@@ -1,0 +1,159 @@
+% Software Requirements Specification: LaTeX template
+% Compile with pdfLaTeX (Overleaf default). Put figures in ./figures as PDF or PNG.
+
+\documentclass[11pt,a4paper]{report}
+
+% ---------- Packages ----------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage[table]{xcolor}
+\usepackage{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% ---------- Document details ----------
+\newcommand{\productname}{Product Name}
+\newcommand{\projectname}{Project Name}
+\newcommand{\coursename}{Course Code: Course Title}
+\newcommand{\institution}{Institution}
+\newcommand{\docversion}{0.1}
+\newcommand{\docdate}{\today}
+
+% ---------- Headings, header and footer ----------
+\titleformat{\chapter}{\normalfont\LARGE\bfseries}{\thechapter.}{0.6em}{}
+\titlespacing*{\chapter}{0pt}{0pt}{18pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small \productname\ -- SRS}
+\fancyhead[R]{\small Version \docversion}
+\fancyfoot[C]{\thepage}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+% ---------- Reusable blocks ----------
+% User story with confirmation criteria:
+% \begin{userstory}{ID}{Title}{Priority} ... \end{userstory}
+\newtcolorbox{userstory}[3]{
+  colback=white, colframe=black!60, boxrule=0.5pt, arc=2pt,
+  fonttitle=\bfseries, title={#1 \textperiodcentered\ #2 \hfill #3}
+}
+
+% Placeholder text, shown in red so nothing unfinished is missed
+\newcommand{\todo}[1]{\textcolor{red}{[#1]}}
+
+\begin{document}
+
+% ---------- Title page ----------
+\begin{titlepage}
+  \centering
+  \vspace*{3cm}
+  {\Large \institution\par}
+  \vspace{0.5cm}
+  {\large \coursename\par}
+  \vspace{2.5cm}
+  {\Huge\bfseries Software Requirements Specification\par}
+  \vspace{0.8cm}
+  {\LARGE \productname\par}
+  \vspace{0.3cm}
+  {\large \projectname\par}
+  \vspace{2.5cm}
+  {\large Version \docversion\par}
+  {\large \docdate\par}
+  \vfill
+  \begin{tabular}{ll}
+    \toprule
+    \textbf{Name} & \textbf{ID} \\
+    \midrule
+    \todo{Member} & \todo{ID} \\
+    \todo{Member} & \todo{ID} \\
+    \todo{Member} & \todo{ID} \\
+    \todo{Member} & \todo{ID} \\
+    \bottomrule
+  \end{tabular}
+\end{titlepage}
+
+% ---------- Revision history ----------
+\chapter*{Revision History}
+\begin{tabularx}{\textwidth}{l l X l}
+  \toprule
+  \textbf{Version} & \textbf{Date} & \textbf{Changes} & \textbf{By} \\
+  \midrule
+  \todo{0.1} & \todo{Date} & \todo{Change} & \todo{Name} \\
+  \bottomrule
+\end{tabularx}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+% ---------- 1 Introduction ----------
+\chapter{Introduction}
+\section{Purpose}
+\section{Intended Audience}
+\section{Intended Use}
+\section{Product Scope}
+\section{Risk Definitions}
+
+% ---------- 2 Overall Description ----------
+\chapter{Overall Description}
+\section{User Classes and Characteristics}
+\section{User Needs}
+\section{Operating Environment}
+\section{Constraints}
+\section{Assumptions}
+
+% ---------- 3 Requirements ----------
+\chapter{Requirements}
+\section{Functional Requirements}
+% Example:
+% \begin{userstory}{XX-01}{Story title}{Must}
+%   As a \todo{role}, I want \todo{goal}, so that \todo{benefit}.
+%   \textbf{Confirmation}
+%   \begin{itemize}
+%     \item Given \todo{context}, when \todo{action}, then \todo{result}.
+%   \end{itemize}
+% \end{userstory}
+
+\section{Non-Functional Requirements}
+% Example:
+% \begin{longtable}{p{2cm} p{2.4cm} p{7.6cm} p{2.2cm}}
+%   \toprule
+%   \textbf{ID} & \textbf{Category} & \textbf{Requirement} & \textbf{Story} \\
+%   \midrule
+%   \endhead
+%   \todo{NFR-01} & \todo{Category} & \todo{Requirement} & \todo{IDs} \\
+%   \bottomrule
+% \end{longtable}
+
+% ---------- Appendices ----------
+\appendix
+\chapter{Glossary}
+\chapter{Analysis Models}
+\section{Use Case Diagrams}
+\section{Use Case Narratives}
+\section{State Diagrams}
+\section{Data Flow Diagrams}
+% Example figure:
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=\textwidth]{diagram-name}
+%   \caption{Caption}
+%   \label{fig:diagram-name}
+% \end{figure}
+
+\end{document}
