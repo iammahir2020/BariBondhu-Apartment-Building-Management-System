@@ -26,7 +26,7 @@ Course project for CSE 451 Software Engineering, Autumn 2026, Independent Univer
 
 | Path | What it holds |
 |---|---|
-| `docs/srs/SRS.docx` | Software Requirements Specification (export of the team's working Google Doc) |
+| `docs/srs/SRS.docx` | Software Requirements Specification, v1.2 (the merged SRS only; each class's working tab is in `docs/sds/<class>/`) |
 | `docs/srs/latex/` | LaTeX template for the final SRS report |
 | `docs/sds/` | Design inputs: use case narratives, state diagrams and DFDs, one folder per user class |
 | `docs/decisions.md` | Technology and design decisions with their reasons |
