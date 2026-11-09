@@ -22,6 +22,19 @@ Create one branch per Trello card. Put your first name in the branch name, so th
 Use lowercase letters and hyphens only. Shared setup work that belongs to nobody in particular (project skeleton,
 CI, linters) can use `chore/<short-name>`.
 
+## Code
+
+The reasons behind these rules are in [docs/decisions.md](docs/decisions.md).
+
+- TypeScript in `strict` mode. Don't use `any`; if a type is unknown, use `unknown` and narrow it.
+- Component files are `PascalCase.tsx` (`BillTable.tsx`). Other files are `camelCase.ts` (`billService.ts`).
+- Models and types are singular `PascalCase` (`Bill`, `GuestPass`). API routes are plural nouns (`/api/bills`).
+- Business rules go in `src/services/`, never in pages or API routes.
+- Every exported function gets a TSDoc comment (`@param`, `@returns`, `@throws`).
+- Don't edit formatting by hand. Prettier formats on save in VS Code, and the pre-commit hook runs ESLint and Prettier
+  on your changed files.
+- Run `npm run lint` and `npx tsc --noEmit` before opening a pull request. Both must pass.
+
 ## Commits
 
 - Write the message in the imperative: "Add guest pass state diagram", not "added diagrams".
@@ -32,6 +45,7 @@ CI, linters) can use `chore/<short-name>`.
 1. Push your branch and open a pull request into `main`.
 2. Fill in the template, including the link to the Trello card.
 3. At least one other member reviews it. The reviewer comments on specific lines and approves or asks for changes.
+   SonarCloud also checks every pull request; fix what it flags or explain in a comment why not.
 4. The author merges after approval and moves the Trello card to Done.
 
 ## Documents and diagrams
