@@ -2,7 +2,7 @@
 
 **BariBondhu: Apartment Building Management System**
 
-Release 1 · Version 1.3 · 15 November 2026
+Release 1 · Version 1.4 · 15 November 2026
 
 CSE 451 Software Engineering, Autumn 2026 · Independent University, Bangladesh
 
@@ -22,10 +22,11 @@ Course instructor: Dr. Md. Mushfique Anwar
 
 | Version | What changed | Date |
 |---|---|---|
-| 1.0 | The five user-class drafts merged into one SRS: 39 stories, business rules, NFRs, risks, permissions and traceability. | 23 Oct 2026 |
-| 1.1 | Building Manager and Committee Member review changes (BM-02 to BM-12, CM titles and criteria, NFR-10, NFR-16, NFR-26). | 25 Oct 2026 |
-| 1.2 | Cover page and revision history added. Full consistency review: one-way story links, NFR and risk links in the traceability matrix, and wording that differed between classes fixed; BR-15 (first log-in and password reset) added; SG-06 offline case, four glossary terms and two Appendix B state tables added. | 9 Nov 2026 |
-| 1.3 | Moved to Markdown. Traceability matrix and glossary removed; Appendix B moved to the SDS. Final team review: move-out, double-payment, guest-pass and night-shift cases fixed in the business rules and stories (mainly BR-03 to BR-14, BM-02 to BM-12); NFRs grouped under the course's four headings. | 15 Nov 2026 |
+| 1.0 | The five user-class drafts merged into one SRS: stories, business rules, NFRs and risks. | 23 Oct 2026 |
+| 1.1 | Building Manager and Committee Member review changes. | 25 Oct 2026 |
+| 1.2 | Full consistency review; BR-15 (first log-in and password reset) added. | 9 Nov 2026 |
+| 1.3 | Moved to Markdown; final team review of move-out, double-payment, guest-pass and night-shift cases. | 15 Nov 2026 |
+| 1.4 | Shortened: criteria that repeat a business rule or NFR, most story notes and all "Touches" lines removed; risks and user needs trimmed; 1.3 rewritten as a paragraph; "In scope" table removed; permissions table moved to the SDS design inputs. | 15 Nov 2026 |
 
 **Contents**
 
@@ -55,15 +56,7 @@ This document specifies Release 1 of BariBondhu, a web application for running o
 
 ### 1.3 Intended Use
 
-Sections 1 and 2 give the context; section 3 holds the requirements. The rest of the document follows these conventions:
-
-| Convention | Meaning |
-|---|---|
-| IDs | Stories carry a class prefix: RES (Resident), SG (Security Guard), BM (Building Manager), CM (Committee Member), MNT (Maintenance Staff) or ADM (System Administrator). Business rules use BR, non-functional requirements NFR and risks R. An ID never changes once issued, so other documents can rely on it. |
-| Priority (MoSCoW) | Must: Release 1 can't ship without it. Should: planned for Release 1. Could: in if time allows. Won't: left out of Release 1 on purpose (listed in 1.4). |
-| Story format | "As a <user>, I want <goal>, so that <benefit>", then confirmation criteria in Given / When / Then form. Every story has at least one failure case. |
-| Touches | Names the other stories that a story depends on, or that depend on it. |
-| Shall | Marks a mandatory requirement in 3.2. |
+Sections 1 and 2 give the context; section 3 holds the requirements, which the design, the code and the tests are checked against. Every requirement has an ID that never changes: stories start with their class (RES, SG, BM, CM, MNT, ADM), and business rules, non-functional requirements and risks use BR, NFR and R. Stories follow "As a [user], I want [goal], so that [benefit]" with Given / When / Then confirmation criteria, and carry a MoSCoW priority: Must (Release 1 can't ship without it), Should (planned for Release 1) or Could (if time allows). Won't items are listed in 1.4.
 
 ### 1.4 Product Scope
 
@@ -78,18 +71,6 @@ Goals for Release 1:
 - Every fault has exactly one ticket with a visible status, from report to close.
 - Residents and the committee can see each month's income, spending and balance.
 - Nothing is app-only: flats that pay cash and visitors who use the intercom are still handled.
-
-**In scope for Release 1**
-
-| Area | What the system does | Stories |
-|---|---|---|
-| Accounts and access | Building setup, accounts for every role, log in, password reset, household move-out | ADM-01, BM-01, BM-02, RES-06, SG-01, CM-05, MNT-06 |
-| Billing and payments | Monthly bills from committee rates, online payment, cash claims, receipts, reminders | CM-01, BM-03 to BM-05, RES-01, RES-04 |
-| Faults and repairs | Fault tickets, assignment, repair progress, work notes, emergencies | RES-02, BM-06, BM-07, MNT-01 to MNT-05 |
-| Gate and guests | Guest passes, pass checks, entry and exit records, visitors inside | RES-03, SG-02 to SG-04, SG-07 |
-| Building fund | Expenses, committee approval, monthly fund summary | BM-08, BM-12, CM-02, CM-04, RES-05 |
-| Communication | Announcements and service feedback | BM-11, RES-07, RES-08, CM-03 |
-| Staff and safety | Guard shifts and emergency numbers | BM-09, BM-10, SG-05, SG-06 |
 
 **Won't have in Release 1**
 
@@ -108,26 +89,20 @@ We considered these and left them out on purpose:
 
 ### 1.5 Risk Definitions
 
-Each risk lists what could go wrong, how likely and how harmful it is (High, Medium or Low), and the requirements that reduce it.
+Each risk lists what could go wrong, how likely and how harmful it is (High, Medium or Low), and the requirements that reduce it. R-03, R-04, R-08, R-10, R-15 and R-16 were dropped in version 1.4 to shorten the document; their IDs are not reused.
 
 | ID | Risk | Likely | Impact | How we handle it |
 |---|---|---|---|---|
 | R-01 | A bill shows Paid but the money never arrived. | M | H | Paid only on gateway server confirmation or manager acceptance (BR-02, NFR-15); cash claims checked by the manager (BM-04). |
 | R-02 | A resident is charged twice for one bill. | M | H | Only one payment flow per bill at a time; Pay is disabled while a payment is pending; a late gateway payment on a settled bill is flagged as an overpayment (BR-03, BR-04, RES-01, BM-04). |
-| R-03 | Arrears are counted twice: on the old bill and again on the new one. | M | M | The old bill becomes Carried forward when its amount moves to the new bill (BR-05, BM-03). |
-| R-04 | A confirmed payment is lost when the database is restored from backup. | L | H | Hourly backups and re-matching against gateway records after a restore (NFR-20). |
 | R-05 | A guest pass is forwarded or reused to let in strangers. | M | M | Visit window, guest count, cancel, and unique random codes (RES-03, SG-02, NFR-08). |
 | R-06 | Private data leaks: phone numbers to staff, one flat's bills to another, or a previous tenant's history to the new one. | M | H | Role and flat-level access checks, occupancy periods, totals-only fund view (NFR-06, NFR-10, NFR-12, NFR-13, BM-02). |
 | R-07 | Someone in danger (fire, gas, lift) waits in a ticket queue. | L | H | Emergency categories show 999 and the building numbers first, then log an Urgent ticket (RES-02, BM-10, SG-06, NFR-16). |
-| R-08 | Flats that pay cash are marked as defaulters. | M | M | Cash claims and manager-recorded payments; Awaiting verification bills stay off the defaulters list (RES-04, BM-04, BM-05). |
 | R-09 | An account is taken over, or someone keeps a flat locked out by entering wrong passwords. | M | M | Hashed passwords, non-guessable usernames, and wrong-password delays per device instead of per account (NFR-04, NFR-05). |
-| R-10 | A shared gate device is left logged in and misused. | M | M | Personal staff accounts, 15-minute idle logout, every check-in tied to a guard account (SG-01, NFR-07, NFR-27). |
 | R-11 | The gate loses internet during load-shedding and guests cannot be checked. | H | M | Fallback to intercom and paper register, then visits entered later (SG-03, NFR-21). |
 | R-12 | Spending is counted before the committee approves it, or rates change without a record. | L | H | Only Approved expenses count; every rate change stores who, when, old and new value and the meeting date (CM-01, CM-02, NFR-27). |
 | R-13 | A fault ticket, or a problem a maintenance worker found during a repair, sits with nobody assigned or stalls after assignment. | M | M | Late and overdue tickets are highlighted for the manager and counted on the committee dashboard; problems found by staff go into the same ticket list (BM-06, MNT-05, CM-04, NFR-16). |
 | R-14 | The manager leaves or is unavailable and nobody can administer the building. | L | H | The system administrator can create, deactivate and replace the manager account (ADM-01). |
-| R-15 | Older or less confident residents don't adopt the app. | H | M | Bangla interface, large text support, few taps, and cash payment and the intercom stay available (NFR-22 to NFR-24, BM-04). |
-| R-16 | People miss notifications because the app runs in a browser tab they have closed. | M | M | Installable web app with push notifications, plus email for bills and announcements (NFR-28, NFR-29). |
 
 ## 2. Overall Description
 
@@ -139,7 +114,7 @@ _Figure 1. System context: the six user roles and the two external services._
 
 ### 2.1 User Classes and Characteristics
 
-There are five user classes who use the system day to day, plus a system administrator who only sets it up. Residents are the primary users; the manager is the most frequent user and links all the others.
+There are five user classes who use the system day to day, plus a system administrator who only sets it up. Residents are the primary users; the manager is the most frequent user and links all the others. Who may do what is summed up in the [permissions table](../sds/design-inputs-from-srs.md#role-permissions) in the SDS design inputs.
 
 | Class | Technical skill | Device | Language | How often |
 |---|---|---|---|---|
@@ -152,63 +127,27 @@ There are five user classes who use the system day to day, plus a system adminis
 
 #### 2.1.1 Resident
 
-Residents are the people who live in the flats: owners living in their own flat, and tenants renting from an owner. Both pay the service charge, so the system treats them the same. Tenants rely on receipts more, because the landlord often wants proof of payment.
-
-Each household gets one shared account for the period it lives in the flat (an occupancy). When a household moves out, the manager ends the occupancy and the next household starts with a new account and an empty history. Skill levels range from students who will figure anything out to an elderly parent who only uses WhatsApp but should still be able to pay a bill. Some flats will not use the app at all, so cash payment and the intercom must keep working for them.
+Owners and tenants who live in the flats. Both pay the service charge, so the system treats them the same. Each household shares one account for the period it lives in the flat (an occupancy); when it moves out, the manager ends the occupancy and the next household starts with a new account and an empty history. Skills range from students to elderly parents who only use WhatsApp, and some flats will not use the app at all, so cash payment and the intercom must keep working.
 
 #### 2.1.2 Security Guard
 
-Guards are building staff who work the gate in shifts. They check guest passes, record when guests come in and leave, and answer gate enquiries. Few of them type English comfortably, and at a busy gate nobody has time for long forms, so the guard screens are in Bangla and need almost no typing. Each guard has a personal account so that every gate record shows who made it. Guards never see residents' phone numbers.
+Building staff who work the gate in shifts, checking guest passes and recording when guests come and go. Few type English comfortably and a busy gate leaves no time for forms, so the guard screens are in Bangla and need almost no typing. Each guard has a personal account, so every gate record shows who made it.
 
 #### 2.1.3 Building Manager
 
-The manager is paid staff who runs the building every day and is the link between all other users. The manager creates the accounts for flats, guards, maintenance staff and committee members, makes the monthly bills from the committee's rates, checks cash payments, assigns and closes fault tickets, plans guard shifts, records expenses for the committee to approve, publishes the monthly fund summary, keeps the emergency numbers up to date and sends announcements. Apart from the household itself, the manager is the only user who can see a resident's phone number. The manager does not set charge rates or approve expenses; those belong to the committee.
+Paid staff who run the building every day and link all the other users: accounts, monthly bills, cash claims, fault tickets, guard shifts, expenses, the fund summary, emergency numbers and announcements. Apart from the household itself, only the manager sees a resident's phone number. Charge rates and expense approval belong to the committee.
 
 #### 2.1.4 Committee Member
 
-Committee members are elected flat owners who oversee the building fund. They set charge rates, approve or reject expenses, check the monthly fund summary and read residents' feedback. They are unpaid and use the system about once a month, around the committee meeting. Decisions are made at the meeting; at least one member enters them in the app, so members who never log in still take part. The secretary and treasurer have the same permissions as other members in Release 1.
+Elected, unpaid flat owners who oversee the building fund: they set charge rates, approve or reject expenses, check the fund summary and read feedback, about once a month around their meeting. At least one member enters the meeting's decisions in the app. The secretary and treasurer have no extra permissions in Release 1.
 
 #### 2.1.5 Maintenance Staff
 
-Maintenance staff are electricians, plumbers and lift technicians who repair reported faults in flats and common areas. They see and update only the tickets assigned to them, record work notes, and report extra problems they find. They cannot assign or close tickets. They see the flat number, photo and the times someone is home, but not the resident's phone number; if they need the resident, they go through the manager.
+Electricians, plumbers and lift technicians who see and update only the tickets assigned to them, add work notes and report extra problems they find. They cannot assign or close tickets, and they contact residents through the manager.
 
 #### 2.1.6 System Administrator
 
 A member of the development team who installs the system for the building, creates the first manager account, and replaces the manager account if the manager leaves. The administrator does not take part in daily operations and cannot see bills, payments or tickets.
-
-#### 2.1.7 Permissions
-
-One table for all roles. "Own" means limited to the user's own flat or own assigned work.
-
-| Action | RES | SG | BM | CM | MNT | ADM |
-|---|---|---|---|---|---|---|
-| Set up the building; create or replace the manager account |  |  |  |  |  | Yes |
-| Create and deactivate flat, guard, maintenance and committee accounts |  |  | Yes |  |  |  |
-| End a household's occupancy |  |  | Yes |  |  |  |
-| Set charge rates |  |  |  | Yes |  |  |
-| Make and correct bills |  |  | Yes |  |  |  |
-| See and pay a bill | Own |  | View all |  |  |  |
-| Record a cash or bank payment claim | Own |  |  |  |  |  |
-| Accept or reject a claim; record a payment received directly |  |  | Yes |  |  |  |
-| See the defaulters list and send reminders |  |  | Yes |  |  |  |
-| Report a fault, follow it, cancel it before assignment | Own |  |  |  |  |  |
-| Assign, reopen and close tickets; mark Duplicate or Won't fix |  |  | Yes |  |  |  |
-| Update ticket status, add work notes, report an extra problem |  |  |  |  | Own |  |
-| Create and cancel guest passes | Own |  |  |  |  |  |
-| Check passes; record guest entry and exit; see visitors inside |  | Yes |  |  |  |  |
-| Record expenses |  |  | Yes |  |  |  |
-| Approve or reject expenses and the opening balance |  |  |  | Yes |  |  |
-| Publish the monthly fund summary |  |  | Yes |  |  |  |
-| See the fund summary (totals only) | Yes |  | Yes | Yes |  |  |
-| Send announcements |  |  | Yes |  |  |  |
-| Read announcements | Yes |  | Yes | Yes |  |  |
-| Give service feedback | Yes |  |  |  |  |  |
-| Read feedback (anonymous entries show no flat) |  |  |  | Yes |  |  |
-| Plan guard shifts |  |  | Yes |  |  |  |
-| See own shift |  | Yes |  |  |  |  |
-| Edit emergency numbers |  |  | Yes |  |  |  |
-| See emergency numbers (999 always first) | Yes | Yes | Yes | Yes | Yes |  |
-| See a resident's phone number | Own | No | Yes | No | No | No |
 
 ### 2.2 User Needs
 
@@ -216,24 +155,11 @@ For each class, the table compares how things work today with what goes wrong. T
 
 | Class | How it works today | Problem | What they need | Stories |
 |---|---|---|---|---|
-| Resident | The manager collects cash and writes it in a register | Handwritten receipts or none; "I paid" against "the register says you didn't"; nobody knows what the charge covers | See an itemised bill, pay online or record cash, always get a receipt | RES-01, RES-04 |
-| Resident | The guard calls the flat on the intercom | The intercom is broken or nobody answers; guests wait at the gate | Pre-approve guests with a code the guard can check | RES-03 |
-| Resident | Phone the manager, then phone again | No record, no status; one water outage means 20 calls | Report once, follow progress, join an existing report | RES-02 |
-| Resident | Notices on the board or in a group chat | Many never see them | Announcements in the app and by email | RES-08 |
-| Resident | Accounts shown once a year, if at all | Residents don't know where the money goes | A monthly fund summary, and a way to rate the services the money pays for | RES-05, RES-07 |
-| Guard | Intercom calls and a paper visitor register | Delays; incomplete records with no exit times; no way to know how many guests were approved | Check a pass, record entry and exit with the guest count, see who is inside | SG-02 to SG-04, SG-07 |
-| Guard | Shifts told verbally; emergency numbers on paper | Unsure of duty times; time lost finding numbers | See own shift; open emergency numbers in two taps | SG-05, SG-06 |
-| Manager | Paper register for dues | Disputes; hard to see who owes | Make itemised bills, check claims, see unpaid flats | BM-03 to BM-05 |
-| Manager | Faults passed on by phone; staff mention extra problems only in passing | No record or status; one water outage brings 20 calls; extra problems are forgotten | One ticket list, including problems found by staff; assign and track each one | BM-06, BM-07 |
-| Manager | Contacts on paper and in the manager's phone | Out of date; unclear who is on duty; residents and guards don't know who to call in an emergency | One place for accounts, shifts and emergency numbers | BM-02, BM-09, BM-10 |
-| Manager | Notice board and group chat | Some residents never see notices | Send an announcement to all or to one block or floor | BM-11 |
-| Manager | Accounts shown to the committee once a year, if at all | Can't easily show where the service charge goes | Record each expense by category; publish a monthly summary | BM-08, BM-12 |
-| Committee | Rates agreed at meetings, written on paper | Disputes about what was agreed; no record of changes | Set rates in the app with a full history | CM-01 |
-| Committee | Receipts shown in person or in a group chat | Spending approved informally | Approve or reject each expense with its receipt | CM-02 |
-| Committee | Complaints through personal conversations | No overview; residents fear being named | Anonymous ratings and comments per service | CM-03 |
-| Committee | Accounts and repair problems come up only at the meeting, in the manager's own words | No way to check the figures or the manager's work beforehand | Each month's fund figures and a count of late tickets, before the meeting | CM-04 |
-| Maintenance | Jobs passed on by phone; work reported verbally | Jobs missed; no record of what was done | A list of assigned tickets with full details; status updates and notes | MNT-01 to MNT-04 |
-| Maintenance | Extra problems mentioned in passing | Forgotten | Report an extra problem as a new ticket | MNT-05 |
+| Resident | Cash to the manager and a paper register; intercom calls; phoning the manager about faults; notices on the board; accounts once a year, if at all | No proof of payment; guests wait at the gate; no record or status for faults; notices missed; no idea where the money goes | An itemised bill paid online or recorded as cash, with a receipt; guest passes; fault reports they can follow; announcements; a monthly fund summary and service ratings | RES-01 to RES-05, RES-07, RES-08 |
+| Guard | Intercom calls and a paper visitor register; shifts told verbally; emergency numbers on paper | Delays and incomplete records; unsure of duty times; time lost finding numbers | Check a pass, record entry and exit, see who is inside; see own shift; open emergency numbers in two taps | SG-02 to SG-07 |
+| Manager | Paper register for dues; faults passed on by phone; contacts on paper; notice board; accounts shown once a year | Disputes over who paid; no record of faults or extra problems; out-of-date contacts and duty times; notices missed | Itemised bills and claim checks; one ticket list; one place for accounts, shifts and emergency numbers; announcements; expenses and a monthly summary | BM-02 to BM-12 |
+| Committee | Rates and approvals agreed on paper or in chat; complaints in person; accounts heard only at the meeting | No record of decisions; spending approved informally; residents fear being named; nothing to check beforehand | Rates with full history; approve or reject each expense with its receipt; anonymous feedback; fund figures and late tickets before the meeting | CM-01 to CM-04 |
+| Maintenance | Jobs passed on by phone; work and extra problems reported verbally | Jobs missed; no record of what was done; extra problems forgotten | A list of assigned tickets with details; status updates and notes; extra problems reported as new tickets | MNT-01 to MNT-05 |
 | All classes | Paper registers and group chats with no sign-in | Anyone can claim a payment, a decision or a gate entry; nobody knows who recorded what | A personal account for each role (one per household for residents), so every record shows who made it and each user sees only their own part | RES-06, SG-01, BM-01, CM-05, MNT-06, ADM-01 |
 
 ### 2.3 Operating Environment
@@ -312,13 +238,10 @@ _As a resident, I want to see my monthly bill broken down by charge and pay it o
 - Given my flat has a bill for the month, when I open Dues, then I see each charge (service, generator, water) with its rate, any Carried forward or adjustment line, the total and the due date.
 - Given I tap Pay and go to the gateway, when the gateway hasn't confirmed yet, then the bill shows Payment pending and both Pay and Record cash payment are disabled (BR-03).
 - Given the gateway confirms the payment while the bill is Payment pending or Unpaid, when I open Dues, even if I closed the app halfway, then the bill shows Paid and I can download a receipt with a receipt number and the gateway's transaction ID.
-- Given the bill was paid another way or carried forward before a late gateway confirmation arrives, when the confirmation arrives, then the bill doesn't change, and the payment is flagged to the manager as an overpayment to refund (BR-04).
 - Given the bill has been Payment pending for 30 minutes and the gateway reports no successful payment, when the system re-checks, then the bill goes back to Unpaid and I can pay again (BR-04).
 - Given the payment fails or I cancel it, when I come back to the app, then the bill stays Unpaid and I see the reason the gateway gave.
 - Given my bill is past its due date, when the manager sends a reminder, then I get a notification that opens the bill.
-- Given I'm logged in for flat 5B, when I try to open another flat's bill, then access is refused.
 
-**Touches:** BM-03 (makes bills), BM-05 (reminders), CM-01 (sets rates), BM-04 (late payments flagged as overpayments).
 
 ##### RES-02 · Report a fault · Must
 
@@ -335,9 +258,7 @@ _As a resident, I want to report a fault and say whether it's inside my flat or 
 - Given other residents have tapped "Me too" on my ticket, when I cancel it, then I only stop following it, and the ticket stays open for them.
 - Given the description is empty, when I submit, then I see "Describe the problem" and nothing is created.
 
-**Note:** "Me too" is there so one water outage doesn't turn into 20 tickets. The maintenance worker sees my flat number, photo and home times, never my phone number.
 
-**Touches:** BM-06 (assigns), BM-07 (closes), MNT-02 (reads the details), MNT-03 (updates status), BM-10 (emergency numbers).
 
 ##### RES-03 · Pre-approve guests · Must
 
@@ -352,9 +273,7 @@ _As a resident, I want to create a pass for guests I'm expecting and share it wi
 - Given my guests are checked in, when the guard records it, then I get a notification with the number of guests who arrived.
 - Given the end time has passed, when anyone checks the code, then the pass shows Expired.
 
-**Note:** The guard sees the guest's name, the flat and how many guests can still come in. My phone number never shows.
 
-**Touches:** SG-02 (checks the pass), SG-03 (records entry), BM-02 (cancels passes at move-out).
 
 ##### RES-04 · Record a cash or bank payment · Should
 
@@ -367,10 +286,7 @@ _As a resident, I want to record that I paid in cash or by bank transfer, so tha
 - Given the payment date is in the future, when I submit, then I see "Check the payment date" and nothing is saved.
 - Given the manager accepts the claim, when they confirm, then the bill shows Paid and I can download a receipt.
 - Given the manager rejects the claim with a reason, when I open Dues, then the bill is Unpaid again and I see the reason. If a newer bill exists and is still Unpaid, the amount moves onto it as a Carried forward line; otherwise the old bill stays Unpaid and I can pay it on its own (BR-05).
-- Given my bill is Awaiting verification, when the due date passes, then my flat is not put on the defaulters list until the manager decides (BR-08).
-- Given the manager rejects my claim after the due date, when the bill goes back to Unpaid, then my flat can appear on the defaulters list.
 
-**Touches:** BM-04 (checks claims), BM-05 (defaulters list).
 
 ##### RES-05 · See how the building fund is spent · Could
 
@@ -380,10 +296,8 @@ _As a resident, I want a monthly summary of what the building collected and spen
 
 - Given the manager has published a month's summary, when I open Fund summary, then I see the opening balance, total collected, total spent by category (repair, salary, utility, other) and the closing balance (BR-10).
 - Given an expense is still Waiting for approval or was Rejected, when I view the summary, then it isn't counted.
-- Given some flats haven't paid, when I view the summary, then I see only the total outstanding, not which flats owe it.
 - Given this month's summary hasn't been published yet, when I open Fund summary, then I see the last published month and a note that this month isn't ready.
 
-**Touches:** BM-08 (records expenses), BM-12 (publishes the summary), CM-02 (approves expenses), CM-04 (the committee sees the same figures).
 
 ##### RES-06 · Log in to my flat's account · Must
 
@@ -395,12 +309,7 @@ _As a resident, I want to log in to my household's account, so that only my hous
 - Given I log in for the first time with a temporary password, when I sign in, then I must set a new password of at least 8 characters before continuing.
 - Given 5 wrong passwords in a row from my phone, when I try again, then my phone must wait 15 minutes, and I see how long is left (BR-14).
 - Given I've forgotten the password and our account has an email address, when I tap Forgot password, then a reset link valid for 30 minutes goes to that email. If there is no email, the screen tells me to ask the manager.
-- Given the manager has ended our occupancy, when I try to log in, then I am refused; our records are kept but the next household cannot see them (BR-09).
-- Given I'm logged in as a resident, when I try to open a manager, guard, maintenance, committee or administrator page, then access is refused.
 
-**Note:** Everyone in the household shares this login in Release 1.
-
-**Touches:** BM-02 (creates accounts, resets passwords, ends occupancies).
 
 ##### RES-07 · Give feedback on building services · Could
 
@@ -413,9 +322,6 @@ _As a resident, I want to rate the building's services and leave a comment, so t
 - Given I already gave feedback on the same service this month, when I submit again, then my earlier feedback is replaced, not added to.
 - Given I haven't picked a rating, when I submit, then I see "Pick a rating" and nothing is saved.
 
-**Note:** Anonymous means hidden from every reader. The system still stores which flat sent it, only to stop duplicates. A specific fault goes through RES-02, not here.
-
-**Touches:** CM-03 (reads feedback).
 
 ##### RES-08 · Read building announcements · Should
 
@@ -428,7 +334,6 @@ _As a resident, I want to read the manager's announcements in the app, so that I
 - Given the manager edits or removes an announcement, when I open Announcements, then I see the new version, or it's gone.
 - Given an announcement was sent only to another block, when I open Announcements, then I don't see it.
 
-**Touches:** BM-11 (sends announcements).
 
 #### 3.1.3 Security Guard (SG)
 
@@ -442,9 +347,7 @@ _As a security guard, I want to log in with my own guard account, so that only a
 - Given 5 wrong passwords in a row for my username on the gate device, when I try again, then my username must wait 15 minutes on that device, and other guards can still log in (BR-14).
 - Given the device has been idle for 15 minutes, when I touch it, then I must log in again.
 - Given the previous guard's shift has ended, when I tap Switch guard, then they are logged out and I can log in with my own account.
-- Given I am logged in as any other role, when I try to open a guard page, then access is refused.
 
-**Touches:** BM-02 (creates guard accounts).
 
 ##### SG-02 · Check a guest pass · Must
 
@@ -453,12 +356,10 @@ _As a security guard, I want to type or scan a resident's guest-pass code, so th
 **Confirmation**
 
 - Given a code that is valid now (BR-11), when I check it, then I see the guest name, the flat, the approved guest count and how many can still enter.
-- Given a code that is expired, cancelled or not yet valid, when I check it, then check-in is refused and I see "Pass not valid" with the reason (Expired, Cancelled or "Valid from <time>").
+- Given a code that is expired, cancelled or not yet valid, when I check it, then check-in is refused and I see "Pass not valid" with the reason (Expired, Cancelled or "Valid from [time]").
 - Given a code that matches no pass, when I check it, then I see "No pass with this code".
 - Given the pass is Fully used, when I check it, then I see Fully used and check-in is not offered.
-- Given any pass result, when it is shown, then the resident's phone number is not on the screen.
 
-**Touches:** RES-03 (creates the pass).
 
 ##### SG-03 · Record guest entry · Must
 
@@ -472,7 +373,6 @@ _As a security guard, I want to check guests in against a valid pass, so that th
 - Given the device can't reach the server, when I try to check a pass or confirm entry, then within 5 seconds I see "No connection: use the intercom and paper register", and nothing is shown as saved.
 - Given the connection is back, when I enter a visit from the paper register with its real time, then it is saved and marked Entered later.
 
-**Touches:** RES-03 (pass and notification), SG-04 (exit records), SG-07 (visitors inside).
 
 ##### SG-04 · Record guest exit · Must
 
@@ -485,7 +385,6 @@ _As a security guard, I want to record when guests leave, so that the list of vi
 - Given a pass has nobody inside, when I try to record an exit, then I see "No guests from this pass are inside" and nothing is saved.
 - Given a pass was cancelled or has expired while its guests are inside, when I record their exit, then it is saved as normal (BR-11).
 
-**Touches:** SG-03 (entry records), SG-07.
 
 ##### SG-05 · See my shift · Should
 
@@ -497,7 +396,6 @@ _As a security guard, I want to see my assigned shifts, so that I know when I'm 
 - Given no shift of mine covers any part of today, when I open Duty, then I see "No shift today".
 - Given I am a guard, when I view Duty, then I cannot create, edit or swap shifts.
 
-**Touches:** BM-09 (plans shifts).
 
 ##### SG-06 · Open emergency numbers · Must
 
@@ -509,7 +407,6 @@ _As a security guard, I want to reach the emergency numbers fast, so that I don'
 - Given the manager changes a number, when I open or refresh the screen, then I see the new number.
 - Given the gate device has lost its connection, when I tap Emergency, then 999 and the last loaded building numbers still show and can be called.
 
-**Touches:** BM-10 (maintains the numbers).
 
 ##### SG-07 · See visitors inside · Should
 
@@ -519,11 +416,8 @@ _As a security guard, I want a list of pass guests who are inside the building, 
 
 - Given guests have entered and not all have left, when I open Visitors inside, then I see each pass with the guest name, flat, number inside and entry time.
 - Given a pass's end time has passed and guests from it are still inside, when I view the list, then that pass is highlighted as Overstayed.
-- Given I open an entry, when its details show, then I see only gate details and never a resident's phone number.
 
-**Note:** Walk-in visitors handled by intercom are not recorded in Release 1, so this list shows pass guests only.
 
-**Touches:** SG-03, SG-04.
 
 #### 3.1.4 Building Manager (BM)
 
@@ -535,11 +429,8 @@ _As a building manager, I want to log in with my own account, so that only I can
 
 - Given I enter the right username and password, when I log in, then I see the manager dashboard.
 - Given 5 wrong passwords in a row from one device, when I try again, then that device must wait 15 minutes, and I see how long is left (BR-14).
-- Given I am a resident, guard, maintenance or committee user, when I try to open a manager page, then access is refused.
 
-**Note:** The same log-in pattern is used by RES-06, SG-01, CM-05 and MNT-06.
 
-**Touches:** ADM-01 (creates the manager account).
 
 ##### BM-02 · Manage accounts and occupancies · Must
 
@@ -559,7 +450,6 @@ _As a building manager, I want to add, edit and deactivate flat, guard, maintena
 - Given I deactivate a guard, when the account is saved, then their future shifts are removed and the gaps show in the duty list (BM-09).
 - Given I try to deactivate my own manager account, when I confirm, then the system refuses; only the administrator can replace the manager (ADM-01).
 
-**Touches:** ADM-01 (creates the flats), RES-06, SG-01, CM-05, MNT-06 (log in with these accounts), RES-03 (passes cancelled at move-out), BM-09 (shifts removed when a guard leaves).
 
 ##### BM-03 · Make monthly bills · Must
 
@@ -569,14 +459,10 @@ _As a building manager, I want to make every flat's monthly bill from the commit
 
 - Given the committee has set rates, when I run the bills for a month with a due date, then every flat (occupied or vacant) gets one bill with each charge and its rate, residents see the same total and due date in their app, and each household gets an in-app and email notification.
 - Given a household has an Unpaid bill from an earlier month, when the new bills are made, then the old bill becomes Carried forward and its amount appears as one line on the new bill (BR-05).
-- Given the committee changes a rate after a month's bills are made, when I open those bills, then they keep the rates they were made with (CM-01).
 - Given the bills for a month already exist, when I try to run them again, then I see "Bills for this month already exist" and nothing is created.
 - Given no charge rates have been set, or the due date is before the first day of the billing month, when I run the bills, then I see "Ask the committee to set the charge rates first" or "Check the due date" and nothing is created.
-- Given an Unpaid bill is wrong, when I correct it, then I must give a reason and the resident is notified. A Paid bill can only be corrected by an adjustment line on next month's bill (BR-07).
-- Given any bill, when I try to delete it, then the system refuses.
-- Given a correction brings a bill's total to ৳0 or below, when I save it, then the bill becomes Paid; any amount below ৳0 appears as a credit line on the household's next bill (BR-07).
+- Given an Unpaid bill is wrong, when I correct it, then I must give a reason and the resident is notified. A Paid bill can only be corrected by an adjustment line on next month's bill, and no bill can be deleted (BR-07).
 
-**Touches:** CM-01 (rates), RES-01 (shows the bill).
 
 ##### BM-04 · Check and record payments · Must
 
@@ -592,7 +478,6 @@ _As a building manager, I want to accept or reject payments that residents recor
 - Given a bill is Payment pending or Awaiting verification, when I try to record a direct payment, then I see "This bill already has a payment in progress" and nothing is saved (BR-03).
 - Given a gateway payment arrives for a bill that is already Paid, Awaiting verification or Carried forward, when I open Claims, then I see it flagged as an overpayment, and I mark it Refunded once the money has been returned outside the app (BR-04).
 
-**Touches:** RES-04 (records claims), RES-01 (online payments that arrive late).
 
 ##### BM-05 · See unpaid dues and send reminders · Should
 
@@ -605,7 +490,6 @@ _As a building manager, I want to see which flats haven't paid and remind them, 
 - Given I select late flats, when I send a reminder, then each gets an in-app and email reminder. A flat can get at most one reminder per bill every 7 days; extra attempts are refused with the date of the last reminder.
 - Given a late bill belongs to an ended occupancy or a vacant flat, when I view Defaulters, then it is listed but no reminder can be sent; I follow it up outside the app, and the flat's current household is never reminded of it (BR-09).
 
-**Touches:** RES-01 (receives reminders), RES-04.
 
 ##### BM-06 · Assign fault tickets · Must
 
@@ -621,7 +505,6 @@ _As a building manager, I want all fault tickets in one list and to give each on
 - Given an Assigned, In progress or On hold ticket is past its due date, when I open the list, then it is highlighted as overdue.
 - Given a ticket repeats an open one or won't be fixed, when I mark it Duplicate (linking the original) or Won't fix with a reason, then the reporter and followers are notified with the reason. For a Duplicate, they all follow the original ticket from then on.
 
-**Touches:** RES-02, MNT-01, MNT-02, MNT-05, CM-04.
 
 ##### BM-07 · Follow and close tickets · Must
 
@@ -635,7 +518,7 @@ _As a building manager, I want to see status changes and work notes from mainten
 
 **Note:** Only the manager closes or reopens tickets. Maintenance staff cannot.
 
-**Touches:** MNT-03, MNT-04, RES-02.
+
 
 ##### BM-08 · Record building expenses · Must
 
@@ -649,7 +532,6 @@ _As a building manager, I want to record each expense with a category and receip
 - Given the committee rejected an expense, when I open it, then I see the reason and can resubmit a corrected version, which goes back to Waiting for approval.
 - Given an expense is Approved, when I need to fix it, then I cannot edit or delete it; I add a correcting expense (which may be negative) that links to the original and needs approval.
 
-**Touches:** CM-02 (approves), BM-12, RES-05.
 
 ##### BM-09 · Plan guard shifts · Should
 
@@ -662,7 +544,6 @@ _As a building manager, I want to give each guard a shift, so that the gate is a
 - Given the end is not after the start, or is more than 24 hours after it, when I save, then I see "Check the shift times" and nothing is saved.
 - Given there are hours in the next 7 days with no guard on duty, when I open the duty list, then those gaps are highlighted.
 
-**Touches:** SG-05, BM-02.
 
 ##### BM-10 · Keep emergency numbers up to date · Must
 
@@ -672,9 +553,7 @@ _As a building manager, I want to set the guard-desk and manager emergency numbe
 
 - Given I change a number, when I save, then every user sees the new number the next time they open or refresh the emergency screen.
 - Given I leave a number empty or enter something that isn't a Bangladeshi phone number (9 to 11 digits), when I save, then I see "Enter a valid phone number" and nothing is saved (BR-12).
-- Given the emergency screen, when anyone opens it, then 999 is listed first and cannot be edited.
 
-**Touches:** RES-02, SG-06.
 
 ##### BM-11 · Send announcements · Should
 
@@ -687,9 +566,7 @@ _As a building manager, I want to send announcements, so that residents and comm
 - Given I edit or remove an announcement, when I save, then residents see the new version or it disappears.
 - Given the title or message is empty, when I send, then I see "Write a message" and nothing is sent.
 
-**Note:** Residents can't confirm that they have read an announcement in Release 1. There is no SMS; announcements go out in the app and by email.
 
-**Touches:** RES-08, BM-12 (the fund summary can also go out as an announcement).
 
 ##### BM-12 · Publish the monthly fund summary · Should
 
@@ -701,11 +578,9 @@ _As a building manager, I want to publish each month's summary of money collecte
 - Given the month hasn't ended yet, when I try to publish its summary, then I see "You can publish once the month has ended" and nothing is published.
 - Given it is the first month in the system, when I publish, then I must enter an opening balance, which the committee approves before the summary is visible to residents. If the committee rejects it, I see the reason and enter a corrected balance, which goes back for approval.
 - Given an expense is Waiting for approval or Rejected, when the summary is worked out, then it is left out, and committee members see how many are still waiting (CM-04).
-- Given some flats haven't paid, when residents or committee members view the summary, then they see only the total outstanding, never which flats owe it (NFR-12).
 - Given an expense dated in a published month is approved later, when it is approved, then that month's summary is updated and marked Revised, and the opening and closing balances of every later month change with it (BR-10).
 - Given some committee members never log in, when I also send the summary as an announcement (BM-11), then they can read it there and in their email.
 
-**Touches:** BM-08, CM-02, CM-04, RES-05, BM-11.
 
 #### 3.1.5 Committee Member (CM)
 
@@ -721,7 +596,6 @@ _As a committee member, I want to enter the charge rates agreed at the meeting, 
 - Given I enter a blank or negative rate, or leave out the meeting date, when I save, then I see "Enter a valid rate and meeting date" and nothing changes.
 - Given a rate has changed, when any member opens Rate history, then they see who changed it, when, the meeting date, and the old and new values.
 
-**Touches:** BM-03, RES-01.
 
 ##### CM-02 · Approve or reject building expenses · Must
 
@@ -736,7 +610,6 @@ _As a committee member, I want to approve or reject each expense with its receip
 - Given the manager has entered the first month's opening balance, when I approve it, then the first summary can be published to residents.
 - Given the opening balance is wrong, when I reject it with a reason, then the manager sees the reason and can enter a corrected figure, which comes back for approval. Without a reason I see "Write a reason" and nothing changes.
 
-**Touches:** BM-08, BM-12, RES-05.
 
 ##### CM-03 · Review resident feedback · Could
 
@@ -745,11 +618,9 @@ _As a committee member, I want to read residents' ratings and comments, so that 
 **Confirmation**
 
 - Given residents have sent feedback, when I open Feedback for a month, then I see each service's average rating, the number of ratings and the comments.
-- Given feedback was sent anonymously, when I view it, then no flat number or account name is shown, on screen or in exports.
 - Given I open a feedback entry, when I try to follow it to that flat's bills or payments, then access is refused.
 - Given no feedback exists for the month, when I open it, then I see "No feedback for this month".
 
-**Touches:** RES-07.
 
 ##### CM-04 · Check the fund and building health · Should
 
@@ -758,11 +629,9 @@ _As a committee member, I want to see each month's money and the building's open
 **Confirmation**
 
 - Given a summary is published, when I open Fund summary, then I see the same figures as residents plus how many expenses are waiting for approval.
-- Given some flats are unpaid, when I view the summary, then I see only the total outstanding, not which flats owe it.
 - Given the month isn't published yet, when I open it, then I see "Not published yet" and the last published month.
 - Given tickets have waited past the late limit with nobody assigned (BM-06), when I open the dashboard, then I see how many there are.
 
-**Touches:** BM-12, BM-06, RES-05.
 
 ##### CM-05 · Log in to the committee screens · Must
 
@@ -773,11 +642,9 @@ _As a committee member, I want to log in with my own committee account, so that 
 - Given I enter the right username and password, when I log in, then I see the committee dashboard.
 - Given 5 wrong passwords in a row from one device, when I try again, then that device must wait 15 minutes (BR-14).
 - Given the manager has deactivated my committee account, when I try to log in, then I am refused and my past decisions stay in the record.
-- Given I am a resident, guard, maintenance or manager user, when I try to open a committee page, then access is refused.
 
 **Note:** A committee member who also lives in the building uses the household account for their flat and this account for committee work.
 
-**Touches:** BM-02 (creates committee accounts).
 
 #### 3.1.6 Maintenance Staff (MNT)
 
@@ -791,7 +658,6 @@ _As a maintenance staff member, I want to see the tickets assigned to me, so tha
 - Given nothing is assigned to me, when I open Tickets, then I see "No tickets assigned to you".
 - Given a ticket is assigned to someone else, when I try to open it, then access is refused.
 
-**Touches:** BM-06.
 
 ##### MNT-02 · See ticket details · Must
 
@@ -800,10 +666,8 @@ _As a maintenance staff member, I want to see the full details of an assigned ti
 **Confirmation**
 
 - Given a ticket is assigned to me, when I open it, then I see the description, category, place or flat number, photo, the times someone is home, priority, due date and the manager's instructions.
-- Given I view any ticket, when the details show, then the resident's phone number is not shown.
 - Given the ticket has been reassigned to someone else, when I try to open it, then I see "This ticket is no longer assigned to you".
 
-**Touches:** RES-02, BM-06.
 
 ##### MNT-03 · Update ticket status · Must
 
@@ -815,9 +679,7 @@ _As a maintenance staff member, I want to update the status of my tickets, so th
 - Given I can't continue (waiting for parts or for access), when I mark it On hold with a reason, then it becomes On hold; when I resume, it returns to In progress.
 - Given a ticket is In progress, when I finish and save, then it becomes Fixed. A ticket cannot go from Assigned straight to Fixed.
 - Given any status change is saved, when the save completes, then I see the new status and time, and the reporter and followers are notified.
-- Given a ticket is Fixed, when I look at the status options, then Closed is not offered; only the manager closes tickets.
 
-**Touches:** BM-07, RES-02.
 
 ##### MNT-04 · Record work notes · Should
 
@@ -829,7 +691,6 @@ _As a maintenance staff member, I want to record notes on the work I do, so that
 - Given the note is empty, when I save, then I see "Write a note" and nothing is saved.
 - Given a note is saved, when the manager opens the ticket, then the note is visible to them.
 
-**Touches:** BM-07.
 
 ##### MNT-05 · Report an extra problem · Could
 
@@ -840,7 +701,6 @@ _As a maintenance staff member, I want to report a new problem I find during a r
 - Given I am working on a ticket, when I submit a category, a description and a place for a new problem, then a new ticket is created as Reported, marked Found by staff, linked to my ticket, and the manager is notified.
 - Given the category, description or place is empty, when I submit, then I see what is missing and nothing is saved.
 
-**Touches:** BM-06 (the manager assigns it like any other ticket).
 
 ##### MNT-06 · Log in to the maintenance screens · Must
 
@@ -850,10 +710,7 @@ _As a maintenance staff member, I want to log in with my own account, so that on
 
 - Given I enter the right username and password for an active maintenance account, when I log in, then I see my tickets.
 - Given 5 wrong passwords in a row from one device, when I try again, then that device must wait 15 minutes (BR-14).
-- Given I have been idle for 15 minutes, when I touch the app, then I must log in again.
-- Given I am logged in as any other role, when I try to open a maintenance page, then access is refused.
 
-**Touches:** BM-02 (creates the account).
 
 #### 3.1.7 System Administrator (ADM)
 
@@ -868,9 +725,7 @@ _As the system administrator, I want to set up the building and its manager acco
 - Given the manager leaves, when I deactivate the account and create a new one, then the new manager has full access and all past records are kept.
 - Given I am logged in as administrator, when I try to open bills, payments, tickets or feedback, then access is refused.
 
-**Note:** The administrator account is created at installation. It logs in under the same rules as every other account (BR-14, NFR-04, NFR-05) and times out after 15 minutes idle (NFR-07).
 
-**Touches:** BM-01, BM-02.
 
 ### 3.2 Non-Functional Requirements
 

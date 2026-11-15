@@ -47,7 +47,7 @@ picked a stack that catches mistakes early and is quick for all of us to learn.
     code.
   - Supabase Auth comes with the database, so there is no separate login service to set up. It stores hashed
     passwords, makes reset links and keeps sessions (BR-15, NFR-04). Each user's role is stored in the `profiles` table next to their
-    Supabase user, and every API route checks it against the SRS permissions table. Drizzle connects to the database
+    Supabase user, and every API route checks it against the permissions table in `docs/sds/design-inputs-from-srs.md`. Drizzle connects to the database
     directly, which skips Supabase's row-level security, so these route checks are the access control and they are
     unit tested (NFR-06).
   - Supabase Auth signs users in by email, but the SRS gives every account a generated username, and some residents
