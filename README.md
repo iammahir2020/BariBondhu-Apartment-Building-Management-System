@@ -27,12 +27,12 @@ Course project for CSE 451 Software Engineering, Autumn 2026, Independent Univer
 | Path | What it holds |
 |---|---|
 | `docs/srs/SRS.md` | Software Requirements Specification, v1.3. This is the copy we edit |
-| `docs/srs/archive/`, `docs/sds/resident/archive/` | Archived Word versions, not maintained. The `.md` files are the current copies |
+| `archive/` folders under `docs/srs/` and `docs/sds/<class>/` | Archived Word versions, not maintained. The `.md` files are the current copies |
 | `docs/srs/figures/` | Figures used in the SRS |
 | `docs/srs/latex/` | LaTeX template for the final SRS report |
-| `docs/sds/` | Design inputs: use case narratives, state diagrams and DFDs, one folder per user class, plus `design-inputs-from-srs.md` (states, use case links, data flows and entities shared by all classes) |
+| `docs/sds/` | Software Design Specification: `SDS.md` (index and notation), one part per user class with its use case narratives and state diagrams, `system/` for the data flow diagrams, and `design-inputs-from-srs.md` (states, use case links, data flows and entities shared by all parts) |
 | `docs/decisions.md` | Technology and design decisions with their reasons |
-| `diagrams/` | Diagram sources (`.drawio.svg`), one folder per user class |
+| `diagrams/` | Diagram sources (`.drawio.svg`), one folder per user class, plus `system/` (data flow diagrams) and `system-administrator/` |
 
 Source code and tests come next, built with the stack and pattern in `docs/decisions.md`.
 

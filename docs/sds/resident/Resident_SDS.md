@@ -1,4 +1,4 @@
-# Resident: use cases, state diagrams and DFD
+# Resident: use cases and state diagrams
 
 This part covers the Resident user class of BariBondhu (Apartment Building Management System). Story IDs (RES), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
 
@@ -251,6 +251,8 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 
 ## 3. State diagrams
 
+Each object has one state diagram, drawn by one member, so no two diagrams can disagree. The Resident part owns these four. The others are in the parts of the class that moves them most: Fault ticket (Maintenance Staff); Staff account, Announcement and Overpayment (Building Manager); Expense, Opening balance, Fund summary and Charge rate (Committee Member); Visit and Shift (Security Guard).
+
 ### Bill
 
 ![State diagram of a Bill](../../../diagrams/resident/resident-state-1-bill.drawio.svg)
@@ -267,34 +269,24 @@ A bill is in one payment flow at a time (BR-03), and only the gateway's confirma
 
 A pass works from its start date-time to its end date-time, 24 hours at most (BR-11). Once it is Fully used, Cancelled or Expired, it stays that way. Cancelled and Expired stop new entries only: guests already inside can still be checked out. Passes are also cancelled when the household moves out (BM-02).
 
-### Fault ticket
-
-![State diagram of a Fault ticket](../../../diagrams/resident/resident-state-3-fault-ticket.drawio.svg)
-
-*Figure R7: State diagram of a Fault ticket*
-
-Residents can cancel a ticket only while it is still Reported and nobody else follows it; if others have tapped "Me too", cancelling only removes the resident as a follower. After the manager assigns it, closing or reopening it is the manager's call. Tapping "Me too" adds a follower and leaves the state alone.
-
 ### Payment claim
 
-![State diagram of a Payment claim](../../../diagrams/resident/resident-state-4-payment-claim.drawio.svg)
+![State diagram of a Payment claim](../../../diagrams/resident/resident-state-3-payment-claim.drawio.svg)
 
-*Figure R8: State diagram of a Payment claim*
+*Figure R7: State diagram of a Payment claim*
 
 A claim starts when the resident records a cash or bank payment, and the amount has to match the bill total (BR-06). Whatever the manager decides also moves the bill; see the Bill diagram.
 
 ### Household account
 
-![State diagram of a Household account](../../../diagrams/resident/resident-state-5-household-account.drawio.svg)
+![State diagram of a Household account](../../../diagrams/resident/resident-state-4-household-account.drawio.svg)
 
-*Figure R9: State diagram of a Household account*
+*Figure R8: State diagram of a Household account*
 
-In Release 1 the whole household shares one account. Too many wrong passwords block the device for 15 minutes (BR-14), not the account, so there is no Locked state.
+In Release 1 the whole household shares one account. Too many wrong passwords block the device for 15 minutes (BR-14), not the account, so there is no Locked state. The manager can't end the occupancy while a payment or claim is in progress, and ending it cancels the household's guest passes (BM-02).
 
-## 4. Data flow diagram (Level 0)
+The fault ticket a resident reports has its state diagram in the Maintenance Staff part, because staff move it through most of its states. A resident can cancel a ticket only while it is still Reported and nobody else follows it; tapping "Me too" adds a follower and leaves the state alone.
 
-Level 0 draws the whole system as a single process, numbered 0. Rectangles are external entities, and each arrow carries data one way. The diagram keeps to the Resident's data: what residents send in, what they get back, and which other people or services that data reaches.
+## 4. Data flow diagrams
 
-![DFD Level 0 (context diagram) for the Resident](../../../diagrams/resident/resident-dfd-level-0.drawio.svg)
-
-*Figure R10: DFD Level 0 (context diagram) for the Resident*
+The team draws one data flow diagram for the whole system, Level 0 (the context diagram), in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md). The Resident's flows are the ones to and from the Resident entity there: log-in details, payments and claims, fault reports, guest passes and feedback going in; bills, receipts, ticket updates, pass codes, the fund summary and announcements coming out.
