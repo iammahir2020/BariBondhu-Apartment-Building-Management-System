@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Charge rates · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}.rate{display:flex;align-items:center;gap:12px}.rate .input{width:136px;text-align:right;font-weight:700}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+</head>
+<body class="proto-phone">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Committee · Charge rates</span></div>
+<div class="proto-stage">
+<div class="phone" style="height: 900px">
+  <header class="topbar">
+    <h1 class="title">Charge rates</h1>
+    <span class="spacer"></span>
+    <a class="lang" href="C-Rates.html" aria-label="Switch to Bangla">বাং</a>
+    <a class="sos round" href="S-Emergency.html" aria-label="Emergency numbers"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg></a>
+  </header>
+  <main class="content" style="gap: 14px">
+    <p class="small" style="font-size: 15px">Enter the rates the meeting agreed. They apply to bills made after you save; bills already made keep their rates.</p>
+    <section class="card stack" style="gap: 12px">
+      <div class="rate"><div class="grow"><label class="h3" for="r1">Service charge</label><div class="small">Now ৳3,500 per flat</div></div><input id="r1" class="input money" value="৳3,800"></div>
+      <div class="divider"></div>
+      <div class="rate"><div class="grow"><label class="h3" for="r2">Generator</label><div class="small">Now ৳800 per flat</div></div><input id="r2" class="input money" value="৳800"></div>
+      <div class="divider"></div>
+      <div class="rate"><div class="grow"><label class="h3" for="r3">Water</label><div class="small">Now ৳550 per flat</div></div><input id="r3" class="input money" value="৳550"></div>
+    </section>
+    <div class="field"><label for="md">Date of the meeting that agreed this</label><input id="md" class="input" value="13 Nov 2026"></div>
+    <a class="btn btn-primary full" href="C-Rates.html">Save new rates</a>
+
+    <div class="stack tight" style="margin-top: 4px">
+      <div class="h3">Rate history</div>
+      <section class="card flush">
+        <div class="listitem"><div class="grow"><div class="h3">Service charge ৳3,200 → ৳3,500</div><div class="small">Meeting 12 Jun 2026 · entered by Farida K., 13 Jun</div></div></div>
+        <div class="listitem"><div class="grow"><div class="h3">Water ৳500 → ৳550</div><div class="small">Meeting 12 Jun 2026 · entered by Farida K., 13 Jun</div></div></div>
+        <div class="listitem"><div class="grow"><div class="h3">Generator ৳700 → ৳800</div><div class="small">Meeting 10 Mar 2026 · entered by Kamal H., 11 Mar</div></div></div>
+      </section>
+    </div>
+  </main>
+  <nav class="navbar" aria-label="Main">
+    <a href="C-Home.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>Home</a>
+    <a href="C-Expense.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg>Decide</a>
+    <a class="on" href="C-Rates.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>Rates</a>
+    <a href="C-Feedback.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>Feedback</a>
+  </nav>
+</div>
+</div>
+<script src="hotspots.js"></script>
+</body>
+</html>

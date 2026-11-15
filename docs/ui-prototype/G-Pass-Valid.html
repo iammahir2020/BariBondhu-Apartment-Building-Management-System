@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>পাস বৈধ · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@600&amp;display=swap">
+<style>body{margin:0}.result{background:#1E6B34;color:#fff;padding:22px 20px;display:flex;gap:14px;align-items:center}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+</head>
+<body class="proto-phone">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Guard · Pass valid, record entry</span></div>
+<div class="proto-stage">
+<template id="screen">
+<div class="phone bn" style="height: 800px">
+  <header class="topbar sub">
+    <a class="iconbtn" href="G-Home.html" aria-label="Back"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
+    <div class="stack" style="gap: 0"><div class="h3">কোড <span class="mono">482 913</span></div><div class="en-hint">Code checked 7:05 pm</div></div>
+    <span class="spacer"></span>
+    <a class="sos" href="S-Emergency.html"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>জরুরি</a>
+  </header>
+  <div class="result" role="status">
+    <span style="width: 56px; height: 56px; border-radius: 28px; background: rgba(255,255,255,.18); display: grid; place-items: center; flex: none"><svg class="i lg" viewBox="0 0 24 24" aria-hidden="true" style="stroke-width: 2.8"><path d="M4 12l5 5L20 6"/></svg></span>
+    <div><div style="font-size: 26px; font-weight: 700; line-height: 1.2">পাস বৈধ</div><div class="en-hint" style="color: #CDEBD5">Pass valid · until 11:00 pm</div></div>
+  </div>
+  <main class="content" style="gap: 14px">
+    <section class="card" style="padding: 4px 16px">
+      <div class="line"><span class="small">অতিথি <span class="en-hint">Guest</span></span><span class="h3">রফিক হাসান</span></div>
+      <div class="line"><span class="small">ফ্ল্যাট <span class="en-hint">Flat</span></span><span class="h2">5B</span></div>
+      <div class="line"><span class="small">অনুমতি <span class="en-hint">Approved</span></span><span class="h3">৪ জন</span></div>
+      <div class="line"><span class="small">আরও ঢুকতে পারবেন <span class="en-hint">Can still enter</span></span><span class="h2" style="color: var(--ok)">২ জন</span></div>
+    </section>
+    <div class="field"><span class="flabel">এখন কতজন ঢুকছেন? <span class="en-hint">How many are arriving now?</span></span>
+      <div class="stepper" style="height: 60px"><button type="button" style="height: 60px; width: 64px" aria-label="One fewer" onClick="{{ dec }}">−</button><span class="val" style="font-size: 24px" aria-live="polite">{{ countBn }}</span><button type="button" style="height: 60px; width: 64px" aria-label="One more" onClick="{{ inc }}">+</button></div>
+    </div>
+    <span class="spacer"></span>
+    <a class="btn btn-primary full" href="G-Inside.html" style="min-height: 60px; font-size: 18px">{{ countBn }} জনের প্রবেশ লিখুন</a>
+    <div class="en-hint" style="text-align: center">Record entry · the flat gets a notice</div>
+  </main>
+</div>
+</template>
+<div id="mount"></div>
+</div>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { n: 2 }; }
+  renderVals() {
+    const n = this.state.n;
+    const bn = '০১২৩৪৫৬৭৮৯';
+    return {
+      countBn: String(n).split('').map((d) => bn[+d]).join(''),
+      inc: () => this.setState({ n: Math.min(2, n + 1) }),
+      dec: () => this.setState({ n: Math.max(1, n - 1) })
+    };
+  }
+}
+</script>
+<script src="proto.js"></script>
+<script src="hotspots.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Announcements · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}.seg3{grid-template-columns:repeat(3,minmax(0,1fr))}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+</head>
+<body class="proto-desk">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Manager · Announcements</span></div>
+<div class="shell">
+  <nav class="side" aria-label="Manager">
+    <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>BariBondhu</div>
+    <a class="nav" href="M-Dashboard.html">Dashboard</a>
+    <div class="sect">Money</div>
+    <a class="nav" href="M-Claims.html">Payment claims<span class="count">3</span></a>
+    <a class="nav" href="M-Bills.html">Monthly bills</a>
+    <a class="nav" href="M-Defaulters.html">Unpaid dues</a>
+    <a class="nav" href="M-Expenses.html">Expenses</a>
+    <a class="nav" href="M-Fund.html">Fund summary</a>
+    <div class="sect">Building</div>
+    <a class="nav" href="M-Tickets.html">Tickets<span class="count">5</span></a>
+    <a class="nav" href="M-Shifts.html">Guard shifts</a>
+    <a class="nav" href="M-Accounts.html">Accounts</a>
+    <a class="nav on" href="M-Announcements.html">Announcements</a>
+    <a class="nav" href="M-Emergency.html">Emergency numbers</a>
+  </nav>
+  <div class="main">
+    <header class="deskbar">
+      <h1 class="h1 grow">Announcements</h1>
+      <a class="sos" href="S-Emergency.html"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>Emergency</a>
+    </header>
+    <div class="deskbody">
+      <div class="panes">
+        <section class="pane-main card stack" style="gap: 14px">
+          <div class="h2">New announcement</div>
+          <div class="field"><label for="tt">Title</label><input id="tt" class="input" value="Power cut Monday, 9 am to 1 pm"></div>
+          <div class="field"><label for="ms">Message (Bangla or English)</label><textarea id="ms" class="input" style="min-height: 110px">DESCO will shut the line for maintenance. The generator will run the lifts and water pump only. Please charge your phones before 9 am.</textarea></div>
+          <div class="field"><span class="flabel">Send to</span><div class="seg seg3" role="group" aria-label="Send to"><button type="button" class="on">All residents</button><button type="button">One block</button><button type="button">One floor</button></div><span class="hint">All residents also reaches committee members.</span></div>
+          <label class="check"><input type="checkbox" checked="checked">Urgent: pin it on residents' home screens</label>
+          <div class="field" style="max-width: 320px"><label for="ex">Pinned until</label><input id="ex" class="input" value="Mon 17 Nov, 1:00 pm"></div>
+          <div class="row" style="gap: 10px"><a class="btn btn-primary sm" href="M-Announcements.html">Send in app and by email</a><span class="small">No SMS in Release 1.</span></div>
+        </section>
+        <aside class="pane-side stack">
+          <div class="h2">Sent</div>
+          <div class="card flush">
+            <div class="listitem"><div class="grow"><div class="row" style="gap: 8px"><span class="h3">Water off today, 10 am to 2 pm</span></div><div class="small">All residents · today 7:30 am</div><span class="badge b-bad" style="margin-top: 6px">Urgent until 2 pm</span></div><a class="tbtn" href="M-Announcements.html">Edit</a></div>
+            <div class="listitem"><div class="grow"><div class="h3">Lift 2 servicing on Saturday</div><div class="small">Block A · 12 Nov</div></div><a class="tbtn" href="M-Announcements.html">Edit</a></div>
+            <div class="listitem"><div class="grow"><div class="h3">October fund summary is out</div><div class="small">All residents · 3 Nov</div></div><a class="tbtn" href="M-Announcements.html">Remove</a></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="hotspots.js"></script>
+</body>
+</html>

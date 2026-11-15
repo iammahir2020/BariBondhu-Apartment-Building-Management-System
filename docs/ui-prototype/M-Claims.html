@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Payment claims · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+</head>
+<body class="proto-desk">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Manager · Payment claims</span></div>
+<div class="shell">
+  <nav class="side" aria-label="Manager">
+    <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>BariBondhu</div>
+    <a class="nav" href="M-Dashboard.html">Dashboard</a>
+    <div class="sect">Money</div>
+    <a class="nav on" href="M-Claims.html">Payment claims<span class="count">3</span></a>
+    <a class="nav" href="M-Bills.html">Monthly bills</a>
+    <a class="nav" href="M-Defaulters.html">Unpaid dues</a>
+    <a class="nav" href="M-Expenses.html">Expenses</a>
+    <a class="nav" href="M-Fund.html">Fund summary</a>
+    <div class="sect">Building</div>
+    <a class="nav" href="M-Tickets.html">Tickets<span class="count">5</span></a>
+    <a class="nav" href="M-Shifts.html">Guard shifts</a>
+    <a class="nav" href="M-Accounts.html">Accounts</a>
+    <a class="nav" href="M-Announcements.html">Announcements</a>
+    <a class="nav" href="M-Emergency.html">Emergency numbers</a>
+  </nav>
+  <div class="main">
+    <header class="deskbar">
+      <h1 class="h1 grow">Payment claims</h1>
+      <a class="tbtn" href="M-Claims.html"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Record a payment handed to me</a>
+      <a class="lang" href="M-Claims.html" aria-label="Switch to Bangla">বাং</a>
+      <a class="sos" href="S-Emergency.html"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>Emergency</a>
+    </header>
+    <div class="deskbody">
+      <div class="panes">
+        <div class="pane-main stack">
+          <div class="tablewrap">
+            <table class="t">
+              <thead><tr><th>Flat</th><th>Bill</th><th class="num">Amount</th><th>Paid on</th><th>Method</th><th>Waiting</th></tr></thead>
+              <tbody>
+                <tr class="sel"><td><b>7D</b></td><td>Nov 2026</td><td class="num">৳4,850.00</td><td>15 Nov</td><td>Cash</td><td>4 hours</td></tr>
+                <tr><td><b>3A</b></td><td>Nov 2026</td><td class="num">৳4,850.00</td><td>13 Nov</td><td>Bank transfer</td><td>2 days</td></tr>
+                <tr><td><b>11B</b></td><td>Oct 2026</td><td class="num">৳9,450.00</td><td>14 Nov</td><td>Cash</td><td>1 day</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="h2" style="margin-top: 8px">Overpayments to refund</div>
+          <div class="tablewrap">
+            <table class="t">
+              <thead><tr><th>Flat</th><th>Why it's flagged</th><th class="num">Amount</th><th></th></tr></thead>
+              <tbody>
+                <tr><td><b>9A</b></td><td>Gateway payment arrived after the bill was already Paid in cash</td><td class="num">৳4,850.00</td><td><a class="tbtn" href="M-Claims.html">Mark refunded</a></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="small">Refund the money outside the app, then mark it refunded.</div>
+        </div>
+        <aside class="pane-side card stack" style="gap: 14px">
+          <div class="row between"><div class="h2">Flat 7D · November</div><span class="badge b-info">Awaiting verification</span></div>
+          <div class="money" style="font-size: 28px">৳4,850.00</div>
+          <div class="small">Bill total ৳4,850.00 · matches</div>
+          <div class="photo" style="height: 180px" role="img" aria-label="Payment slip photo">Slip photo from the resident</div>
+          <div class="stack tight" style="font-size: 14px"><div><span class="label">Method</span> Cash to manager</div><div><span class="label">Paid on</span> 15 Nov 2026</div><div><span class="label">Recorded</span> 15 Nov, 3:30 pm</div></div>
+          <div class="field"><label for="rs">Reason (needed to reject)</label><textarea id="rs" class="input" placeholder="For example: no cash received on this date" style="min-height: 72px"></textarea></div>
+          <div class="row" style="gap: 10px"><a class="btn btn-danger-outline grow sm" href="M-Claims.html">Reject</a><a class="btn btn-primary grow sm" href="M-Claims.html">Accept, mark Paid</a></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="hotspots.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Decide an expense · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+</head>
+<body class="proto-phone">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Committee · Decide an expense</span></div>
+<div class="proto-stage">
+<template id="screen">
+<div class="phone" style="height: 860px">
+  <header class="topbar sub">
+    <a class="iconbtn" href="C-Home.html" aria-label="Back"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
+    <h1 class="title">Expense 1 of 2</h1>
+    <span class="spacer"></span>
+    <a class="sos round" href="S-Emergency.html" aria-label="Emergency numbers"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg></a>
+  </header>
+  <main class="content" style="gap: 14px">
+    <div class="row between top">
+      <div><div class="h2">Water pump motor rewinding</div><div class="small">Recorded by the manager, 11 Nov 2026</div></div>
+      <sc-if value="{{ waiting }}" hint-placeholder-val="{{ true }}"><span class="badge b-warn">Waiting</span></sc-if>
+      <sc-if value="{{ approved }}" hint-placeholder-val="{{ false }}"><span class="badge b-ok">Approved</span></sc-if>
+    </div>
+    <div class="money big">৳18,500.00</div>
+    <div class="photo" style="height: 150px" role="img" aria-label="Receipt photo">Receipt photo · Rahman Electric Works</div>
+    <section class="card" style="padding: 4px 16px">
+      <div class="line"><span class="small">Category</span><span>Repair</span></div>
+      <div class="line"><span class="small">Expense date</span><span>10 Nov 2026</span></div>
+      <div class="line"><span class="small">Note</span><span style="text-align: right">Motor burnt out on 9 Nov. Rewound and refitted.</span></div>
+    </section>
+
+    <sc-if value="{{ rejecting }}" hint-placeholder-val="{{ false }}">
+      <div class="field"><label for="rr">Why is it rejected?</label><textarea id="rr" class="input error" placeholder="The manager sees this reason"></textarea><span class="errtext">Write a reason</span></div>
+    </sc-if>
+    <sc-if value="{{ approved }}" hint-placeholder-val="{{ false }}">
+      <div class="alert alert-ok"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg><div><div class="h3">Approved</div><div>It now counts in November's fund summary. It can't be edited; mistakes are fixed with a correcting expense.</div></div></div>
+    </sc-if>
+
+    <span class="spacer"></span>
+    <sc-if value="{{ waiting }}" hint-placeholder-val="{{ true }}">
+      <div class="row" style="gap: 10px">
+        <button type="button" class="btn btn-danger-outline grow" onClick="{{ reject }}">Reject</button>
+        <button type="button" class="btn btn-primary grow" onClick="{{ approve }}">Approve</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ approved }}" hint-placeholder-val="{{ false }}"><a class="btn btn-primary full" href="C-Home.html">Next expense</a></sc-if>
+  </main>
+</div>
+</template>
+<div id="mount"></div>
+</div>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":860}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { mode: 'waiting' }; }
+  renderVals() {
+    const m = this.state.mode;
+    return {
+      waiting: m !== 'approved', approved: m === 'approved', rejecting: m === 'reject',
+      approve: () => this.setState({ mode: 'approved' }),
+      reject: () => this.setState({ mode: 'reject' })
+    };
+  }
+}
+</script>
+<script src="proto.js"></script>
+<script src="hotspots.js"></script>
+</body>
+</html>
