@@ -102,8 +102,8 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Precondition** | The bill is Unpaid and no payment is pending. |
 | **Trigger** | The resident chooses Pay online (specialises Pay bill). |
 | **Main success scenario** | 1. System sets the bill to Payment pending and disables Record cash or bank payment (BR-03).<br>2. System sends a payment request for the bill total to the Payment Gateway and opens its payment page.<br>3. Resident pays on the gateway's page.<br>4. Payment Gateway confirms the payment to the system server to server.<br>5. System sets the bill to Paid, creates a receipt with a receipt number and the gateway's transaction ID, and notifies the resident. |
-| **Alternate flows** | 3a. The payment fails or the resident cancels → the bill returns to Unpaid and the gateway's reason is shown.<br>3b. The resident closes the app halfway → steps 4 and 5 still happen when the gateway confirms.<br>4a. No confirmation after 30 minutes → System asks the gateway for the status. If there is no successful payment, the bill returns to Unpaid (BR-04). A confirmation that arrives later still makes the bill Paid. |
-| **Postcondition** | The bill is Paid with a receipt, or Unpaid again with nothing charged. Each change is logged (NFR-27). |
+| **Alternate flows** | 3a. The payment fails or the resident cancels → the bill returns to Unpaid and the gateway's reason is shown.<br>3b. The resident closes the app halfway → steps 4 and 5 still happen when the gateway confirms.<br>4a. No confirmation after 30 minutes → System asks the gateway for the status. If there is no successful payment, the bill returns to Unpaid (BR-04). A confirmation that arrives later makes the bill Paid only if it is still Unpaid or Payment pending.<br>4b. The bill was paid another way or carried forward before the late confirmation arrives → the bill doesn't change, and the payment is flagged to the manager as an overpayment to refund (BR-04, BM-04). |
+| **Postcondition** | The bill is Paid with a receipt, or Unpaid again with nothing charged. After 4b the bill is unchanged and the overpayment waits for the manager. Each change is logged (NFR-27). |
 | **Non-functional** | Only the gateway's confirmation makes the bill Paid (BR-02, NFR-15). No confirmed payment is lost after a restore (NFR-20). Sandbox gateway only, no real money (constraint 2.4). |
 
 ### UC-R07 Record cash or bank payment
@@ -115,7 +115,7 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Precondition** | The bill is Unpaid and no online payment is pending. |
 | **Trigger** | The resident chooses Record cash or bank payment (specialises Pay bill). |
 | **Main success scenario** | 1. Resident enters the amount, the date, the method (cash or bank transfer) and, optionally, a photo of the slip.<br>2. System checks that the amount equals the bill total.<br>3. System saves the claim, sets the bill to Awaiting verification and notifies the manager.<br>4. Manager accepts the claim (BM-04). The bill becomes Paid and the resident can download a receipt. |
-| **Alternate flows** | 1a. The photo is not a JPG or PNG, or is over 5 MB → refused with a message (NFR-09).<br>2a. The amount is not the bill total → "The amount must match the bill total (৳ total). Partial payments aren't supported." Nothing is saved (BR-06).<br>4a. Manager rejects the claim with a reason → the bill returns to Unpaid and the resident sees the reason.<br>4b. The due date passes while the bill is Awaiting verification → the flat stays off the defaulters list until the manager decides (BR-08). |
+| **Alternate flows** | 1a. The photo is not a JPG or PNG, or is over 5 MB → refused with a message (NFR-09).<br>1b. The payment date is in the future → "Check the payment date". Nothing is saved.<br>2a. The amount is not the bill total → "The amount must match the bill total (৳ total). Partial payments aren't supported." Nothing is saved (BR-06).<br>4a. Manager rejects the claim with a reason → the bill returns to Unpaid and the resident sees the reason. If a newer bill exists and is still Unpaid, the amount moves onto it as a Carried forward line; otherwise the old bill stays Unpaid and can be paid on its own (BR-05).<br>4b. The due date passes while the bill is Awaiting verification → the flat stays off the defaulters list until the manager decides (BR-08). |
 | **Postcondition** | The claim is recorded. The bill is Awaiting verification, then Paid or Unpaid. |
 | **Non-functional** | Slip photos are visible only to the manager and the flat that uploaded them (NFR-14). A bill becomes Paid only as set out in BR-02 (NFR-15). |
 
@@ -192,9 +192,9 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Actors** | Primary: Resident · Secondary: Building Manager |
 | **Precondition** | The resident's own ticket is still Reported («include» Log in). |
 | **Trigger** | The resident opens the ticket and taps Cancel. |
-| **Main success scenario** | 1. System asks the resident to confirm.<br>2. Resident confirms.<br>3. System sets the ticket to Cancelled and notifies the manager. |
-| **Alternate flows** | The ticket is already Assigned → Cancel isn't offered. Only the manager can close it.<br>2a. The resident doesn't confirm → nothing changes. |
-| **Postcondition** | The ticket is Cancelled. |
+| **Main success scenario** | 1. System asks the resident to confirm.<br>2. Resident confirms.<br>3. Nobody else follows the ticket, so System sets it to Cancelled and notifies the manager. |
+| **Alternate flows** | The ticket is already Assigned → Cancel isn't offered. Only the manager can close it.<br>2a. The resident doesn't confirm → nothing changes.<br>3a. Other residents follow the ticket ("Me too") → System only removes this resident as a follower. The ticket stays Reported for the others, and the manager is not notified. |
+| **Postcondition** | The ticket is Cancelled, or, after 3a, it stays Reported and this resident no longer follows it. |
 | **Non-functional** | The change is logged with the account, date and time (NFR-27). |
 
 ### UC-R14 Create guest pass
@@ -206,7 +206,7 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Precondition** | The resident is logged in («include» Log in). |
 | **Trigger** | The resident taps New guest pass. |
 | **Main success scenario** | 1. Resident enters the guest's name, the number of people (1 to 20) and a start and end date-time.<br>2. System checks that the end is after the start and no more than 24 hours later.<br>3. System creates a 6-digit code and a matching QR code (BR-11) and saves the pass.<br>4. Resident shares the code or the QR code from the phone. |
-| **Alternate flows** | 2a. The end is before the start, or more than 24 hours after it → "Check the visit times", no pass is created.<br>2b. The number of people is outside 1 to 20 → refused with a message.<br>After step 4, when the guard checks the guests in (SG-03), the resident gets a notification with the number who arrived. |
+| **Alternate flows** | 2a. The end is before the start, more than 24 hours after it, or already past → "Check the visit times", no pass is created.<br>2b. The number of people is outside 1 to 20 → refused with a message.<br>After step 4, when the guard checks the guests in (SG-03), the resident gets a notification with the number who arrived. |
 | **Postcondition** | The pass is Scheduled, or Active if it starts now. The guard can check it during its time window. |
 | **Non-functional** | Codes come from a secure random source and are tied to one flat and one pass (NFR-08). At most 4 taps (NFR-24). Pass checking is available 99.5% of the time (NFR-18). The guard never sees the resident's phone number (NFR-10). |
 
@@ -218,9 +218,9 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Actors** | Primary: Resident |
 | **Precondition** | The pass is Scheduled, Active or Partly used («include» Log in). |
 | **Trigger** | The resident opens the pass and taps Cancel. |
-| **Main success scenario** | 1. System asks the resident to confirm.<br>2. Resident confirms.<br>3. System sets the pass to Cancelled. The code and QR code stop working at the gate straight away. |
+| **Main success scenario** | 1. System asks the resident to confirm.<br>2. Resident confirms.<br>3. System sets the pass to Cancelled. The code and QR code stop working for new entries at the gate straight away; guests already inside can still be checked out (BR-11). |
 | **Alternate flows** | The pass is Fully used or Expired → Cancel isn't offered.<br>2a. The resident doesn't confirm → nothing changes. |
-| **Postcondition** | The pass is Cancelled. Guests already checked in stay in the visitor log. |
+| **Postcondition** | The pass is Cancelled. Guests already checked in stay in the visitor log, and the guard can still record their exit. The manager also cancels a household's passes when its occupancy ends (BM-02). |
 | **Non-functional** | A gate check returns within 2 s and shows the pass as cancelled (NFR-02). The change is logged (NFR-27). |
 
 ### UC-R16 Give feedback
@@ -257,7 +257,7 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 
 *Figure R5: State diagram of a Bill*
 
-A bill is in one payment flow at a time (BR-03), and only the gateway's confirmation or the manager's decision can make it Paid (BR-02). Paid and Carried forward are final. To fix a mistake on a Paid bill, the manager adds an adjustment line to next month's bill (BR-07).
+A bill is in one payment flow at a time (BR-03), and only the gateway's confirmation, the manager's decision, or a correction that brings the total to ৳0 or below can make it Paid (BR-02, BR-07). A bill that returns to Unpaid after a newer bill exists moves onto that bill only if it is still Unpaid; otherwise it waits for the next bill run (BR-05). Paid and Carried forward are final. To fix a mistake on a Paid bill, the manager adds an adjustment line to next month's bill (BR-07).
 
 ### Guest pass
 
@@ -265,7 +265,7 @@ A bill is in one payment flow at a time (BR-03), and only the gateway's confirma
 
 *Figure R6: State diagram of a Guest pass*
 
-A pass works from its start date-time to its end date-time, 24 hours at most (BR-11). Once it is Fully used, Cancelled or Expired, it stays that way.
+A pass works from its start date-time to its end date-time, 24 hours at most (BR-11). Once it is Fully used, Cancelled or Expired, it stays that way. Cancelled and Expired stop new entries only: guests already inside can still be checked out. Passes are also cancelled when the household moves out (BM-02).
 
 ### Fault ticket
 
@@ -273,7 +273,7 @@ A pass works from its start date-time to its end date-time, 24 hours at most (BR
 
 *Figure R7: State diagram of a Fault ticket*
 
-Residents can cancel a ticket only while it is still Reported. After the manager assigns it, closing or reopening it is the manager's call. Tapping "Me too" adds a follower and leaves the state alone.
+Residents can cancel a ticket only while it is still Reported and nobody else follows it; if others have tapped "Me too", cancelling only removes the resident as a follower. After the manager assigns it, closing or reopening it is the manager's call. Tapping "Me too" adds a follower and leaves the state alone.
 
 ### Payment claim
 

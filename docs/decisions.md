@@ -1,6 +1,7 @@
 # Technology and design decisions
 
-Decided on 10 November 2026.
+Decided on 10 November 2026. Updated on 15 November 2026: the database moved from MongoDB Atlas to Supabase
+(PostgreSQL) with Drizzle, and login moved from Auth.js to Supabase Auth.
 
 BariBondhu manages one apartment building for five user classes. Most of what it does is move records through states:
 bills, payment claims, fault tickets, guest passes. We are five people with three weeks to build ten features, so we
@@ -12,7 +13,8 @@ picked a stack that catches mistakes early and is quick for all of us to learn.
 - **Why:** The same language runs in the browser and on the server, so anyone can work on any part of a feature. Types
   catch wrong field names and missing values before the code runs, which matters when five people's features share
   the same models. A bill's status can be typed as `'Unpaid' | 'Awaiting verification' | 'Paid'`, so the editor rejects
-  any state that isn't in our state diagrams. Next.js, shadcn/ui and Mongoose all ship with TypeScript support.
+  any state that isn't in our state diagrams. Next.js, shadcn/ui, Drizzle and the Supabase client all ship with
+  TypeScript support.
 - **Alternatives considered:** Plain JavaScript (nothing new to learn, but mistakes only show up at runtime). Python
   with Django (fast for admin-style apps, but we'd still need a separate frontend).
 
@@ -24,8 +26,8 @@ picked a stack that catches mistakes early and is quick for all of us to learn.
   |---|---|
   | Web app (frontend and backend) | Next.js 15, App Router |
   | UI | shadcn/ui with Tailwind CSS |
-  | Database | MongoDB Atlas with Mongoose |
-  | Login and roles | Auth.js, one role per user class |
+  | Database | Supabase (PostgreSQL), accessed through the Drizzle ORM |
+  | Login and roles | Supabase Auth, one role per user class |
   | Testing | Jest and React Testing Library |
   | Code review | SonarCloud and pull request reviews |
   | Demo hosting | Vercel |
@@ -35,12 +37,33 @@ picked a stack that catches mistakes early and is quick for all of us to learn.
     React components that fetch from `/api/...` routes, and we don't use server actions.
   - shadcn/ui is built on Radix, so keyboard use and screen-reader labels work out of the box. All components share one
     theme, which helps with Nielsen's consistency heuristic. The component code sits in our repo and we can edit it.
-  - Atlas is free and needs no local install. The whole team shares one database.
-  - Auth.js stores each user's role, and every API route checks it against the SRS permissions matrix.
+  - Our data is relational: a flat has occupancies, an occupancy has bills, a bill has lines and payments, a ticket
+    has followers and status changes. PostgreSQL keeps these links correct with foreign keys, and a payment and the
+    bill it marks Paid can be saved in one transaction. Supabase hosts PostgreSQL on a free plan with no local install,
+    and the whole team shares one project.
+  - Drizzle defines each table in TypeScript, so the database schema and our types come from the same code. A bill's
+    status is a PostgreSQL enum, so the database rejects any state that isn't in our state diagrams, just as the
+    editor does. `drizzle-kit` turns schema changes into SQL migration files that we commit and review like any other
+    code.
+  - Supabase Auth comes with the database, so there is no separate login service to set up. It stores hashed
+    passwords, makes reset links and keeps sessions (BR-15, NFR-04). Each user's role is stored in the `profiles` table next to their
+    Supabase user, and every API route checks it against the SRS permissions table. Drizzle connects to the database
+    directly, which skips Supabase's row-level security, so these route checks are the access control and they are
+    unit tested (NFR-06).
+  - Supabase Auth signs users in by email, but the SRS gives every account a generated username, and some residents
+    have no email (BR-15, NFR-05). So each account is created by the server with Supabase's admin API under an
+    internal address made from its username (for example `bb-4k7q2m@users.baribondhu.invalid`), and the log-in screen
+    asks only for the username. A real email, when there is one, is stored on the profile. For Forgot password, the
+    server asks the admin API for a reset link and sends it to that real email itself. Users without an email get a
+    new temporary password from the manager (BM-02).
+  - Supabase's built-in email sender only delivers to the project team and is rate-limited, so reset links and
+    notifications are sent through our own email service (SMTP), the one the SRS lists in section 2.
   - SonarCloud is free for public repos and scans every pull request on its own.
 - **Alternatives considered:** React and Express as two separate apps (more setup). MUI (no Tailwind needed, but harder
-  to style with the App Router). PostgreSQL with Prisma (a close call, since our data is relational, but Atlas needs no
-  setup).
+  to style with the App Router). MongoDB Atlas with Mongoose (our first choice, but our records are linked to each
+  other, and Mongo can't enforce those links). Prisma instead of Drizzle (more beginner guides, but it adds a code
+  generation step and its own schema language, while Drizzle is plain TypeScript). Auth.js instead of Supabase Auth (works
+  with any database, but we would have to build password resets and email sending ourselves).
 
 ## 3. Coding standards
 
@@ -99,7 +122,7 @@ picked a stack that catches mistakes early and is quick for all of us to learn.
 
   | Part | Folder | Example |
   |---|---|---|
-  | Model | `src/models/` | `Bill.ts` |
+  | Model | `src/models/` (Drizzle tables and their types), migrations in `drizzle/` | `Bill.ts` |
   | Service | `src/services/` | `billService.ts` |
   | Controller | `src/app/api/<resource>/route.ts` | `src/app/api/bills/route.ts` |
   | View | `src/app/<role>/.../page.tsx`, `src/components/` | `src/app/resident/bills/page.tsx` |

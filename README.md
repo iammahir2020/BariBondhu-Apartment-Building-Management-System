@@ -26,14 +26,15 @@ Course project for CSE 451 Software Engineering, Autumn 2026, Independent Univer
 
 | Path | What it holds |
 |---|---|
-| `docs/srs/SRS.docx` | Software Requirements Specification, v1.2 (the merged SRS only; each class's working tab is in `docs/sds/<class>/`) |
+| `docs/srs/SRS.md` | Software Requirements Specification, v1.3. This is the copy we edit |
+| `docs/srs/archive/`, `docs/sds/resident/archive/` | Archived Word versions, not maintained. The `.md` files are the current copies |
+| `docs/srs/figures/` | Figures used in the SRS |
 | `docs/srs/latex/` | LaTeX template for the final SRS report |
-| `docs/sds/` | Design inputs: use case narratives, state diagrams and DFDs, one folder per user class |
+| `docs/sds/` | Design inputs: use case narratives, state diagrams and DFDs, one folder per user class, plus `design-inputs-from-srs.md` (states, use case links, data flows and entities shared by all classes) |
 | `docs/decisions.md` | Technology and design decisions with their reasons |
 | `diagrams/` | Diagram sources (`.drawio.svg`), one folder per user class |
 
-Source code and tests will be added once the language, framework and architectural pattern are chosen
-(see `docs/decisions.md`).
+Source code and tests come next, built with the stack and pattern in `docs/decisions.md`.
 
 ## Deliverables
 
@@ -41,7 +42,7 @@ Source code and tests will be added once the language, framework and architectur
 |---|---|---|
 | 2026-10-15 | SRS with user stories | Done |
 | 2026-10-28 | Use case diagrams, use case narratives, state diagrams (4+ objects), DFD Level 0 | Done |
-| 2026-11-10 | Language, frameworks, coding standards, documentation tool, architectural pattern | In progress |
+| 2026-11-10 | Language, frameworks, coding standards, documentation tool, architectural pattern | Done |
 | 2026-11-28 | Two features per member built (story, UI, code, review, test) | Not started |
 | 2026-11-28 | Final report (12 sections) and GitHub Wiki, one page per section. Hard deadline, no extension | Not started |
 | 2026-11-29 | Project demonstration and viva | Not started |
