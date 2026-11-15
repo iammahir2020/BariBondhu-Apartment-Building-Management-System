@@ -1,0 +1,18 @@
+/* Frame around the screens when the prototype runs on its own in a browser */
+.proto-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; min-height: 44px; padding: 6px 16px; background: #14201F; color: #DCE3E1; font: 500 13px/1.3 Inter, system-ui, sans-serif; }
+.proto-bar a { color: #fff; font-weight: 700; text-decoration: none; }
+.proto-bar a:hover { text-decoration: underline; }
+.proto-bar .proto-title { color: #9FB0AC; }
+.proto-ctl { display: inline-flex; align-items: center; gap: 6px; color: #fff; }
+.proto-ctl select { font: inherit; padding: 4px 6px; border-radius: 6px; border: 0; }
+.proto-ctl input { width: 16px; height: 16px; }
+.proto-hot { margin-left: auto; }
+html.hotspots a[href], html.hotspots button, html.hotspots input, html.hotspots select, html.hotspots textarea { outline: 2px solid #FF2D2D; outline-offset: 2px; }
+html.hotspots .proto-bar a, html.hotspots .proto-bar input, html.hotspots .proto-bar select { outline: none; }
+body.proto-phone { background: #D5DDDA; }
+.proto-stage { display: flex; justify-content: center; padding: 24px 16px 48px; overflow-x: auto; }
+.proto-stage > .phone { border-radius: 24px; box-shadow: 0 12px 40px rgba(20, 32, 31, 0.22); flex: none; }
+@media (max-width: 420px) {
+  .proto-stage { padding: 0; }
+  .proto-stage > .phone { border-radius: 0; box-shadow: none; }
+}

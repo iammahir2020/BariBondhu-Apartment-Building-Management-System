@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Fund summary · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}.bar{height:10px;border-radius:5px;background:var(--brand-700)}.track{height:10px;border-radius:5px;background:#E3EAE8;flex:1;overflow:hidden}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+</head>
+<body class="proto-phone">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Resident · Fund summary</span></div>
+<div class="proto-stage">
+<div class="phone" style="height: 860px">
+  <header class="topbar sub">
+    <a class="iconbtn" href="R-Home.html" aria-label="Back"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
+    <h1 class="title">Fund summary</h1>
+    <span class="spacer"></span>
+    <a class="sos round" href="S-Emergency.html" aria-label="Emergency numbers"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg></a>
+  </header>
+  <main class="content" style="gap: 14px">
+    <div class="row between"><div><div class="h2">October 2026</div><div class="small">Published 3 Nov 2026</div></div><span class="badge b-ok">Published</span></div>
+    <div class="alert alert-info" style="padding: 10px 14px"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div>November isn't ready yet. It's published after the month ends.</div></div>
+    <section class="card" style="padding: 4px 16px">
+      <div class="line"><span>Opening balance</span><span class="money" style="font-weight: 500">৳3,12,400.00</span></div>
+      <div class="line"><span>Collected</span><span class="money" style="color: var(--ok)">+ ৳4,26,850.00</span></div>
+      <div class="line"><span>Spent</span><span class="money" style="color: var(--bad)">− ৳3,65,100.00</span></div>
+      <div class="line total"><span>Closing balance</span><span class="money">৳3,74,150.00</span></div>
+    </section>
+    <section class="card stack" style="gap: 12px">
+      <div class="h3">Where the money went</div>
+      <div class="stack tight"><div class="row between"><span>Salaries</span><span class="money" style="font-weight: 600">৳1,95,000</span></div><div class="track"><div class="bar" style="width: 53%"></div></div></div>
+      <div class="stack tight"><div class="row between"><span>Utilities</span><span class="money" style="font-weight: 600">৳1,12,300</span></div><div class="track"><div class="bar" style="width: 31%"></div></div></div>
+      <div class="stack tight"><div class="row between"><span>Repairs</span><span class="money" style="font-weight: 600">৳48,200</span></div><div class="track"><div class="bar" style="width: 13%"></div></div></div>
+      <div class="stack tight"><div class="row between"><span>Other</span><span class="money" style="font-weight: 600">৳9,600</span></div><div class="track"><div class="bar" style="width: 3%"></div></div></div>
+    </section>
+    <section class="card row between"><div><div class="h3">Still owed by flats</div><div class="small">Total only. No flat is named.</div></div><span class="money" style="font-size: 17px">৳58,200.00</span></section>
+    <div class="small">Only expenses the committee approved are counted.</div>
+  </main>
+</div>
+</div>
+<script src="hotspots.js"></script>
+</body>
+</html>

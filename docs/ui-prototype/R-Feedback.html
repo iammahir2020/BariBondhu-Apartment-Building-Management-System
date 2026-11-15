@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Rate building services · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}.star{width:52px;height:52px;border:0;background:transparent;display:grid;place-items:center;padding:0}.star svg{width:38px;height:38px;stroke:#C08A00;stroke-width:1.6;stroke-linejoin:round}.star.on svg{fill:#F2B544}.star.off svg{fill:none;stroke:#AEBBB8}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+</head>
+<body class="proto-phone">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Resident · Feedback</span></div>
+<div class="proto-stage">
+<template id="screen">
+<div class="phone" style="height: 860px">
+  <header class="topbar sub">
+    <a class="iconbtn" href="R-Home.html" aria-label="Back"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
+    <h1 class="title">Rate services</h1>
+    <span class="spacer"></span>
+    <a class="sos round" href="S-Emergency.html" aria-label="Emergency numbers"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg></a>
+  </header>
+  <main class="content" style="gap: 18px">
+    <p class="small" style="font-size: 15px">The committee reads these each month. For a specific fault, report it instead.</p>
+    <div class="field"><span class="flabel">Which service?</span>
+      <div class="chips"><button type="button" class="chip">Cleaning</button><button type="button" class="chip on">Security</button><button type="button" class="chip">Maintenance</button><button type="button" class="chip">Lift</button><button type="button" class="chip">Other</button></div>
+    </div>
+    <div class="field"><span class="flabel">Your rating</span>
+      <div class="row" style="gap: 0" role="group" aria-label="Rating out of 5">
+        <sc-for list="{{ stars }}" as="s" hint-placeholder-count="5">
+          <button type="button" class="{{ s.cls }}" aria-label="{{ s.label }}" onClick="{{ s.pick }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg></button>
+        </sc-for>
+      </div>
+      <span class="hint">{{ ratingText }}</span>
+    </div>
+    <div class="field"><label for="cm">Comment (optional)</label><textarea id="cm" class="input">Night guard is very helpful. The gate light is often off after 11 pm.</textarea><span class="hint" style="text-align: right">72 / 500</span></div>
+    <label class="check"><input type="checkbox" checked="checked">Send anonymously: the committee won't see your flat</label>
+    <span class="spacer"></span>
+    <div class="small">You already rated Security this month. Sending again replaces that rating.</div>
+    <a class="btn btn-primary full" href="R-Home.html">Send feedback</a>
+  </main>
+</div>
+</template>
+<div id="mount"></div>
+</div>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":860}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { rating: 4 }; }
+  renderVals() {
+    const r = this.state.rating;
+    const words = ['', 'Very poor', 'Poor', 'OK', 'Good', 'Very good'];
+    return {
+      ratingText: r + ' of 5 · ' + words[r],
+      stars: [1, 2, 3, 4, 5].map((n) => ({
+        cls: 'star ' + (n <= r ? 'on' : 'off'),
+        label: n + (n === 1 ? ' star' : ' stars'),
+        pick: () => this.setState({ rating: n })
+      }))
+    };
+  }
+}
+</script>
+<script src="proto.js"></script>
+<script src="hotspots.js"></script>
+</body>
+</html>

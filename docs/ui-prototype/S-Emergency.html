@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Emergency numbers · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}.callrow{display:flex;align-items:center;gap:14px;padding:16px;background:#fff;border:1px solid var(--line);border-radius:16px}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+</head>
+<body class="proto-phone">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Emergency numbers (all roles)</span></div>
+<div class="proto-stage">
+<div class="phone" style="height: 780px">
+  <header class="topbar sub" style="background: var(--danger); color: #fff; border-bottom: 0">
+    <a class="iconbtn" href="R-Home.html" aria-label="Back" style="color: #fff"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
+    <h1 class="title">Emergency</h1>
+    <span class="spacer"></span>
+    <a class="lang" href="S-Emergency.html" aria-label="Switch to Bangla" style="background: transparent; color: #fff; border-color: rgba(255,255,255,.5)">বাং</a>
+  </header>
+  <main class="content" style="gap: 14px">
+    <p style="font-size: 15px">Fire, gas smell, someone stuck in a lift: call first. You can log a repair after.</p>
+    <div class="callrow" style="border: 2px solid var(--danger)">
+      <span class="ico red" style="width: 52px; height: 52px"><svg class="i lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4 6 6.5 6 11a6 6 0 0 1-12 0c0-2.5 1.2-4 2.5-5.5C9 11 10 12 11 12c0-3 .5-6 1-9z"/></svg></span>
+      <div class="grow"><div class="money" style="font-size: 30px; line-height: 1">999</div><div class="small">National emergency: fire, police, ambulance</div></div>
+      <a class="btn btn-danger sm" href="S-Emergency.html" aria-label="Call 999"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>Call</a>
+    </div>
+    <div class="callrow">
+      <span class="ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg></span>
+      <div class="grow"><div class="h3">Guard desk</div><div class="money" style="font-size: 17px">01700-000111</div></div>
+      <a class="btn btn-primary sm" href="S-Emergency.html" aria-label="Call the guard desk">Call</a>
+    </div>
+    <div class="callrow">
+      <span class="ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg></span>
+      <div class="grow"><div class="h3">Building manager</div><div class="money" style="font-size: 17px">01700-000222</div></div>
+      <a class="btn btn-primary sm" href="S-Emergency.html" aria-label="Call the manager">Call</a>
+    </div>
+    <div class="small">999 is always first and cannot be changed. The manager keeps the building numbers up to date. These numbers still show when you are offline.</div>
+    <span class="spacer"></span>
+    <div class="card stack tight">
+      <div class="h3">After you have called</div>
+      <div class="small">Log it so the manager sends someone. It is saved as Urgent.</div>
+      <a class="btn btn-secondary full" href="R-Tickets.html" style="margin-top: 6px">Log it for repair</a>
+    </div>
+  </main>
+</div>
+</div>
+<script src="hotspots.js"></script>
+</body>
+</html>

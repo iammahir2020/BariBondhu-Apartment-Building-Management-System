@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Ticket details · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+</head>
+<body class="proto-phone">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Maintenance · Ticket details</span></div>
+<div class="proto-stage">
+<template id="screen">
+<div class="phone" style="height: 980px">
+  <header class="topbar sub">
+    <a class="iconbtn" href="T-List.html" aria-label="Back"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
+    <h1 class="title">#T-1043</h1>
+    <span class="spacer"></span>
+    <a class="sos round" href="S-Emergency.html" aria-label="Emergency numbers"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg></a>
+  </header>
+  <main class="content" style="gap: 14px">
+    <div class="row between top">
+      <div><div class="h2">Kitchen tap leaking</div><div class="small">Plumbing · Normal · due 14 Nov</div></div>
+      <span class="{{ badgeCls }}">{{ status }}</span>
+    </div>
+    <div class="row" style="gap: 12px">
+      <div class="photo" style="width: 112px; height: 84px; flex: none" role="img" aria-label="Resident's photo of the tap">Photo</div>
+      <div class="stack tight" style="font-size: 14px">
+        <div><span class="label">Flat</span> <b>5B</b>, Block A, floor 5</div>
+        <div><span class="label">Someone home</span> weekdays after 5 pm, Fri all day</div>
+      </div>
+    </div>
+    <section class="card stack tight">
+      <div class="label">Problem</div>
+      <div>Water drips from the tap base all the time, even when closed.</div>
+      <div class="label" style="margin-top: 6px">Manager's instructions</div>
+      <div>Bring a new cartridge. If the pipe under the sink is rusted, tell me before replacing.</div>
+    </section>
+    <div class="small">Need to reach the resident? Ask the manager. Phone numbers aren't shown here.</div>
+
+    <div class="stack tight">
+      <div class="h3">Update status</div>
+      <sc-if value="{{ isAssigned }}" hint-placeholder-val="{{ true }}"><button type="button" class="btn btn-primary full" onClick="{{ start }}">Start work</button></sc-if>
+      <sc-if value="{{ isProgress }}" hint-placeholder-val="{{ false }}"><div class="row" style="gap: 10px"><button type="button" class="btn btn-secondary grow" onClick="{{ hold }}">Put on hold</button><button type="button" class="btn btn-primary grow" onClick="{{ fix }}">Mark fixed</button></div></sc-if>
+      <sc-if value="{{ isHold }}" hint-placeholder-val="{{ false }}"><div class="stack tight"><div class="field"><label for="hr">Reason for hold</label><input id="hr" class="input" value="Waiting for a new cartridge"></div><button type="button" class="btn btn-primary full" onClick="{{ start }}">Resume work</button></div></sc-if>
+      <sc-if value="{{ isFixed }}" hint-placeholder-val="{{ false }}"><div class="alert alert-ok"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg><div>Saved at 7:42 pm. The manager checks it and closes the ticket.</div></div></sc-if>
+    </div>
+
+    <div class="stack tight">
+      <div class="h3">Work notes</div>
+      <section class="card flush">
+        <div class="listitem" style="align-items: flex-start"><div class="grow"><div>Checked the tap. Cartridge worn out; bought a replacement.</div><div class="small">Karim · 15 Nov, 10:20 am</div></div></div>
+      </section>
+      <div class="row" style="gap: 8px"><label for="nn" style="position: absolute; left: -9999px">New note</label><input id="nn" class="input grow" placeholder="Add a note (up to 1,000 characters)"><button type="button" class="btn btn-secondary sm">Save</button></div>
+    </div>
+    <a class="btn btn-ghost full" href="T-ExtraProblem.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Report an extra problem found here</a>
+  </main>
+</div>
+</template>
+<div id="mount"></div>
+</div>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":980}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { s: 'Assigned' }; }
+  renderVals() {
+    const s = this.state.s;
+    const cls = { 'Assigned': 'b-info', 'In progress': 'b-info', 'On hold': 'b-warn', 'Fixed': 'b-ok' }[s];
+    return {
+      status: s, badgeCls: 'badge ' + cls,
+      isAssigned: s === 'Assigned', isProgress: s === 'In progress', isHold: s === 'On hold', isFixed: s === 'Fixed',
+      start: () => this.setState({ s: 'In progress' }),
+      hold: () => this.setState({ s: 'On hold' }),
+      fix: () => this.setState({ s: 'Fixed' })
+    };
+  }
+}
+</script>
+<script src="proto.js"></script>
+<script src="hotspots.js"></script>
+</body>
+</html>
