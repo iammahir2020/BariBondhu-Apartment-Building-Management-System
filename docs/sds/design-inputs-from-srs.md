@@ -45,3 +45,37 @@ Figure 1 of the SRS ([system-context.png](../srs/figures/system-context.png)) is
 ## Main entities
 
 Building, Block, Flat, Occupancy, UserAccount (with role), ChargeRate, RateChange, Bill, BillLine, Payment, PaymentClaim, Overpayment, Receipt, Ticket, TicketFollower, TicketStatusChange, WorkNote, CommonAreaPlace, GuestPass, Visit, Shift, EmergencyContact, Expense, ExpenseDecision, OpeningBalance, FundSummary, Announcement, Feedback, Notification, AuditLog.
+
+## Role permissions
+
+Moved here from SRS section 2.1.7 in SRS version 1.4. Every page and API route checks the user's role against this table (NFR-06). "Own" means limited to the user's own flat or own assigned work.
+
+| Action | RES | SG | BM | CM | MNT | ADM |
+|---|---|---|---|---|---|---|
+| Set up the building; create or replace the manager account |  |  |  |  |  | Yes |
+| Create and deactivate flat, guard, maintenance and committee accounts |  |  | Yes |  |  |  |
+| End a household's occupancy |  |  | Yes |  |  |  |
+| Set charge rates |  |  |  | Yes |  |  |
+| Make and correct bills |  |  | Yes |  |  |  |
+| See and pay a bill | Own |  | View all |  |  |  |
+| Record a cash or bank payment claim | Own |  |  |  |  |  |
+| Accept or reject a claim; record a payment received directly |  |  | Yes |  |  |  |
+| See the defaulters list and send reminders |  |  | Yes |  |  |  |
+| Report a fault, follow it, cancel it before assignment | Own |  |  |  |  |  |
+| Assign, reopen and close tickets; mark Duplicate or Won't fix |  |  | Yes |  |  |  |
+| Update ticket status, add work notes, report an extra problem |  |  |  |  | Own |  |
+| Create and cancel guest passes | Own |  |  |  |  |  |
+| Check passes; record guest entry and exit; see visitors inside |  | Yes |  |  |  |  |
+| Record expenses |  |  | Yes |  |  |  |
+| Approve or reject expenses and the opening balance |  |  |  | Yes |  |  |
+| Publish the monthly fund summary |  |  | Yes |  |  |  |
+| See the fund summary (totals only) | Yes |  | Yes | Yes |  |  |
+| Send announcements |  |  | Yes |  |  |  |
+| Read announcements | Yes |  | Yes | Yes |  |  |
+| Give service feedback | Yes |  |  |  |  |  |
+| Read feedback (anonymous entries show no flat) |  |  |  | Yes |  |  |
+| Plan guard shifts |  |  | Yes |  |  |  |
+| See own shift |  | Yes |  |  |  |  |
+| Edit emergency numbers |  |  | Yes |  |  |  |
+| See emergency numbers (999 always first) | Yes | Yes | Yes | Yes | Yes |  |
+| See a resident's phone number | Own | No | Yes | No | No | No |
