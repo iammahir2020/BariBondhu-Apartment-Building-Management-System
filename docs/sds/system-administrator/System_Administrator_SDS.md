@@ -6,7 +6,7 @@ The diagram is a `.drawio.svg` file in `diagrams/system-administrator/use_case/`
 
 ## 1. UML use case diagram
 
-The System Administrator is the primary actor and the Building Manager the secondary actor. Every use case needs the administrator to be logged in, which the diagram shows as «include» Log in.
+The System Administrator is the primary actor and the Building Manager the secondary actor. Every use case needs the administrator to be logged in, which the diagram shows as «include» Log in. The administrator has no Set new password or Reset password use case, because the account is set up at installation and reset by the development team outside the app.
 
 ![System Administrator use cases: Building Setup](../../../diagrams/system-administrator/use_case/system-administrator-usecase-1-building-setup.drawio.svg)
 

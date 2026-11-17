@@ -26,7 +26,7 @@ Course project for CSE 451 Software Engineering, Autumn 2026, Independent Univer
 
 | Path | What it holds |
 |---|---|
-| `docs/srs/SRS.md` | Software Requirements Specification, v1.4. This is the copy we edit |
+| `docs/srs/SRS.md` | Software Requirements Specification, v1.5. This is the copy we edit |
 | `archive/` folders under `docs/srs/` and `docs/sds/<class>/` | Archived Word versions, not maintained. The `.md` files are the current copies |
 | `docs/srs/figures/` | Figures used in the SRS |
 | `docs/srs/latex/` | LaTeX template for the final SRS report |

@@ -139,7 +139,7 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Use case** | UC-R09 View fund summary (RES-05) |
 | **Actors** | Primary: Resident |
 | **Precondition** | The resident is logged in («include» Log in). |
-| **Trigger** | The resident opens Building fund. |
+| **Trigger** | The resident opens Fund summary. |
 | **Main success scenario** | 1. System finds the latest month the manager has published.<br>2. System shows the opening balance, total collected, total spent by category (repair, salary, utility, other), the closing balance and the total outstanding.<br>3. Resident can pick an earlier published month. |
 | **Alternate flows** | 1a. This month's summary isn't published yet → System shows the last published month and a note that this month isn't ready. |
 | **Postcondition** | Nothing changes. |
@@ -249,9 +249,11 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Postcondition** | Nothing changes. |
 | **Non-functional** | In-app notification within 1 minute, plus email when the account has one (NFR-29). Bangla and English (NFR-22). |
 
+Every resident use case also has the emergency screen 2 taps away (NFR-16).
+
 ## 3. State diagrams
 
-Each object has one state diagram, drawn by one member, so no two diagrams can disagree. The Resident part owns these four. The others are in the parts of the class that moves them most: Fault ticket (Maintenance Staff); Staff account, Announcement and Overpayment (Building Manager); Expense, Opening balance, Fund summary and Charge rate (Committee Member); Visit and Shift (Security Guard).
+Each object has exactly one state diagram, so no two diagrams can disagree. This part has these four. The others are in the parts of the class that moves them most: Fault ticket (Maintenance Staff); Staff account, Announcement and Overpayment (Building Manager); Expense, Opening balance, Fund summary and Charge rate (Committee Member); Visit and Shift (Security Guard).
 
 ### Bill
 
@@ -289,4 +291,4 @@ The fault ticket a resident reports has its state diagram in the Maintenance Sta
 
 ## 4. Data flow diagrams
 
-The team draws one data flow diagram for the whole system, Level 0 (the context diagram), in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md). The Resident's flows are the ones to and from the Resident entity there: log-in details, payments and claims, fault reports, guest passes and feedback going in; bills, receipts, ticket updates, pass codes, the fund summary and announcements coming out.
+There is one data flow diagram for the whole system, Level 0 (the context diagram), in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md). The Resident's flows are the ones to and from the Resident entity there: log-in details, payments and claims, fault reports, "Me too", cancellations, guest passes and feedback going in; bills, receipts, payment status, reminders, ticket updates, pass codes, arrival notices, the fund summary, announcements and emergency numbers coming out.
