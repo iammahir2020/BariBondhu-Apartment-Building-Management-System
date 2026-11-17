@@ -50,5 +50,6 @@ The reasons behind these rules are in [docs/decisions.md](docs/decisions.md).
 
 ## Documents and diagrams
 
-- Diagrams are `.drawio.svg` files under `diagrams/<user-class>/`. Edit them in draw.io and save in place.
+- Diagrams are `.drawio.svg` files under `diagrams/<user-class>/`, in `use_case/` or `state_diagrams/`. Edit them in
+  draw.io and save in place. Old versions and other formats (PNG, PDF, plain `.drawio`) go in `archive/`.
 - Keep diagrams consistent with the SRS: same story IDs, state names and business rules.

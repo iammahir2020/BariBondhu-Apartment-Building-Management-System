@@ -2,17 +2,17 @@
 
 This part covers the Maintenance Staff user class of BariBondhu (Apartment Building Management System). Story IDs (MNT), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
 
-The diagrams are `.drawio.svg` files in `diagrams/maintenance-staff/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The team's data flow diagram is in [Data\_Flow\_Diagrams.md](../system/Data_Flow_Diagrams.md).
+The diagrams are `.drawio.svg` files in `diagrams/maintenance-staff/use_case/` and `diagrams/maintenance-staff/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The team's data flow diagram is in [Data\_Flow\_Diagrams.md](../system/Data_Flow_Diagrams.md).
 
 ## 1\. UML use case diagrams
 
 The Maintenance Staff member is the primary actor. The Building Manager and the Email Service join in as secondary actors. There are two diagrams. Apart from Reset password, every use case needs the staff member to be logged in, which the diagrams show as «include» Log in. Staff can't assign, close or reopen tickets.
 
-![Maintenance Staff use cases: Accounts and Login](../../../diagrams/maintenance-staff/maintenance-staff-usecase-1-accounts-login.drawio.svg)
+![Maintenance Staff use cases: Accounts and Login](../../../diagrams/maintenance-staff/use_case/maintenance-staff-usecase-1-accounts-login.drawio.svg)
 
 *Figure M1: Maintenance Staff use cases: Accounts and Login*
 
-![Maintenance Staff use cases: Repair Work](../../../diagrams/maintenance-staff/maintenance-staff-usecase-2-repair-work.drawio.svg)
+![Maintenance Staff use cases: Repair Work](../../../diagrams/maintenance-staff/use_case/maintenance-staff-usecase-2-repair-work.drawio.svg)
 
 *Figure M2: Maintenance Staff use cases: Repair Work*
 
@@ -130,7 +130,7 @@ Each object has one state diagram, drawn by one member. Maintenance staff own th
 
 ### Fault ticket
 
-![State diagram of a Fault ticket](../../../diagrams/maintenance-staff/maintenance-staff-state-1-fault-ticket.drawio.svg)
+![State diagram of a Fault ticket](../../../diagrams/maintenance-staff/state_diagrams/maintenance-staff-state-1-fault-ticket.drawio.svg)
 
 *Figure M3: State diagram of a Fault ticket*
 

@@ -2,25 +2,25 @@
 
 This part covers the Resident user class of BariBondhu (Apartment Building Management System). Story IDs (RES), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
 
-The diagrams are `.drawio.svg` files in `diagrams/resident/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension.
+The diagrams are `.drawio.svg` files in `diagrams/resident/use_case/` and `diagrams/resident/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension.
 
 ## 1. UML use case diagrams
 
 The Resident is the primary actor. The Payment Gateway, the Email Service and the Building Manager join in as secondary actors. There are four diagrams, one per subsystem. Apart from Reset password, every use case needs the resident to be logged in, which the diagrams show as «include» Log in. Pay bill is drawn in italics because it is abstract: a resident never just "pays", they pay online or record a cash or bank payment. The condition for each «extend» is written on its arrow.
 
-![Resident use cases: Accounts and Login](../../../diagrams/resident/resident-usecase-1-accounts-login.drawio.svg)
+![Resident use cases: Accounts and Login](../../../diagrams/resident/use_case/resident-usecase-1-accounts-login.drawio.svg)
 
 *Figure R1: Resident use cases: Accounts and Login*
 
-![Resident use cases: Bills and Payments](../../../diagrams/resident/resident-usecase-2-bills-payments.drawio.svg)
+![Resident use cases: Bills and Payments](../../../diagrams/resident/use_case/resident-usecase-2-bills-payments.drawio.svg)
 
 *Figure R2: Resident use cases: Bills and Payments*
 
-![Resident use cases: Fault Tickets](../../../diagrams/resident/resident-usecase-3-fault-tickets.drawio.svg)
+![Resident use cases: Fault Tickets](../../../diagrams/resident/use_case/resident-usecase-3-fault-tickets.drawio.svg)
 
 *Figure R3: Resident use cases: Fault Tickets*
 
-![Resident use cases: Guests, Feedback and Announcements](../../../diagrams/resident/resident-usecase-4-guests-feedback-announcements.drawio.svg)
+![Resident use cases: Guests, Feedback and Announcements](../../../diagrams/resident/use_case/resident-usecase-4-guests-feedback-announcements.drawio.svg)
 
 *Figure R4: Resident use cases: Guests, Feedback and Announcements*
 
@@ -255,7 +255,7 @@ Each object has one state diagram, drawn by one member, so no two diagrams can d
 
 ### Bill
 
-![State diagram of a Bill](../../../diagrams/resident/resident-state-1-bill.drawio.svg)
+![State diagram of a Bill](../../../diagrams/resident/state_diagrams/resident-state-1-bill.drawio.svg)
 
 *Figure R5: State diagram of a Bill*
 
@@ -263,7 +263,7 @@ A bill is in one payment flow at a time (BR-03), and only the gateway's confirma
 
 ### Guest pass
 
-![State diagram of a Guest pass](../../../diagrams/resident/resident-state-2-guest-pass.drawio.svg)
+![State diagram of a Guest pass](../../../diagrams/resident/state_diagrams/resident-state-2-guest-pass.drawio.svg)
 
 *Figure R6: State diagram of a Guest pass*
 
@@ -271,7 +271,7 @@ A pass works from its start date-time to its end date-time, 24 hours at most (BR
 
 ### Payment claim
 
-![State diagram of a Payment claim](../../../diagrams/resident/resident-state-3-payment-claim.drawio.svg)
+![State diagram of a Payment claim](../../../diagrams/resident/state_diagrams/resident-state-3-payment-claim.drawio.svg)
 
 *Figure R7: State diagram of a Payment claim*
 
@@ -279,7 +279,7 @@ A claim starts when the resident records a cash or bank payment, and the amount 
 
 ### Household account
 
-![State diagram of a Household account](../../../diagrams/resident/resident-state-4-household-account.drawio.svg)
+![State diagram of a Household account](../../../diagrams/resident/state_diagrams/resident-state-4-household-account.drawio.svg)
 
 *Figure R8: State diagram of a Household account*
 

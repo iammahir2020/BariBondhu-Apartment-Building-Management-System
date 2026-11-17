@@ -2,21 +2,21 @@
 
 This part covers the Committee Member user class of BariBondhu (Apartment Building Management System). Story IDs (CM), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
 
-The diagrams are `.drawio.svg` files in `diagrams/committee-member/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The team's data flow diagram is in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md).
+The diagrams are `.drawio.svg` files in `diagrams/committee-member/use_case/` and `diagrams/committee-member/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The team's data flow diagram is in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md).
 
 ## 1. UML use case diagrams
 
 The Committee Member is the primary actor. The Building Manager, the Resident and the Email Service join in as secondary actors. There are three diagrams, one per subsystem. Apart from Reset password, every use case needs the member to be logged in, which the diagrams show as «include» Log in. Decide expense is drawn in italics because it is abstract: Approve expense and Reject expense specialise it and inherit its «include».
 
-![Committee Member use cases: Accounts and Login](../../../diagrams/committee-member/committee-member-usecase-1-accounts-login.drawio.svg)
+![Committee Member use cases: Accounts and Login](../../../diagrams/committee-member/use_case/committee-member-usecase-1-accounts-login.drawio.svg)
 
 *Figure C1: Committee Member use cases: Accounts and Login*
 
-![Committee Member use cases: Rates and Expenses](../../../diagrams/committee-member/committee-member-usecase-2-rates-expenses.drawio.svg)
+![Committee Member use cases: Rates and Expenses](../../../diagrams/committee-member/use_case/committee-member-usecase-2-rates-expenses.drawio.svg)
 
 *Figure C2: Committee Member use cases: Rates and Expenses*
 
-![Committee Member use cases: Fund, Health and Feedback](../../../diagrams/committee-member/committee-member-usecase-3-fund-health-feedback.drawio.svg)
+![Committee Member use cases: Fund, Health and Feedback](../../../diagrams/committee-member/use_case/committee-member-usecase-3-fund-health-feedback.drawio.svg)
 
 *Figure C3: Committee Member use cases: Fund, Health and Feedback*
 
@@ -186,7 +186,7 @@ Each object has one state diagram, drawn by one member. The committee owns these
 
 ### Expense
 
-![State diagram of an Expense](../../../diagrams/committee-member/committee-member-state-1-expense.drawio.svg)
+![State diagram of an Expense](../../../diagrams/committee-member/state_diagrams/committee-member-state-1-expense.drawio.svg)
 
 *Figure C4: State diagram of an Expense*
 
@@ -194,7 +194,7 @@ An Approved expense never changes. A mistake is fixed by a new correcting expens
 
 ### Opening balance
 
-![State diagram of an Opening balance](../../../diagrams/committee-member/committee-member-state-2-opening-balance.drawio.svg)
+![State diagram of an Opening balance](../../../diagrams/committee-member/state_diagrams/committee-member-state-2-opening-balance.drawio.svg)
 
 *Figure C5: State diagram of an Opening balance*
 
@@ -202,7 +202,7 @@ First month only (BR-10). Until the opening balance is Approved, the first fund 
 
 ### Fund summary
 
-![State diagram of a Fund summary](../../../diagrams/committee-member/committee-member-state-3-fund-summary.drawio.svg)
+![State diagram of a Fund summary](../../../diagrams/committee-member/state_diagrams/committee-member-state-3-fund-summary.drawio.svg)
 
 *Figure C6: State diagram of a Fund summary*
 
@@ -210,7 +210,7 @@ A summary is marked Revised, not replaced, when a late approval changes a publis
 
 ### Charge rate
 
-![State diagram of a Charge rate](../../../diagrams/committee-member/committee-member-state-4-charge-rate.drawio.svg)
+![State diagram of a Charge rate](../../../diagrams/committee-member/state_diagrams/committee-member-state-4-charge-rate.drawio.svg)
 
 *Figure C7: State diagram of a Charge rate*
 
