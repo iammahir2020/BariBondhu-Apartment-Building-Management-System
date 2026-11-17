@@ -111,7 +111,7 @@
         const sel = document.createElement('select');
         (d.options || []).forEach((o) => { const opt = document.createElement('option'); opt.textContent = o; sel.appendChild(opt); });
         sel.value = props[k];
-        sel.addEventListener('change', () => { comp.props[k] = sel.value; comp.state = Object.assign({}, comp.state, { area: undefined }); render(); });
+        sel.addEventListener('change', () => { comp.props[k] = sel.value; comp.state = {}; render(); });
         label.append(text + ': ', sel);
       }
       bar.appendChild(label);

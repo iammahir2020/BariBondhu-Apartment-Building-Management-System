@@ -1,6 +1,6 @@
 # BariBondhu UI prototype
 
-A clickable prototype of every key screen in Release 1, built from SRS v1.3. It is plain HTML, CSS and a little
+A clickable prototype of every key screen in Release 1, kept in line with SRS v1.5 and the SDS. It is plain HTML, CSS and a little
 JavaScript, with no build step.
 
 ## Opening it
@@ -21,13 +21,18 @@ system font.
 
   | Screen | Control |
   |---|---|
+  | `S-Login.html` | State: Log in, Too many wrong passwords, Forgot password (link sent, or no email) |
   | `R-Dues.html` | Bill state: Unpaid, Payment pending, Awaiting verification, Claim rejected |
   | `R-ReportFault.html` | Start in: Inside my flat or Common area (the switch on the screen works too) |
   | `G-Home.html` | Offline banner |
   | `G-Pass-Invalid.html` | Reason: Expired, Cancelled, Not yet valid, No pass with this code, Fully used |
+  | `C-Expense.html` | Item: an expense, or the first month's opening balance |
+  | `M-Accounts.html` | Show: Households, or Staff and committee (the switch on the screen works too) |
+  | `M-Fund.html` | Month: a normal month, or the first month with its opening balance waiting for approval or rejected |
 
-- Working parts: the guard keypad (type 6 digits; `111111` shows "Pass not valid"), the guest-count steppers, the
-  feedback stars, the maintenance status buttons, and the committee's Approve and Reject.
+- Working parts: Forgot password on the log-in screen, the guard keypad (type 6 digits; `111111` shows "Pass not
+  valid"), the guest-count steppers, the feedback stars, the maintenance status buttons, and the committee's Approve
+  and Reject (for expenses and the opening balance).
 
 All names, flats and amounts are sample data.
 

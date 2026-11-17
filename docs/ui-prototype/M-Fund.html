@@ -11,7 +11,8 @@
 <link rel="stylesheet" href="proto.css">
 </head>
 <body class="proto-desk">
-<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Manager · Publish fund summary</span></div>
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Manager · Publish fund summary</span><span id="proto-controls" class="row wrap" style="gap: 12px"></span></div>
+<template id="screen">
 <div class="shell">
   <nav class="side" aria-label="Manager">
     <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>BariBondhu</div>
@@ -36,6 +37,7 @@
     </header>
     <div class="deskbody">
       <div class="panes">
+        <sc-if value="{{ normal }}" hint-placeholder-val="{{ true }}">
         <section class="pane-main card stack" style="gap: 14px">
           <div class="row between"><div><div class="h2">November 2026 so far</div><div class="small">Draft · updates as payments and approvals come in</div></div><span class="badge b-warn">Draft</span></div>
           <div class="grid2" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
@@ -59,10 +61,58 @@
           </div>
           <div class="small">Residents and committee see totals only, never which flats owe money.</div>
         </aside>
+        </sc-if>
+        <sc-if value="{{ first }}" hint-placeholder-val="{{ false }}">
+        <section class="pane-main card stack" style="gap: 14px">
+          <div class="row between"><div><div class="h2">October 2026 · first month</div><div class="small">The month has ended. Its opening balance needs the committee's approval first.</div></div><span class="badge b-warn">Draft</span></div>
+          <div class="card stack" style="gap: 10px; background: var(--bg)">
+            <div class="row between wrap" style="gap: 12px">
+              <div><div class="label">Opening balance on 1 Oct 2026 (entered by you)</div><div class="money" style="font-size: 22px">{{ openingFigure }}</div></div>
+              <sc-if value="{{ waiting }}" hint-placeholder-val="{{ true }}"><span class="badge b-info">Waiting for the committee</span></sc-if>
+              <sc-if value="{{ rejected }}" hint-placeholder-val="{{ false }}"><span class="badge b-bad">Rejected</span></sc-if>
+            </div>
+            <sc-if value="{{ waiting }}" hint-placeholder-val="{{ true }}"><div class="small">Sent 4 Nov 2026. Committee members see it on their home screen.</div></sc-if>
+            <sc-if value="{{ rejected }}" hint-placeholder-val="{{ false }}">
+              <div class="alert alert-warn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg><div><div class="h3">Rejected by Farida K., 6 Nov</div><div>"The paper accounts show ৳3,12,400. Please check the September closing page."</div></div></div>
+              <div class="grid2" style="gap: 12px; align-items: end"><div class="field"><label for="ob">Corrected opening balance</label><input id="ob" class="input money" value="3,12,400.00"></div><a class="btn btn-primary sm" href="M-Fund.html">Send for approval again</a></div>
+            </sc-if>
+          </div>
+          <div class="grid2" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
+            <div><div class="label">Collected (by date confirmed)</div><div class="money" style="font-size: 22px; color: var(--ok)">৳4,26,850.00</div></div>
+            <div><div class="label">Spent (approved only)</div><div class="money" style="font-size: 22px">৳3,65,100.00</div></div>
+            <div><div class="label">Closing balance</div><div class="money" style="font-size: 22px">{{ closingFigure }}</div></div>
+            <div><div class="label">Outstanding (total only)</div><div class="money" style="font-size: 22px">৳58,200.00</div></div>
+          </div>
+          <label class="check"><input type="checkbox" checked="checked">Also send it as an announcement, for members who don't log in</label>
+          <div class="row wrap" style="gap: 12px"><span class="btn disabled sm">Publish October</span><span class="errtext">The committee must approve the opening balance before you can publish.</span></div>
+        </section>
+        <aside class="pane-side stack">
+          <div class="h2">Months</div>
+          <div class="card"><div class="small">No month published yet. Residents see "Not ready yet" until October is published.</div></div>
+          <div class="small">The first month's opening balance is entered once. After that, each month opens with the previous month's closing balance.</div>
+        </aside>
+        </sc-if>
       </div>
     </div>
   </div>
 </div>
+</template>
+<div id="mount"></div>
+<script type="text/x-dc" data-dc-script data-props='{"month":{"editor":"enum","options":["Normal month","First month: waiting for approval","First month: opening balance rejected"],"default":"Normal month"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const m = this.props.month ?? 'Normal month';
+    const rejected = m.indexOf('rejected') !== -1;
+    return {
+      normal: m === 'Normal month', first: m !== 'Normal month',
+      waiting: m.indexOf('waiting') !== -1, rejected,
+      openingFigure: rejected ? '৳3,21,400.00' : '৳3,12,400.00',
+      closingFigure: rejected ? '৳3,83,150.00' : '৳3,74,150.00'
+    };
+  }
+}
+</script>
+<script src="proto.js"></script>
 <script src="hotspots.js"></script>
 </body>
 </html>
