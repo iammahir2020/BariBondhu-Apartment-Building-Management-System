@@ -2,13 +2,13 @@
 
 This part covers the System Administrator of BariBondhu (Apartment Building Management System). The administrator is a member of the development team who installs the system, sets the building up, and creates or replaces the manager's account. They take no part in running the building and can't open bills, payments, tickets or feedback (ADM-01). Story IDs (ADM), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
 
-The diagram is a `.drawio.svg` file in `diagrams/system-administrator/`. To edit it, open it in draw.io or the VS Code Draw.io Integration extension.
+The diagram is a `.drawio.svg` file in `diagrams/system-administrator/use_case/`. To edit it, open it in draw.io or the VS Code Draw.io Integration extension.
 
 ## 1. UML use case diagram
 
 The System Administrator is the primary actor and the Building Manager the secondary actor. Every use case needs the administrator to be logged in, which the diagram shows as «include» Log in.
 
-![System Administrator use cases: Building Setup](../../../diagrams/system-administrator/system-administrator-usecase-1-building-setup.drawio.svg)
+![System Administrator use cases: Building Setup](../../../diagrams/system-administrator/use_case/system-administrator-usecase-1-building-setup.drawio.svg)
 
 *Figure A1: System Administrator use cases: Building Setup*
 
