@@ -4,10 +4,10 @@
 
 Release 1 · CSE 451 Software Engineering, Autumn 2026 · Independent University, Bangladesh
 
-This document describes the design of Release 1 as specified in the [SRS](../srs/SRS.md) (version 1.4). It holds the
+This document describes the design of Release 1 as specified in the [SRS](../srs/SRS.md) (version 1.5). It holds the
 four analysis models the course asks for: UML use case diagrams, use case narratives, state diagrams and a data flow
-diagram. Each user class owner wrote the part for their class; the Resident owner also wrote the System
-Administrator part and drew the team's data flow diagram.
+diagram. There is one part for each user class, including the System Administrator, and one data flow diagram for
+the whole system.
 Story IDs (RES, SG, BM, CM, MNT, ADM), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
 
 ## Parts

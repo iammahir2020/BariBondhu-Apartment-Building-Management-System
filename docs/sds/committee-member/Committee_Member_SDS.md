@@ -2,7 +2,7 @@
 
 This part covers the Committee Member user class of BariBondhu (Apartment Building Management System). Story IDs (CM), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
 
-The diagrams are `.drawio.svg` files in `diagrams/committee-member/use_case/` and `diagrams/committee-member/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The team's data flow diagram is in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md).
+The diagrams are `.drawio.svg` files in `diagrams/committee-member/use_case/` and `diagrams/committee-member/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The system's data flow diagram is in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md).
 
 ## 1. UML use case diagrams
 
@@ -136,7 +136,7 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Actors** | Primary: Committee Member · Secondary: Building Manager (enters the first month's opening balance) |
 | **Precondition** | The member is logged in («include» Log in). The manager has entered the first month's opening balance, and it is Waiting for approval. This happens in the first month only. |
 | **Trigger** | The member opens the opening balance from the approvals list. |
-| **Main success scenario** | 1. System shows the amount and the date the manager entered.<br>2. Member approves it.<br>3. System sets it to Approved and records the member's name and the time.<br>4. The first fund summary can now be shown to residents (BM-12). |
+| **Main success scenario** | 1. System shows the amount and the date the manager entered.<br>2. Member approves it.<br>3. System sets it to Approved and records the member's name and the time.<br>4. The manager can now publish the first fund summary (BM-12). |
 | **Alternate flows** | 1a. Already decided → the current status is shown. Nothing changes.<br>2a. Member rejects it and writes a reason → it is Rejected, and the manager sees the reason and enters a corrected figure, which comes back as Waiting for approval.<br>2b. Reject with no reason → "Write a reason". Nothing changes. |
 | **Postcondition** | The opening balance is Approved, or Rejected and waiting for the manager's correction. |
 | **Non-functional** | Totals equal the saved records (NFR-26). Logged with old and new values (NFR-27). |
@@ -180,9 +180,11 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Postcondition** | Nothing changes. |
 | **Non-functional** | Anonymous feedback never shows the flat or the account (NFR-11). Role check on every page and API (NFR-06). |
 
+Every committee use case also has the emergency screen 2 taps away (NFR-16).
+
 ## 3. State diagrams
 
-Each object has one state diagram, drawn by one member. The committee owns these four, because its decisions move them. A double ring marks the end of the object's life.
+Each object has exactly one state diagram. This part has these four, because the committee's decisions move them. A double ring marks the end of the object's life.
 
 ### Expense
 

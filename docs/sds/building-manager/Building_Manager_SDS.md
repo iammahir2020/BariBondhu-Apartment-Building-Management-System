@@ -2,7 +2,7 @@
 
 This part covers the Building Manager user class of BariBondhu (Apartment Building Management System). Story IDs (BM), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
 
-The diagrams are `.drawio.svg` files in `diagrams/building-manager/use_case/` and `diagrams/building-manager/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The administrator who creates the manager's account is covered in [System_Administrator_SDS.md](../system-administrator/System_Administrator_SDS.md). The team's data flow diagram is in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md).
+The diagrams are `.drawio.svg` files in `diagrams/building-manager/use_case/` and `diagrams/building-manager/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The administrator who creates the manager's account is covered in [System_Administrator_SDS.md](../system-administrator/System_Administrator_SDS.md). The system's data flow diagram is in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md).
 
 ## 1. UML use case diagrams
 
@@ -87,8 +87,8 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Actors** | Primary: Building Manager · Secondary: Resident, Security Guard, Maintenance Staff, Committee Member (the account owners) |
 | **Precondition** | The manager is logged in («include» Log in). |
 | **Trigger** | The manager opens Accounts and taps Add, or opens an existing account. |
-| **Main success scenario** | 1. Manager chooses the kind of account: household (for a flat), guard, maintenance or committee.<br>2. Manager enters the details. For a household: the flat, occupant name, owner or tenant, start date, phone and an optional email. For staff and committee: name, phone and role.<br>3. System checks the details.<br>4. System creates the account with a generated username (not the flat number) and a temporary password, and shows it in the list. |
-| **Alternate flows** | 2a. The flat already has an active occupancy → "End the current occupancy first". Nothing is created.<br>1a. Manager edits a phone number, email or flat details → the new details show straight away and the change is logged.<br>1b. A user forgot the password and has no email → manager issues a new temporary password, which must be changed at the next log-in.<br>1c. Manager deactivates an account → that person can no longer log in. Their bills, tickets and committee decisions are kept.<br>1c-i. The account is a maintenance worker with Assigned, In progress or On hold tickets → "Reassign their open tickets first". Nothing changes.<br>1c-ii. The account is a guard → their future shifts are removed and the gaps show in the duty list (BM-09).<br>1c-iii. The account is the manager's own → refused. Only the administrator can replace the manager (ADM-01). |
+| **Main success scenario** | 1. Manager chooses the kind of account: household (for a flat), guard, maintenance or committee.<br>2. Manager enters the details. For a household: the flat, occupant name, owner or tenant, start date, phone and an optional email. For staff and committee: name, phone, role and an optional email.<br>3. System checks the details.<br>4. System creates the account with a generated username (not the flat number) and a temporary password, and shows it in the list. |
+| **Alternate flows** | 2a. The flat already has an active occupancy → "End the current occupancy first". Nothing is created.<br>1a. Manager edits a phone number, email or flat details → the new details show straight away and the change is logged.<br>1b. A user forgot the password and has no email → manager issues a new temporary password, which must be changed at the next log-in.<br>1c. Manager deactivates a guard, maintenance or committee account → that person can no longer log in. Their tickets and committee decisions are kept. A household account ends only through End occupancy (UC-BM05).<br>1c-i. The account is a maintenance worker with Assigned, In progress or On hold tickets → "Reassign their open tickets first". Nothing changes.<br>1c-ii. The account is a guard → their future shifts are removed and the gaps show in the duty list (BM-09).<br>1c-iii. The account is the manager's own → refused. Only the administrator can replace the manager (ADM-01). |
 | **Postcondition** | The account is created, changed or deactivated, and the change is logged. |
 | **Non-functional** | Usernames are generated, never the flat number (NFR-05). Temporary passwords expire after 7 days (NFR-04). Phone numbers are shown only to the manager and the household (NFR-10). Every change is logged (NFR-27). |
 
@@ -270,7 +270,7 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Precondition** | The manager is logged in («include» Log in). |
 | **Trigger** | The manager opens Fund summary, chooses a month and taps Publish. |
 | **Main success scenario** | 1. System checks that the month has ended.<br>2. System works out the opening balance (last month's closing balance), the total collected (by the date each payment was confirmed), the total spent by category (Approved expenses only, by expense date), the closing balance and the total outstanding (BR-10).<br>3. System shows how many expenses are still waiting for approval; they are left out.<br>4. Manager publishes, and residents and committee members see the totals. |
-| **Alternate flows** | 1a. The month hasn't ended → "You can publish once the month has ended". Nothing is published.<br>2a. First month in the system → «extend» Enter opening balance (UC-BM19). Residents see the summary only after the committee approves the balance.<br>4a. Manager also sends the summary as an announcement (UC-BM22), so members who never log in see it by email.<br>Later, an expense dated in a published month is approved → that summary is updated and marked Revised, and every later month's balances change with it. |
+| **Alternate flows** | 1a. The month hasn't ended → "You can publish once the month has ended". Nothing is published.<br>2a. First month in the system → «extend» Enter opening balance (UC-BM19). The summary can be published only after the committee approves the balance.<br>4a. Manager also sends the summary as an announcement (UC-BM22), so members who never log in see it by email.<br>Later, an expense dated in a published month is approved → that summary is updated and marked Revised, and every later month's balances change with it. |
 | **Postcondition** | The summary is Published. |
 | **Non-functional** | Totals only, never which flats owe (NFR-12). Equals the sum of the saved records (NFR-26). Loads within 3 s (NFR-01). |
 
@@ -282,7 +282,7 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Actors** | Primary: Building Manager · Secondary: Committee Member |
 | **Precondition** | It is the first month in the system, and there is no approved opening balance yet. |
 | **Trigger** | The manager publishes the first fund summary (extends Publish fund summary at step 2). |
-| **Main success scenario** | 1. Manager enters the opening balance.<br>2. System saves it as Waiting for approval.<br>3. The committee approves it (CM-02), and the first summary can be shown to residents. |
+| **Main success scenario** | 1. Manager enters the opening balance.<br>2. System saves it as Waiting for approval.<br>3. The committee approves it (CM-02), and the first summary can be published. |
 | **Alternate flows** | 3a. The committee rejects it with a reason → the manager sees the reason and enters a corrected figure, which goes back to Waiting for approval. |
 | **Postcondition** | The opening balance is Approved. |
 | **Non-functional** | Totals equal the saved records (NFR-26). Logged (NFR-27). |
@@ -330,7 +330,7 @@ Every manager use case also has the emergency screen 2 taps away (NFR-16).
 
 ## 3. State diagrams
 
-Each object has one state diagram, drawn by one member, so no two diagrams can disagree. The manager owns these three. The Bill, Payment claim, Guest pass and Household account are in the Resident part; the Fault ticket is in the Maintenance Staff part; Expense, Opening balance, Fund summary and Charge rate are in the Committee Member part; Visit and Shift are in the Security Guard part.
+Each object has exactly one state diagram, so no two diagrams can disagree. This part has these three. The Bill, Payment claim, Guest pass and Household account are in the Resident part; the Fault ticket is in the Maintenance Staff part; Expense, Opening balance, Fund summary and Charge rate are in the Committee Member part; Visit and Shift are in the Security Guard part.
 
 ### Staff account
 

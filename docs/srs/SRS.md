@@ -2,7 +2,7 @@
 
 **BariBondhu: Apartment Building Management System**
 
-Release 1 · Version 1.4 · 15 November 2026
+Release 1 · Version 1.5 · 17 November 2026
 
 CSE 451 Software Engineering, Autumn 2026 · Independent University, Bangladesh
 
@@ -27,6 +27,7 @@ Course instructor: Dr. Md. Mushfique Anwar
 | 1.2 | Full consistency review; BR-15 (first log-in and password reset) added. | 9 Nov 2026 |
 | 1.3 | Moved to Markdown; final team review of move-out, double-payment, guest-pass and night-shift cases. | 15 Nov 2026 |
 | 1.4 | Shortened: criteria that repeat a business rule or NFR, most story notes and all "Touches" lines removed; risks and user needs trimmed; 1.3 rewritten as a paragraph; "In scope" table removed; permissions table moved to the SDS design inputs. | 15 Nov 2026 |
+| 1.5 | Consistency fixes after the SDS review: optional email on staff and committee accounts (BM-02); the first fund summary is published only after the opening balance is approved (BM-12); total outstanding added to RES-05; R-13 and NFR-07 reworded to match the stories. | 17 Nov 2026 |
 
 **Contents**
 
@@ -101,7 +102,7 @@ Each risk lists what could go wrong, how likely and how harmful it is (High, Med
 | R-09 | An account is taken over, or someone keeps a flat locked out by entering wrong passwords. | M | M | Hashed passwords, non-guessable usernames, and wrong-password delays per device instead of per account (NFR-04, NFR-05). |
 | R-11 | The gate loses internet during load-shedding and guests cannot be checked. | H | M | Fallback to intercom and paper register, then visits entered later (SG-03, NFR-21). |
 | R-12 | Spending is counted before the committee approves it, or rates change without a record. | L | H | Only Approved expenses count; every rate change stores who, when, old and new value and the meeting date (CM-01, CM-02, NFR-27). |
-| R-13 | A fault ticket, or a problem a maintenance worker found during a repair, sits with nobody assigned or stalls after assignment. | M | M | Late and overdue tickets are highlighted for the manager and counted on the committee dashboard; problems found by staff go into the same ticket list (BM-06, MNT-05, CM-04, NFR-16). |
+| R-13 | A fault ticket, or a problem a maintenance worker found during a repair, sits with nobody assigned or stalls after assignment. | M | M | Late and overdue tickets are highlighted for the manager, and late ones are counted on the committee dashboard; problems found by staff go into the same ticket list (BM-06, MNT-05, CM-04, NFR-16). |
 | R-14 | The manager leaves or is unavailable and nobody can administer the building. | L | H | The system administrator can create, deactivate and replace the manager account (ADM-01). |
 
 ## 2. Overall Description
@@ -294,7 +295,7 @@ _As a resident, I want a monthly summary of what the building collected and spen
 
 **Confirmation**
 
-- Given the manager has published a month's summary, when I open Fund summary, then I see the opening balance, total collected, total spent by category (repair, salary, utility, other) and the closing balance (BR-10).
+- Given the manager has published a month's summary, when I open Fund summary, then I see the opening balance, total collected, total spent by category (repair, salary, utility, other), the closing balance and the total outstanding (BR-10).
 - Given an expense is still Waiting for approval or was Rejected, when I view the summary, then it isn't counted.
 - Given this month's summary hasn't been published yet, when I open Fund summary, then I see the last published month and a note that this month isn't ready.
 
@@ -442,7 +443,7 @@ _As a building manager, I want to add, edit and deactivate flat, guard, maintena
 - Given the flat already has an active occupancy, when I try to add another, then I see "End the current occupancy first" and nothing is created.
 - Given the household has a bill that is Payment pending or Awaiting verification, when I try to end its occupancy, then I see "Settle the payment in progress first" and nothing changes.
 - Given a household is moving out, when I end its occupancy, then its account is deactivated, its guest passes are cancelled, its records are kept, and the flat is ready for a new occupancy with an empty history (BR-09). If it still has Unpaid bills, I must enter a note on how they will be settled.
-- Given I create a guard, maintenance or committee account with name, phone and role, when I save, then it gets a generated username and temporary password.
+- Given I create a guard, maintenance or committee account with name, phone, role and an optional email, when I save, then it gets a generated username and temporary password.
 - Given I change a resident's phone number, email or flat details, when I save, then the new details show straight away and the change is logged (NFR-27).
 - Given a user has forgotten the password and has no email, when I reset it, then a new temporary password is issued and must be changed at first login.
 - Given I deactivate any account, when that person tries to log in, then they are refused, and their past bills, tickets and committee decisions are kept.
@@ -576,7 +577,7 @@ _As a building manager, I want to publish each month's summary of money collecte
 
 - Given the month has ended, when I publish its summary, then it shows the opening balance, total collected, total spent by category, the closing balance and the total outstanding (BR-10).
 - Given the month hasn't ended yet, when I try to publish its summary, then I see "You can publish once the month has ended" and nothing is published.
-- Given it is the first month in the system, when I publish, then I must enter an opening balance, which the committee approves before the summary is visible to residents. If the committee rejects it, I see the reason and enter a corrected balance, which goes back for approval.
+- Given it is the first month in the system, when I publish, then I must enter an opening balance, which the committee must approve before I can publish the summary. If the committee rejects it, I see the reason and enter a corrected balance, which goes back for approval.
 - Given an expense is Waiting for approval or Rejected, when the summary is worked out, then it is left out, and committee members see how many are still waiting (CM-04).
 - Given an expense dated in a published month is approved later, when it is approved, then that month's summary is updated and marked Revised, and the opening and closing balances of every later month change with it (BR-10).
 - Given some committee members never log in, when I also send the summary as an announcement (BM-11), then they can read it there and in their email.
@@ -748,7 +749,7 @@ The categories map to the four headings of the course SRS outline as follows:
 | NFR-04 | Security | Passwords shall be at least 8 characters and stored only as salted hashes (bcrypt or Argon2). Passwords shall never be stored, logged or emailed in plain text. Temporary passwords shall expire after 7 days if unused. | All log-in stories, BM-02 | Inspection, Test |
 | NFR-05 | Security | Wrong-password protection shall work per device as set out in BR-14. Usernames shall be generated and shall not be the flat number. | All log-in stories | Test |
 | NFR-06 | Security | Every page and API shall check the user's role. A resident shall reach only their own occupancy's data; maintenance staff only their assigned tickets. Automated tests shall cover every page and API for every role. | All | Test |
-| NFR-07 | Security | Sessions on shared or work devices (guard, maintenance) and administrator sessions shall end after 15 minutes idle. Resident, manager and committee sessions shall end after 7 days idle. | SG-01, MNT-06, ADM-01, RES-06, BM-01, CM-05 | Test |
+| NFR-07 | Security | Guard, maintenance and administrator sessions shall end after 15 minutes idle. Resident, manager and committee sessions shall end after 7 days idle. | SG-01, MNT-06, ADM-01, RES-06, BM-01, CM-05 | Test |
 | NFR-08 | Security | Guest-pass codes shall be generated from a secure random source and follow BR-11. A code shall be tied to one flat and one pass. | RES-03, SG-02 | Inspection, Test |
 | NFR-09 | Security | Uploaded photos shall be JPG or PNG of at most 5 MB, compressed on the phone to about 1 MB before upload. Other file types shall be refused. | RES-02, RES-04, BM-08 | Test |
 | NFR-10 | Privacy | Residents' phone numbers shall be visible only to the manager and to the resident's own household. They shall never appear on guard, maintenance or committee screens, or in any API response those roles can call. Automated tests shall check this. | RES-02, RES-03, SG-02, SG-07, MNT-02, BM-02, CM-03 | Test |

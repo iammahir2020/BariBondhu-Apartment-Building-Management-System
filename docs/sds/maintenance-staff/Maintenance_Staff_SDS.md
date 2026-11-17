@@ -2,7 +2,7 @@
 
 This part covers the Maintenance Staff user class of BariBondhu (Apartment Building Management System). Story IDs (MNT), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
 
-The diagrams are `.drawio.svg` files in `diagrams/maintenance-staff/use_case/` and `diagrams/maintenance-staff/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The team's data flow diagram is in [Data\_Flow\_Diagrams.md](../system/Data_Flow_Diagrams.md).
+The diagrams are `.drawio.svg` files in `diagrams/maintenance-staff/use_case/` and `diagrams/maintenance-staff/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The system's data flow diagram is in [Data\_Flow\_Diagrams.md](../system/Data_Flow_Diagrams.md).
 
 ## 1\. UML use case diagrams
 
@@ -108,7 +108,7 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Trigger** | The staff member taps Add note. |
 | **Main success scenario** | 1\. Staff member writes a note of up to 1,000 characters about the work.<br>2\. Staff member taps Save.<br>3\. System stores the note on the ticket with the staff member's name and the time, and shows "Note saved".<br>4\. The manager sees the note when opening the ticket (BM-07). |
 | **Alternate flows** | 1a. The note is empty → "Write a note". Nothing is saved.<br>3a. The save fails → an error within 5 s, and the note is never shown as saved. |
-| **Postcondition** | The note is stored on the ticket. The SRS gives no way to edit or delete a note. |
+| **Postcondition** | The note is stored on the ticket. Notes can't be edited or deleted. |
 | **Non-functional** | A failed save is never shown as saved (NFR-17). Logged (NFR-27). |
 
 ### UC-MNT08 Report extra problem
@@ -124,9 +124,11 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 | **Postcondition** | A new Reported ticket exists in the manager's list. |
 | **Non-functional** | A failed save is never shown as saved (NFR-17). Logged (NFR-27). |
 
+Every maintenance use case also has the emergency screen 2 taps away (NFR-16).
+
 ## 3\. State diagrams
 
-Each object has one state diagram, drawn by one member. Maintenance staff own the Fault ticket, because they move it through most of its states. An extra problem a staff member reports is an ordinary ticket marked Found by staff, so it has no diagram of its own, and the SRS gives a work note no edit or delete step, so it has no states. The staff account is in the Building Manager's Staff account diagram.
+Each object has exactly one state diagram. This part has the Fault ticket, because maintenance staff move it through most of its states. An extra problem a staff member reports is an ordinary ticket marked Found by staff, so it has no diagram of its own, and a work note can't be edited or deleted, so it has no states. The staff account is in the Building Manager's Staff account diagram.
 
 ### Fault ticket
 
@@ -134,4 +136,4 @@ Each object has one state diagram, drawn by one member. Maintenance staff own th
 
 *Figure M3: State diagram of a Fault ticket*
 
-Residents can cancel a ticket only while it is still Reported and nobody else follows it; if others have tapped "Me too", cancelling only removes the resident as a follower. After the manager assigns it, closing, reopening or declining it is the manager's call (BM-06, BM-07).
+Residents can cancel a ticket only while it is still Reported and nobody else follows it; if others have tapped "Me too", cancelling only removes the resident as a follower. Before assignment the manager can mark it Duplicate or Won't fix; after that, closing and reopening are the manager's call (BM-06, BM-07).

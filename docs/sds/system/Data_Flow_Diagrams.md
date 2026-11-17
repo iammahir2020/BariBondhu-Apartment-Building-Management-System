@@ -14,11 +14,11 @@ Level 0 draws the whole system as a single process, numbered 0. It shows the six
 
 | Entity | Sends to the system | Gets from the system |
 |---|---|---|
-| Resident | log-in details, online payments, payment claims, fault reports, "Me too", cancellations, guest passes, feedback | bills, receipts, payment status, ticket updates, guest pass codes, arrival notices, fund summary, announcements, emergency numbers |
-| Building Manager | accounts and occupancies, bill runs and corrections, claim decisions and direct payments, ticket decisions, expenses, shifts, emergency numbers, announcements | payment claims, overpayments, defaulters, tickets and work notes, expense decisions, duty gaps |
-| Committee Member | charge rates, expense and opening balance decisions | expenses to decide, rate history, fund summary, late-ticket count, feedback, announcements |
+| Resident | log-in details, online payments, payment claims, fault reports, "Me too", cancellations, guest passes, feedback | bills, receipts, payment status, reminders, ticket updates, guest pass codes, arrival notices, fund summary, announcements, emergency numbers |
+| Building Manager | accounts and occupancies, bill runs and corrections, claim decisions and direct payments, reminders, ticket decisions, expenses, opening balance, fund summary, shifts, emergency numbers, announcements | payment claims, overpayments, defaulters, tickets and work notes, expense and opening balance decisions, duty gaps, emergency numbers |
+| Committee Member | charge rates, expense and opening balance decisions | expenses and opening balance to decide, rate history, fund summary, late-ticket count, feedback, announcements, emergency numbers |
 | Security Guard | pass codes, guest entries and exits, late entries | pass results, visitors inside, shifts, emergency numbers |
-| Maintenance Staff | ticket status changes, work notes, extra problems | assigned tickets (flat, photo, home times; never a phone number) |
+| Maintenance Staff | ticket status changes, work notes, extra problems | assigned tickets (flat, photo, home times; never a phone number), emergency numbers |
 | System Administrator | building and flats, manager account | the manager's username and temporary password |
 | Payment Gateway | payment confirmation or status | payment request, status check |
 | Email Service | (nothing) | reset links, bill, reminder and announcement emails |

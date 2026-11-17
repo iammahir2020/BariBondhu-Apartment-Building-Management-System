@@ -2,7 +2,7 @@
 
 This part covers the Security Guard user class of BariBondhu (Apartment Building Management System). Story IDs (SG), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
 
-The diagrams are `.drawio.svg` files in `diagrams/security_guard/use_case/` and `diagrams/security_guard/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The team's data flow diagram is in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md).
+The diagrams are `.drawio.svg` files in `diagrams/security_guard/use_case/` and `diagrams/security_guard/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The system's data flow diagram is in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md).
 
 ## 1. UML use case diagrams
 
@@ -143,7 +143,7 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 
 ## 3. State diagrams
 
-Each object has one state diagram, drawn by one member. The guard owns these two, because guards move them at the gate. The Guest pass is in the Resident part, and the guard account is in the Building Manager's Staff account diagram.
+Each object has exactly one state diagram. This part has these two, because guards move them at the gate. The Guest pass is in the Resident part, and the guard account is in the Building Manager's Staff account diagram.
 
 ### Visit
 
@@ -151,7 +151,7 @@ Each object has one state diagram, drawn by one member. The guard owns these two
 
 *Figure G4: State diagram of a Visit*
 
-A visit is the record of the guests from one pass entering and leaving the building. A visit entered from the paper register after a lost connection is marked Entered later (SG-03). Overstayed is a flag for guests still inside after the pass end time; they can always be checked out (BR-11, SG-07).
+A visit is the record of the guests from one pass entering and leaving the building. A visit entered from the paper register after a lost connection is marked Entered later (SG-03). Overstayed is the state of guests still inside after the pass end time; they can always be checked out (BR-11, SG-07).
 
 ### Shift
 

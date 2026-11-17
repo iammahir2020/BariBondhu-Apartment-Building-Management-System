@@ -12,14 +12,15 @@ them. Story, rule and NFR IDs refer to [docs/srs/SRS.md](../srs/SRS.md).
 | Overpayment | Flagged (a gateway payment arrived for a bill that was already Paid, Awaiting verification or Carried forward) → Refunded when the manager confirms the money was returned outside the app (BR-04). |
 | Payment claim | Awaiting verification → Accepted (the bill becomes Paid) or → Rejected with a reason (the bill returns to Unpaid). Both are final; after a rejection the resident can record a new claim. |
 | Guest pass | Scheduled (before start) → Active → Partly used → Fully used. Scheduled, Active or Partly used → Cancelled (by the resident, or when the occupancy ends). Scheduled, Active or Partly used → Expired at the end time. Cancelled and Expired stop new entries only (BR-11). |
-| Visit | Guests inside → Some left → All left. Guests inside past the pass end time are flagged Overstayed. Exits can be recorded even after the pass is Cancelled or Expired. |
-| Ticket | Reported → Assigned → In progress ⇄ On hold; In progress → Fixed → Closed. Fixed → Assigned (reopened with a reason). Reported → Cancelled (by the resident, only when nobody else follows it; otherwise the resident just stops following and the ticket stays Reported). Reported → Duplicate or Won't fix (by the manager, with a reason). |
+| Visit | Guests inside → Some left → All left. Guests still inside after the pass end time move to Overstayed, and leave it when the remaining guests leave. Exits can be recorded even after the pass is Cancelled or Expired. |
+| Ticket | Reported → Assigned → In progress ⇄ On hold; In progress → Fixed → Closed. Fixed → Assigned (reopened with a reason). Reported → Cancelled (by the resident, only when nobody else follows it; otherwise the resident just stops following and the ticket stays Reported). Reported → Duplicate or Won't fix (by the manager, with a reason). Reassigning an open ticket to another staff member keeps its status (BM-02, BM-06). |
 | Expense | Waiting for approval → Approved, or → Rejected. Rejected → Waiting for approval when the manager resubmits. Approved is final; corrections are new linked expenses. |
 | Household account | Temporary password → Active (first log-in) → Ended (the manager ends the occupancy, only with no payment in progress). Temporary password → Temporary password expired after 7 days unused → Temporary password (the manager issues a new one). Active → Temporary password when the manager resets it. |
 | Staff account | The same password states, ending in Deactivated instead of Ended. Covers guard, maintenance, committee and manager accounts; the administrator creates and deactivates the manager's (ADM-01). Deactivation is refused for a maintenance worker with open tickets and for the manager's own account (BM-02). |
 | Opening balance | Waiting for approval → Approved, or → Rejected with a reason. Rejected → Waiting for approval when the manager enters a corrected figure. Approved is final (CM-02, BM-12). |
 | Shift | Planned → On duty (start time reached) → Finished (end time reached). Planned → Removed when the guard is deactivated (BM-02). A shift has a start and end date-time, at most 24 hours apart, and may cross midnight (BM-09). |
 | Fund summary | Draft → Published → Revised (when a late approval changes the month). |
+| Charge rate | Current → Replaced when a newer rate for the same charge is saved. A rate is never edited or deleted, and a bill keeps the rate it was made with (CM-01). |
 | Announcement | Published → Removed. Edits keep it Published. An Urgent announcement stays pinned at the top of residents' home screens until its expiry time, then remains Published without the pin. |
 
 ## Use case relationships
@@ -27,7 +28,7 @@ them. Story, rule and NFR IDs refer to [docs/srs/SRS.md](../srs/SRS.md).
 These are the relationships the use case diagrams draw. Carrying unpaid bills forward and working out fund balances are steps inside Make monthly bills and Publish fund summary, not use cases of their own.
 
 - Every use case except Reset password «include» Log in.
-- Set new password «extend» Log in (first log-in with a temporary password); Reset password «extend» Log in (the user forgot the password). Every class has both.
+- Set new password «extend» Log in (first log-in with a temporary password); Reset password «extend» Log in (the user forgot the password). Every class has both, except the System Administrator, whose account is set up at installation and reset by the development team outside the app.
 - Record guest entry «include» Check guest pass.
 - Pay bill «extend» View bill (bill is Unpaid and no payment is pending). Pay bill is abstract: Pay bill online and Record cash or bank payment specialise it.
 - Download receipt «extend» View bill (bill is Paid).
