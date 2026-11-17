@@ -1,12 +1,12 @@
 # Security Guard: use cases and state diagrams
 
-This part covers the Security Guard user class of BariBondhu (Apartment Building Management System). Story IDs (SG), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
+This part covers security guards, who work the gate in shifts, check guest passes and record visits. IDs such as SG-03, BR-11 and NFR-21 refer to the SRS.
 
 The diagrams are `.drawio.svg` files in `diagrams/security_guard/use_case/` and `diagrams/security_guard/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The system's data flow diagram is in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md).
 
 ## 1. UML use case diagrams
 
-The Security Guard is the primary actor. The Resident and the Email Service join in as secondary actors. There are three diagrams, one per subsystem. Apart from Reset password, every use case needs the guard to be logged in, which the diagrams show as «include» Log in. Record guest entry also includes Check guest pass, because a guest can only be checked in against a valid pass.
+The Security Guard is the primary actor. The Resident is notified when guests arrive, and the Email Service sends reset links. There are three diagrams, one per subsystem. Every use case outside Accounts and Login includes Log in. Record guest entry also includes Check guest pass, because a guest can only be checked in against a valid pass.
 
 ![Security Guard use cases: Accounts and Login](../../../diagrams/security_guard/use_case/security-guard-usecase-1-accounts-login.drawio.svg)
 
@@ -22,7 +22,7 @@ The Security Guard is the primary actor. The Resident and the Email Service join
 
 ## 2. Use case narratives
 
-Each use case has its own narrative in the Lecture 3 table format. An alternate flow is numbered after the step it branches from, so 2a branches from step 2. The guard screens are in Bangla and need almost no typing (NFR-22, NFR-24).
+The narratives use the Lecture 3 table format described in [SDS.md](../SDS.md#notation). The guard screens are in Bangla and need almost no typing (NFR-22, NFR-24).
 
 ### UC-SG01 Log in
 
@@ -143,7 +143,7 @@ Each use case has its own narrative in the Lecture 3 table format. An alternate 
 
 ## 3. State diagrams
 
-Each object has exactly one state diagram. This part has these two, because guards move them at the gate. The Guest pass is in the Resident part, and the guard account is in the Building Manager's Staff account diagram.
+This part draws two objects, the Visit and the Shift, because both belong to the guard's work at the gate. The Guest pass is in the Resident part, and the guard account is in the Building Manager's Staff account diagram.
 
 ### Visit
 

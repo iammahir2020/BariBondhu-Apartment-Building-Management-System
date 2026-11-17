@@ -10,13 +10,13 @@ Course instructor: Dr. Md. Mushfique Anwar
 
 **Prepared by**
 
-| Team member | Part owned |
-|---|---|
-| Mahir Al Kamal | Resident (RES) |
-| Jannatul Ferdus Nishi | Building Manager (BM) |
-| Tawhid | Security Guard (SG) |
-| Ayesha Siddiqa | Committee Member (CM) |
-| Adika Rahman | Maintenance Staff (MNT) |
+| Team member | ID | Part owned |
+|---|---|---|
+| Mahir Al Kamal | 2632711 | Resident (RES) |
+| Jannatul Ferdus Nishi | 2231385 | Building Manager (BM) |
+| Tawhid Moslim | 2311428 | Security Guard (SG) |
+| Ayesha Siddiqa | 2211155 | Committee Member (CM) |
+| Adika Rahman | 2221975 | Maintenance Staff (MNT) |
 
 **Revision history**
 
@@ -44,7 +44,7 @@ Course instructor: Dr. Md. Mushfique Anwar
 
 ### 1.1 Purpose
 
-This document specifies Release 1 of BariBondhu, a web application for running one apartment building in Dhaka. For each kind of user it says what the system must do and how well, within the limits set out in 2.4. Design, development and testing all start from here. If a behaviour isn't described in this document, it isn't in Release 1.
+This document specifies Release 1 of BariBondhu, a web application for running one apartment building in Dhaka. For each kind of user it says what the system must do and how well, within the limits set out in 2.4. If a behaviour isn't described in this document, it isn't in Release 1.
 
 ### 1.2 Intended Audience
 
@@ -57,40 +57,42 @@ This document specifies Release 1 of BariBondhu, a web application for running o
 
 ### 1.3 Intended Use
 
-Sections 1 and 2 give the context; section 3 holds the requirements, which the design, the code and the tests are checked against. Every requirement has an ID that never changes: stories start with their class (RES, SG, BM, CM, MNT, ADM), and business rules, non-functional requirements and risks use BR, NFR and R. Stories follow "As a [user], I want [goal], so that [benefit]" with Given / When / Then confirmation criteria, and carry a MoSCoW priority: Must (Release 1 can't ship without it), Should (planned for Release 1) or Could (if time allows). Won't items are listed in 1.4.
+Sections 1 and 2 give the context; section 3 holds the requirements, which the design, the code and the tests are checked against. Every requirement has an ID that never changes: stories start with their class (RES, SG, BM, CM, MNT, ADM), and business rules, non-functional requirements and risks use BR, NFR and R. Stories follow "As a [user], I want [goal], so that [benefit]" with Given / When / Then confirmation criteria, and carry a MoSCoW priority: Must (Release 1 can't ship without it), Should (planned for Release 1) or Could (if time allows).
 
 ### 1.4 Product Scope
 
-Most Dhaka apartment buildings run on a paper register, a phone and a WhatsApp group. The manager collects service charges in cash and writes receipts by hand, when there are receipts at all. Guests stand at the gate while the guard tries an intercom that may not work. A burst pipe means a dozen calls to the manager. And residents see the accounts once a year, if that.
+In most Dhaka apartment buildings, daily running depends on a paper register, phone calls and a WhatsApp group. The manager collects service charges in cash and writes receipts by hand, if there is a receipt at all. At the gate, a guest waits while the guard tries the flat on an intercom that often doesn't work. When the lift stops or a pipe bursts, residents keep phoning the manager to find out whether anyone is on it. Most residents only hear how the building fund was spent once a year, if then.
 
-BariBondhu puts all of this in one system shared by the five groups who live in and run the building.
+BariBondhu moves this work into one web app shared by the five groups who live in or run the building: residents, guards, the manager, the committee and maintenance staff.
 
 Goals for Release 1:
 
-- Every payment, online or cash, ends with a receipt and a record that both the resident and the manager can see.
-- A guest with a pass gets through the gate without anyone calling the flat.
-- Every fault has exactly one ticket with a visible status, from report to close.
+- Every payment, online or in cash, ends with a receipt and a record that both the household and the manager can see.
+- A guest with a valid pass gets through the gate without the guard calling the flat.
+- Each fault has exactly one ticket, and everyone who reported or follows it can see its status until it is closed.
 - Residents and the committee can see each month's income, spending and balance.
-- Nothing is app-only: flats that pay cash and visitors who use the intercom are still handled.
+- Nothing depends on the app alone: flats that pay in cash and visitors who use the intercom are still handled.
 
-**Won't have in Release 1**
+**Not included in Release 1**
 
-We considered these and left them out on purpose:
+We discussed these and left them out of Release 1 on purpose:
 
 - Separate logins for each family member, and registering maids, drivers or tutors.
 - Approving walk-in visitors and deliveries from the resident's phone. Walk-ins keep using the intercom.
-- Parcel tracking and collection rules.
+- Parcel tracking and parcel collection management.
 - Read receipts on announcements, and polls or voting.
-- The resident confirming or rejecting a repair. The manager closes tickets (BM-07).
-- Disputing a bill line inside the app. Residents raise disputes with the manager.
-- Partial and advance payments, and different charge rates for different flats.
-- Two-person approval for large expenses, budgets and forecasts.
+- Residents confirming or rejecting a repair. The manager closes tickets (BM-07).
+- Raising bill disputes through the platform. Residents will need to contact the manager directly.
+- Partial or advance payments, and different charge rates for different flats.
+- Two-person approval for large expenses, and budgets or forecasts.
 - SMS, an SOS button, native Android or iOS apps, and more than one building per installation.
-- Real money: payments run against a payment-gateway sandbox only.
+- Real payments. Release 1 runs only against a payment-gateway sandbox.
 
 ### 1.5 Risk Definitions
 
-Each risk lists what could go wrong, how likely and how harmful it is (High, Medium or Low), and the requirements that reduce it. R-03, R-04, R-08, R-10, R-15 and R-16 were dropped in version 1.4 to shorten the document; their IDs are not reused.
+Each risk below is rated for likelihood and impact (H, M or L for High, Medium or Low), with the requirements that reduce it.
+
+R-03, R-04, R-08, R-10, R-15 and R-16 were dropped in version 1.4 to shorten the document. Their IDs are not reused.
 
 | ID | Risk | Likely | Impact | How we handle it |
 |---|---|---|---|---|
@@ -100,14 +102,16 @@ Each risk lists what could go wrong, how likely and how harmful it is (High, Med
 | R-06 | Private data leaks: phone numbers to staff, one flat's bills to another, or a previous tenant's history to the new one. | M | H | Role and flat-level access checks, occupancy periods, totals-only fund view (NFR-06, NFR-10, NFR-12, NFR-13, BM-02). |
 | R-07 | Someone in danger (fire, gas, lift) waits in a ticket queue. | L | H | Emergency categories show 999 and the building numbers first, then log an Urgent ticket (RES-02, BM-10, SG-06, NFR-16). |
 | R-09 | An account is taken over, or someone keeps a flat locked out by entering wrong passwords. | M | M | Hashed passwords, non-guessable usernames, and wrong-password delays per device instead of per account (NFR-04, NFR-05). |
-| R-11 | The gate loses internet during load-shedding and guests cannot be checked. | H | M | Fallback to intercom and paper register, then visits entered later (SG-03, NFR-21). |
-| R-12 | Spending is counted before the committee approves it, or rates change without a record. | L | H | Only Approved expenses count; every rate change stores who, when, old and new value and the meeting date (CM-01, CM-02, NFR-27). |
-| R-13 | A fault ticket, or a problem a maintenance worker found during a repair, sits with nobody assigned or stalls after assignment. | M | M | Late and overdue tickets are highlighted for the manager, and late ones are counted on the committee dashboard; problems found by staff go into the same ticket list (BM-06, MNT-05, CM-04, NFR-16). |
+| R-11 | Load-shedding cuts the gate's internet, so the guard can't check passes. | H | M | Fallback to intercom and paper register, then visits entered later (SG-03, NFR-21). |
+| R-12 | Spending counts before the committee approves it, or a rate changes with no record of who changed it. | L | H | Only Approved expenses count; every rate change stores who, when, old and new value and the meeting date (CM-01, CM-02, NFR-27). |
+| R-13 | A fault ticket, or a problem a maintenance worker found during a repair, sits with nobody assigned or stalls after assignment. | M | M | The manager sees late and overdue tickets highlighted, and the committee dashboard counts the late ones. Problems found by staff join the same ticket list (BM-06, MNT-05, CM-04, NFR-16). |
 | R-14 | The manager leaves or is unavailable and nobody can administer the building. | L | H | The system administrator can create, deactivate and replace the manager account (ADM-01). |
 
 ## 2. Overall Description
 
-BariBondhu is a new product. Nothing like it runs in the building today. People open it in a phone or laptop browser and can add it to the home screen like an app. One installation serves one building, and it relies on two outside services: a payment gateway (sandbox) for online payments, and an email service for notifications and password resets.
+BariBondhu is a new product; the building has no system today that it replaces. People open it in the browser on a phone or laptop, and can add it to the phone's home screen like an app.
+
+One installation serves one building. It uses two outside services: a payment-gateway sandbox for online payments, and an email service for notifications and password resets.
 
 ![System context: the six user roles and the two external services](figures/system-context.png)
 
@@ -115,7 +119,9 @@ _Figure 1. System context: the six user roles and the two external services._
 
 ### 2.1 User Classes and Characteristics
 
-There are five user classes who use the system day to day, plus a system administrator who only sets it up. Residents are the primary users; the manager is the most frequent user and links all the others. Who may do what is summed up in the [permissions table](../sds/design-inputs-from-srs.md#role-permissions) in the SDS design inputs.
+Five user classes use BariBondhu day to day. A sixth, the system administrator, only sets the system up and creates or replaces the manager's account.
+
+Residents are the primary users. The manager uses the system most often and links all the other classes. The [permissions table](../sds/design-inputs-from-srs.md#role-permissions) in the SDS design inputs lists what each role can do.
 
 | Class | Technical skill | Device | Language | How often |
 |---|---|---|---|---|
@@ -128,27 +134,27 @@ There are five user classes who use the system day to day, plus a system adminis
 
 #### 2.1.1 Resident
 
-Owners and tenants who live in the flats. Both pay the service charge, so the system treats them the same. Each household shares one account for the period it lives in the flat (an occupancy); when it moves out, the manager ends the occupancy and the next household starts with a new account and an empty history. Skills range from students to elderly parents who only use WhatsApp, and some flats will not use the app at all, so cash payment and the intercom must keep working.
+Flat owners and tenants who live in the building. Both pay the service charge, so the system treats them the same. Each household shares one account for as long as it lives in the flat (its occupancy). When it moves out, the manager ends the occupancy, and the next household starts with a new account and an empty history. Some flats will not use the app at all, so paying the manager in cash and the intercom must keep working.
 
 #### 2.1.2 Security Guard
 
-Building staff who work the gate in shifts, checking guest passes and recording when guests come and go. Few type English comfortably and a busy gate leaves no time for forms, so the guard screens are in Bangla and need almost no typing. Each guard has a personal account, so every gate record shows who made it.
+Building staff who work the gate in shifts. They check guest passes and record when guests arrive and leave. Each guard logs in with a personal account, so every gate record shows who made it. Few guards type English comfortably and a busy gate leaves no time for forms, so the guard screens are in Bangla and need almost no typing.
 
 #### 2.1.3 Building Manager
 
-Paid staff who run the building every day and link all the other users: accounts, monthly bills, cash claims, fault tickets, guard shifts, expenses, the fund summary, emergency numbers and announcements. Apart from the household itself, only the manager sees a resident's phone number. Charge rates and expense approval belong to the committee.
+Paid staff who run the building every day: household and staff accounts, monthly bills, payment claims, fault tickets, guard shifts, expenses, the fund summary, emergency numbers and announcements. The manager connects all user groups and is the only person, apart from the household itself, who can view residents' phone numbers.
 
 #### 2.1.4 Committee Member
 
-Elected, unpaid flat owners who oversee the building fund: they set charge rates, approve or reject expenses, check the fund summary and read feedback, about once a month around their meeting. At least one member enters the meeting's decisions in the app. The secretary and treasurer have no extra permissions in Release 1.
+Elected flat owners who oversee building finances. They can set service charge rates, approve or reject expenses, review fund summaries and read resident feedback. At least one member records meeting decisions in the system. All committee members have the same permissions in Release 1.
 
 #### 2.1.5 Maintenance Staff
 
-Electricians, plumbers and lift technicians who see and update only the tickets assigned to them, add work notes and report extra problems they find. They cannot assign or close tickets, and they contact residents through the manager.
+Electricians, plumbers and other technicians responsible for building repairs. They can view and update assigned tickets, add work notes and report additional issues. They cannot assign or close tickets and communicate with residents through the manager.
 
 #### 2.1.6 System Administrator
 
-A member of the development team who installs the system for the building, creates the first manager account, and replaces the manager account if the manager leaves. The administrator does not take part in daily operations and cannot see bills, payments or tickets.
+A development team member responsible for installing the system and creating the initial manager account. They can also replace the manager account when needed but cannot access daily building records such as bills, payments or maintenance tickets.
 
 ### 2.2 User Needs
 

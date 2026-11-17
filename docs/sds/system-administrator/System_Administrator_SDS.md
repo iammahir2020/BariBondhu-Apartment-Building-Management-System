@@ -1,6 +1,6 @@
 # System Administrator: use cases
 
-This part covers the System Administrator of BariBondhu (Apartment Building Management System). The administrator is a member of the development team who installs the system, sets the building up, and creates or replaces the manager's account. They take no part in running the building and can't open bills, payments, tickets or feedback (ADM-01). Story IDs (ADM), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
+This part covers the System Administrator of BariBondhu (Apartment Building Management System). The administrator is a member of the development team who installs the system, sets the building up, and creates or replaces the manager's account. They take no part in running the building and can't open bills, payments, tickets or feedback (ADM-01). IDs such as ADM-01 and BR-15 refer to the SRS.
 
 The diagram is a `.drawio.svg` file in `diagrams/system-administrator/use_case/`. To edit it, open it in draw.io or the VS Code Draw.io Integration extension.
 
@@ -14,7 +14,7 @@ The System Administrator is the primary actor and the Building Manager the secon
 
 ## 2. Use case narratives
 
-Each use case has its own narrative in the Lecture 3 table format. An alternate flow is numbered after the step it branches from, so 2a branches from step 2.
+The narratives use the Lecture 3 table format described in [SDS.md](../SDS.md#notation).
 
 ### UC-ADM01 Log in
 

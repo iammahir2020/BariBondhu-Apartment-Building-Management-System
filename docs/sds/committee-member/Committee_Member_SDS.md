@@ -1,12 +1,12 @@
 # Committee Member: use cases and state diagrams
 
-This part covers the Committee Member user class of BariBondhu (Apartment Building Management System). Story IDs (CM), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
+This part covers committee members, who set charge rates, decide expenses and check the building fund. IDs such as CM-02, BR-10 and NFR-12 refer to the SRS.
 
 The diagrams are `.drawio.svg` files in `diagrams/committee-member/use_case/` and `diagrams/committee-member/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The system's data flow diagram is in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md).
 
 ## 1. UML use case diagrams
 
-The Committee Member is the primary actor. The Building Manager, the Resident and the Email Service join in as secondary actors. There are three diagrams, one per subsystem. Apart from Reset password, every use case needs the member to be logged in, which the diagrams show as «include» Log in. Decide expense is drawn in italics because it is abstract: Approve expense and Reject expense specialise it and inherit its «include».
+The Committee Member is the primary actor. The Building Manager records the expenses and opening balance the committee decides, the Resident gives the feedback it reads, and the Email Service sends reset links. There are three diagrams, one per subsystem. Every use case outside Accounts and Login includes Log in. Decide expense is drawn in italics because it is abstract: Approve expense and Reject expense specialise it and inherit its «include».
 
 ![Committee Member use cases: Accounts and Login](../../../diagrams/committee-member/use_case/committee-member-usecase-1-accounts-login.drawio.svg)
 
@@ -22,7 +22,7 @@ The Committee Member is the primary actor. The Building Manager, the Resident an
 
 ## 2. Use case narratives
 
-Each use case has its own narrative in the Lecture 3 table format. An alternate flow is numbered after the step it branches from, so 2a branches from step 2.
+The narratives use the Lecture 3 table format described in [SDS.md](../SDS.md#notation).
 
 ### UC-C01 Log in
 
@@ -184,7 +184,7 @@ Every committee use case also has the emergency screen 2 taps away (NFR-16).
 
 ## 3. State diagrams
 
-Each object has exactly one state diagram. This part has these four, because the committee's decisions move them. A double ring marks the end of the object's life.
+This part draws four objects, because the committee's decisions move them: the Expense, Opening balance, Fund summary and Charge rate.
 
 ### Expense
 

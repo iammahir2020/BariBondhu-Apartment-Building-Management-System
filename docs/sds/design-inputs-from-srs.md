@@ -27,7 +27,7 @@ them. Story, rule and NFR IDs refer to [docs/srs/SRS.md](../srs/SRS.md).
 
 These are the relationships the use case diagrams draw. Carrying unpaid bills forward and working out fund balances are steps inside Make monthly bills and Publish fund summary, not use cases of their own.
 
-- Every use case except Reset password «include» Log in.
+- Every use case except Log in, Set new password and Reset password «include» Log in.
 - Set new password «extend» Log in (first log-in with a temporary password); Reset password «extend» Log in (the user forgot the password). Every class has both, except the System Administrator, whose account is set up at installation and reset by the development team outside the app.
 - Record guest entry «include» Check guest pass.
 - Pay bill «extend» View bill (bill is Unpaid and no payment is pending). Pay bill is abstract: Pay bill online and Record cash or bank payment specialise it.
