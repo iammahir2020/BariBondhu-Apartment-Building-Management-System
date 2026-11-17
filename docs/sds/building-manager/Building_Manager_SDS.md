@@ -1,12 +1,12 @@
 # Building Manager: use cases and state diagrams
 
-This part covers the Building Manager user class of BariBondhu (Apartment Building Management System). Story IDs (BM), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
+This part covers the building manager, who runs the building day to day and links all the other classes. IDs such as BM-04, BR-05 and NFR-27 refer to the SRS.
 
 The diagrams are `.drawio.svg` files in `diagrams/building-manager/use_case/` and `diagrams/building-manager/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The administrator who creates the manager's account is covered in [System_Administrator_SDS.md](../system-administrator/System_Administrator_SDS.md). The system's data flow diagram is in [Data_Flow_Diagrams.md](../system/Data_Flow_Diagrams.md).
 
 ## 1. UML use case diagrams
 
-The Building Manager is the primary actor. Residents, security guards, maintenance staff, committee members and the Email Service join in as secondary actors. There are seven diagrams, one per subsystem. Apart from Reset password, every use case needs the manager to be logged in, which the diagrams show as «include» Log in. The condition for each «extend» is written on its arrow.
+The Building Manager is the primary actor. The other classes appear as secondary actors where the manager's work reaches them: residents for accounts, bills, tickets and announcements; guards for shifts; maintenance staff for ticket assignments; the committee for expenses and the opening balance. The Email Service sends reset links, reminders and announcements. There are seven diagrams, one per subsystem. Every use case outside Accounts and Login includes Log in. The condition for each «extend» is written on its arrow.
 
 ![Building Manager use cases: Accounts and Login](../../../diagrams/building-manager/use_case/building-manager-usecase-1-accounts-login.drawio.svg)
 
@@ -38,7 +38,7 @@ The Building Manager is the primary actor. Residents, security guards, maintenan
 
 ## 2. Use case narratives
 
-Each use case has its own narrative in the Lecture 3 table format. An alternate flow is numbered after the step it branches from, so 2a branches from step 2.
+The narratives use the Lecture 3 table format described in [SDS.md](../SDS.md#notation).
 
 ### UC-BM01 Log in
 
@@ -330,7 +330,7 @@ Every manager use case also has the emergency screen 2 taps away (NFR-16).
 
 ## 3. State diagrams
 
-Each object has exactly one state diagram, so no two diagrams can disagree. This part has these three. The Bill, Payment claim, Guest pass and Household account are in the Resident part; the Fault ticket is in the Maintenance Staff part; Expense, Opening balance, Fund summary and Charge rate are in the Committee Member part; Visit and Shift are in the Security Guard part.
+This part draws three objects: the Staff account, Announcement and Overpayment. Every other object is drawn once, in the part whose class moves it most. The Bill, Payment claim, Guest pass and Household account are in the Resident part; the Fault ticket is in the Maintenance Staff part; Expense, Opening balance, Fund summary and Charge rate are in the Committee Member part; Visit and Shift are in the Security Guard part.
 
 ### Staff account
 

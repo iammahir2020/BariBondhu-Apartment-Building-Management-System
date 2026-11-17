@@ -1,12 +1,12 @@
 # Maintenance Staff: use cases and state diagrams
 
-This part covers the Maintenance Staff user class of BariBondhu (Apartment Building Management System). Story IDs (MNT), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
+This part covers maintenance staff: the electricians, plumbers and other technicians who work only on the tickets assigned to them. IDs such as MNT-03 and NFR-10 refer to the SRS.
 
 The diagrams are `.drawio.svg` files in `diagrams/maintenance-staff/use_case/` and `diagrams/maintenance-staff/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension. The system's data flow diagram is in [Data\_Flow\_Diagrams.md](../system/Data_Flow_Diagrams.md).
 
 ## 1\. UML use case diagrams
 
-The Maintenance Staff member is the primary actor. The Building Manager and the Email Service join in as secondary actors. There are two diagrams. Apart from Reset password, every use case needs the staff member to be logged in, which the diagrams show as «include» Log in. Staff can't assign, close or reopen tickets.
+The Maintenance Staff member is the primary actor. The Building Manager receives the extra problems staff report, and the Email Service sends reset links. There are two diagrams. Every use case outside Accounts and Login includes Log in. Staff can't assign, close or reopen tickets.
 
 ![Maintenance Staff use cases: Accounts and Login](../../../diagrams/maintenance-staff/use_case/maintenance-staff-usecase-1-accounts-login.drawio.svg)
 
@@ -18,7 +18,7 @@ The Maintenance Staff member is the primary actor. The Building Manager and the 
 
 ## 2\. Use case narratives
 
-Each use case has its own narrative in the Lecture 3 table format. An alternate flow is numbered after the step it branches from, so 2a branches from step 2\.
+The narratives use the Lecture 3 table format described in [SDS.md](../SDS.md#notation).
 
 ### UC-MNT01 Log in
 
@@ -128,7 +128,7 @@ Every maintenance use case also has the emergency screen 2 taps away (NFR-16).
 
 ## 3\. State diagrams
 
-Each object has exactly one state diagram. This part has the Fault ticket, because maintenance staff move it through most of its states. An extra problem a staff member reports is an ordinary ticket marked Found by staff, so it has no diagram of its own, and a work note can't be edited or deleted, so it has no states. The staff account is in the Building Manager's Staff account diagram.
+This part draws the Fault ticket, because maintenance staff move it through most of its states. An extra problem a staff member reports is an ordinary ticket marked Found by staff, so it has no diagram of its own, and a work note can't be edited or deleted, so it has no states. The staff account is in the Building Manager's Staff account diagram.
 
 ### Fault ticket
 

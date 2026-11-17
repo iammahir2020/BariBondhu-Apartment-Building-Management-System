@@ -9,13 +9,13 @@ Course project for CSE 451 Software Engineering, Autumn 2026, Independent Univer
 
 ## Team
 
-| Member | User class owned |
-|---|---|
-| Mahir Al Kamal | Resident |
-| Jannatul Ferdus Nishi | Building Manager |
-| Tawhid | Security Guard |
-| Ayesha Siddiqa | Committee Member |
-| Adika Rahman | Maintenance Staff |
+| Member | ID | User class owned |
+|---|---|---|
+| Mahir Al Kamal | 2632711 | Resident |
+| Jannatul Ferdus Nishi | 2231385 | Building Manager |
+| Tawhid Moslim | 2311428 | Security Guard |
+| Ayesha Siddiqa | 2211155 | Committee Member |
+| Adika Rahman | 2221975 | Maintenance Staff |
 
 ## Project links
 
@@ -29,7 +29,7 @@ Course project for CSE 451 Software Engineering, Autumn 2026, Independent Univer
 | `docs/srs/SRS.md` | Software Requirements Specification, v1.5. This is the copy we edit |
 | `archive/` folders under `docs/srs/` and `docs/sds/<class>/` | Archived Word versions, not maintained. The `.md` files are the current copies |
 | `docs/srs/figures/` | Figures used in the SRS |
-| `docs/srs/latex/` | LaTeX template for the final SRS report |
+| `docs/srs/latex/` | LaTeX source of the SRS for the PDF (`main.tex` and `figures/`), made from `SRS.md`. Compile with XeLaTeX |
 | `docs/sds/` | Software Design Specification: `SDS.md` (index and notation), one part per user class with its use case narratives and state diagrams, `system/` for the data flow diagrams, and `design-inputs-from-srs.md` (states, use case links, data flows and entities shared by all parts) |
 | `docs/decisions.md` | Technology and design decisions with their reasons |
 | `diagrams/` | Diagram sources (`.drawio.svg`), one folder per user class, plus `system/` (data flow diagrams) and `system-administrator/` |

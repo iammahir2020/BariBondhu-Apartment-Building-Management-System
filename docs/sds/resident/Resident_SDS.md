@@ -1,12 +1,12 @@
 # Resident: use cases and state diagrams
 
-This part covers the Resident user class of BariBondhu (Apartment Building Management System). Story IDs (RES), business rules (BR) and non-functional requirements (NFR) refer to the SRS.
+This part covers residents: the owners and tenants who share one household account per flat. IDs such as RES-01, BR-05 and NFR-06 refer to the SRS.
 
 The diagrams are `.drawio.svg` files in `diagrams/resident/use_case/` and `diagrams/resident/state_diagrams/`. To edit one, open it in draw.io or the VS Code Draw.io Integration extension.
 
 ## 1. UML use case diagrams
 
-The Resident is the primary actor. The Payment Gateway, the Email Service and the Building Manager join in as secondary actors. There are four diagrams, one per subsystem. Apart from Reset password, every use case needs the resident to be logged in, which the diagrams show as «include» Log in. Pay bill is drawn in italics because it is abstract: a resident never just "pays", they pay online or record a cash or bank payment. The condition for each «extend» is written on its arrow.
+The Resident is the primary actor. The Payment Gateway takes online payments, the Email Service sends reset links, and the Building Manager checks cash and bank claims and receives fault reports. There are four diagrams, one per subsystem. Every use case outside Accounts and Login includes Log in. Pay bill is drawn in italics because it is abstract: a resident never just "pays", they pay online or record a cash or bank payment. The condition for each «extend» is written on its arrow.
 
 ![Resident use cases: Accounts and Login](../../../diagrams/resident/use_case/resident-usecase-1-accounts-login.drawio.svg)
 
@@ -26,7 +26,7 @@ The Resident is the primary actor. The Payment Gateway, the Email Service and th
 
 ## 2. Use case narratives
 
-Each use case has its own narrative in the Lecture 3 table format. An alternate flow is numbered after the step it branches from, so 2a branches from step 2.
+The narratives use the Lecture 3 table format described in [SDS.md](../SDS.md#notation).
 
 ### UC-R01 Log in
 
@@ -253,7 +253,7 @@ Every resident use case also has the emergency screen 2 taps away (NFR-16).
 
 ## 3. State diagrams
 
-Each object has exactly one state diagram, so no two diagrams can disagree. This part has these four. The others are in the parts of the class that moves them most: Fault ticket (Maintenance Staff); Staff account, Announcement and Overpayment (Building Manager); Expense, Opening balance, Fund summary and Charge rate (Committee Member); Visit and Shift (Security Guard).
+This part draws four objects: the Bill, Guest pass, Payment claim and Household account. Every other object is drawn once, in the part whose class moves it most: Fault ticket (Maintenance Staff); Staff account, Announcement and Overpayment (Building Manager); Expense, Opening balance, Fund summary and Charge rate (Committee Member); Visit and Shift (Security Guard).
 
 ### Bill
 

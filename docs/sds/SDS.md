@@ -18,7 +18,7 @@ Story IDs (RES, SG, BM, CM, MNT, ADM), business rules (BR) and non-functional re
 | [Building Manager](building-manager/Building_Manager_SDS.md) | Jannatul Ferdus Nishi | UC-BM01 to UC-BM22 | Staff account, Announcement, Overpayment |
 | [System Administrator](system-administrator/System_Administrator_SDS.md) | Mahir Al Kamal | UC-ADM01 to UC-ADM04 | (manager account: see Staff account) |
 | [Committee Member](committee-member/Committee_Member_SDS.md) | Ayesha Siddiqa | UC-C01 to UC-C12 | Expense, Opening balance, Fund summary, Charge rate |
-| [Security Guard](security-guard/Security_Guard_SDS.md) | Tawhid | UC-SG01 to UC-SG09 | Visit, Shift |
+| [Security Guard](security-guard/Security_Guard_SDS.md) | Tawhid Moslim | UC-SG01 to UC-SG09 | Visit, Shift |
 | [Maintenance Staff](maintenance-staff/Maintenance_Staff_SDS.md) | Adika Rahman | UC-MNT01 to UC-MNT08 | Fault ticket |
 | [Data flow diagram](system/Data_Flow_Diagrams.md) | Mahir Al Kamal | Level 0 (context diagram) for the whole system | |
 
