@@ -11,8 +11,9 @@
 <link rel="stylesheet" href="proto.css">
 </head>
 <body class="proto-phone">
-<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Log in (all roles)</span></div>
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Log in (all roles)</span><span id="proto-controls" class="row wrap" style="gap: 12px"></span></div>
 <div class="proto-stage">
+<template id="screen">
 <div class="phone" style="height: 780px">
   <header class="topbar">
     <span class="spacer"></span>
@@ -22,19 +23,37 @@
   <main class="content" style="padding: 32px 24px; gap: 28px">
     <div class="stack" style="gap: 14px">
       <span class="logo" style="width: 56px; height: 56px; border-radius: 16px"><svg class="i lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>
-      <h1 class="h1" style="font-size: 26px">Log in to BariBondhu</h1>
-      <p class="small" style="font-size: 15px">Use the username and password the building manager gave you.</p>
+      <h1 class="h1" style="font-size: 26px">{{ heading }}</h1>
+      <p class="small" style="font-size: 15px">{{ intro }}</p>
     </div>
+    <sc-if value="{{ login }}" hint-placeholder-val="{{ true }}">
     <form class="stack" style="gap: 18px">
       <div class="field"><label for="u">Username</label><input id="u" class="input mono" value="bb-4k7q2m"></div>
       <div class="field"><label for="p">Password</label><input id="p" class="input" type="password" value="password1"></div>
       <a class="btn btn-primary full" href="R-Home.html">Log in</a>
-      <a class="btn btn-ghost full" href="S-Login.html">Forgot password?</a>
+      <button type="button" class="btn btn-ghost full" onClick="{{ forgot }}">Forgot password?</button>
     </form>
+    </sc-if>
+    <sc-if value="{{ locked }}" hint-placeholder-val="{{ false }}">
     <div class="alert alert-warn">
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       <div><div class="h3">Too many wrong passwords</div><div>This phone can try again in 14 minutes. Other phones are not affected.</div></div>
     </div>
+    </sc-if>
+    <sc-if value="{{ reset }}" hint-placeholder-val="{{ false }}">
+    <form class="stack" style="gap: 18px">
+      <div class="field"><label for="ru">Username</label><input id="ru" class="input mono" value="{{ resetUser }}"></div>
+      <button type="button" class="btn btn-primary full" onClick="{{ send }}">Send reset link</button>
+      <button type="button" class="btn btn-ghost full" onClick="{{ back }}">Back to log in</button>
+    </form>
+    <sc-if value="{{ sent }}" hint-placeholder-val="{{ false }}">
+    <div class="alert alert-ok"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg><div><div class="h3">Check your email</div><div>We sent a link to h•••@example.com. It works for 30 minutes.</div></div></div>
+    </sc-if>
+    <sc-if value="{{ noEmail }}" hint-placeholder-val="{{ false }}">
+    <div class="alert alert-warn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg><div><div class="h3">This account has no email</div><div>Ask the building manager for a new temporary password. If you are the manager, ask the system administrator.</div></div></div>
+    </sc-if>
+    <div class="small">The administrator's own password is reset by the development team, not here.</div>
+    </sc-if>
     <div class="stack tight">
       <div class="label">Demo: log in as another role</div>
       <div class="chips">
@@ -47,7 +66,28 @@
     </div>
   </main>
 </div>
+</template>
+<div id="mount"></div>
 </div>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["Log in","Too many wrong passwords","Forgot password: link sent","Forgot password: no email"],"default":"Log in"},"$preview":{"width":360,"height":780}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const map = { 'Log in': 'login', 'Too many wrong passwords': 'locked', 'Forgot password: link sent': 'sent', 'Forgot password: no email': 'noEmail' };
+    const v = this.state.view ?? map[this.props.state ?? 'Log in'];
+    const reset = v === 'reset' || v === 'sent' || v === 'noEmail';
+    return {
+      login: !reset, locked: v === 'locked', reset, sent: v === 'sent', noEmail: v === 'noEmail',
+      heading: reset ? 'Reset your password' : 'Log in to BariBondhu',
+      intro: reset ? 'Enter your username. A reset link goes to the email on your account.' : 'Use the username and password the building manager gave you.',
+      resetUser: v === 'noEmail' ? 'bb-g7s2l4' : 'bb-4k7q2m',
+      forgot: () => this.setState({ view: 'reset' }),
+      send: () => this.setState({ view: 'sent' }),
+      back: () => this.setState({ view: 'login' })
+    };
+  }
+}
+</script>
+<script src="proto.js"></script>
 <script src="hotspots.js"></script>
 </body>
 </html>
