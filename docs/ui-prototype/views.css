@@ -1,0 +1,110 @@
+/*
+ * BariBondhu prototype: the second view of every screen.
+ * Phone screens (R-, G-, C-, T-, S-) get a web view (*-Web.html): the bottom menu becomes a side menu, the top bar
+ * becomes the desk bar, and the page gets a wider layout.
+ * Laptop screens (M-, A-) get a mobile view (*-Mobile.html): the side menu becomes a bottom menu with "More", and
+ * tables turn into stacked cards so nothing scrolls sideways at 360 px (NFR-23).
+ */
+
+/* ---------- Web view of a phone screen ---------- */
+body.proto-web { background: var(--bg); }
+body.proto-web .proto-stage { display: block; padding: 0; overflow: visible; }
+.phone.web {
+  width: auto; height: auto !important; min-height: calc(100vh - 44px);
+  display: grid; grid-template-columns: 264px minmax(0, 1fr); grid-template-rows: auto auto 1fr;
+  grid-template-areas: "nav top" "nav banner" "nav main";
+  border-radius: 0; box-shadow: none; overflow: visible; background: var(--bg);
+}
+.phone.web > .webnav { grid-area: nav; }
+.phone.web > .topbar { grid-area: top; height: auto; min-height: 68px; padding: 10px 28px; gap: 12px; flex-wrap: wrap; }
+.phone.web > .topbar.sub { padding-left: 16px; }
+.phone.web > .topbar .logo { display: none; }
+.phone.web > .topbar .brand, .phone.web > .topbar .title { font-size: 22px; color: var(--ink); }
+/* Anything else in the frame (like the guard's Pass valid banner) sits under the top bar */
+.phone.web > :not(.webnav):not(.topbar):not(.content) { grid-area: banner; }
+.phone.web > .content { grid-area: main; padding: 24px 28px 40px; overflow: visible; width: 100%; max-width: 760px; }
+.phone.web > .content.wide { max-width: 1180px; }
+.phone.web .grid2 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.phone.web .btn.full { width: auto; min-width: 240px; align-self: flex-start; }
+.phone.web .content.wide .btn.full { min-width: 0; }
+
+/* Two columns on wide screens: put .col-main and .col-side children in a grid (set per screen) */
+.phone.web > .content.cols { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 20px; align-items: start; }
+.phone.web > .content.cols > * { grid-column: 1; }
+.phone.web > .content.cols > .col-side { grid-column: 2; }
+.phone.web > .content.cols > .col-full { grid-column: 1 / -1; }
+.phone.web .web-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* Side menu built from the role's navigation */
+.webnav { background: var(--brand-900); color: #DCEDEA; padding: 20px 14px; display: flex; flex-direction: column; gap: 4px; min-height: 100%; }
+.webnav .brand { color: #fff; padding: 4px 8px 6px; }
+.webnav .logo { background: #fff; color: var(--brand-900); }
+.webnav .who { font-size: 13px; color: #8FB5AF; padding: 0 8px 14px 50px; }
+.webnav a { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 12px; border-radius: 10px; color: #CFE3DF; text-decoration: none; font-weight: 500; font-size: 15px; }
+.webnav a.on { background: rgba(255, 255, 255, 0.12); color: #fff; font-weight: 700; }
+.webnav .sect { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #8FB5AF; padding: 14px 12px 4px; font-weight: 700; }
+
+/* Log-in screen on the web: centred card, no menu */
+.phone.web.auth { grid-template-columns: 1fr; grid-template-areas: "top" "banner" "main"; }
+.phone.web.auth > .content { justify-self: center; max-width: 480px; margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 32px; }
+
+/* ---------- Mobile view of a laptop screen ---------- */
+body.proto-mobile { background: #D5DDDA; }
+.shell.mobile {
+  width: 360px; min-height: 800px; margin: 24px auto 48px; display: flex; flex-direction: column; flex-wrap: nowrap;
+  border-radius: 24px; overflow: hidden; box-shadow: 0 12px 40px rgba(20, 32, 31, 0.22);
+}
+.shell.mobile > .side { display: none; }
+.shell.mobile > .main { flex: 1 1 auto; }
+.shell.mobile > .navbar { order: 99; position: sticky; bottom: 0; }
+.shell.mobile .deskbar { min-height: 64px; padding: 8px 8px 8px 16px; gap: 8px; }
+.shell.mobile .deskbar .h1 { font-size: 18px; }
+.shell.mobile .deskbar .search { order: 10; flex: 1 1 100%; max-width: none; }
+.shell.mobile .deskbar .seg { order: 10; flex: 1 1 100%; }
+.shell.mobile .deskbody { padding: 16px; gap: 16px; }
+.shell.mobile .panes > * { flex-basis: 100%; }
+.shell.mobile .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.shell.mobile .kpi { padding: 12px 14px; }
+.shell.mobile .kpi .num { font-size: 22px; }
+.shell.mobile .row { flex-wrap: wrap; }
+
+/* Tables become one card per row: each cell shows its column name (data-label) on the left */
+.shell.mobile .tablewrap { overflow: visible; }
+.shell.mobile table.t thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.shell.mobile table.t, .shell.mobile table.t tbody, .shell.mobile table.t tr { display: block; width: 100%; }
+.shell.mobile table.t tr { padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.shell.mobile table.t tr:last-child { border-bottom: 0; }
+.shell.mobile table.t td { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 4px 0; border: 0; text-align: right; min-height: 32px; }
+.shell.mobile table.t td::before { content: attr(data-label); color: var(--muted); font-size: 13px; font-weight: 600; text-align: left; flex: none; }
+.shell.mobile table.t td[data-label=""]::before { content: none; }
+.shell.mobile table.t td[data-label=""] { justify-content: flex-start; }
+.shell.mobile table.t tr.late { background: #FFF5F4; }
+.shell.mobile table.t tr.late td { background: transparent; }
+.shell.mobile table.t tr.sel { background: var(--brand-50); }
+.shell.mobile table.t tr.sel td { background: transparent; }
+
+/* Admin setup on a phone: the steps become a strip at the top instead of a side menu */
+.shell.mobile.setup > .side { display: flex; flex-direction: row; gap: 8px; overflow-x: auto; padding: 12px; max-width: none; flex: none; }
+.shell.mobile.setup > .side .brand, .shell.mobile.setup > .side .spacer, .shell.mobile.setup > .side > div:last-child { display: none; }
+.shell.mobile.setup > .side .step { flex: none; min-width: 200px; }
+
+@media (max-width: 420px) {
+  .shell.mobile { width: 100%; margin: 0; border-radius: 0; box-shadow: none; }
+}
+
+/* Phone: the desk bar keeps title + Emergency on one line; page actions get their own full-width row */
+.shell.mobile .deskbar > :first-child { flex: 1 1 0; min-width: 0; }
+.shell.mobile .deskbar .tbtn, .shell.mobile .deskbar .btn { order: 11; flex: 1 1 100%; justify-content: center; min-height: 48px; }
+.shell.mobile .deskbar .avatar { display: none; }
+.shell.mobile table.t td .tdv { min-width: 0; text-align: right; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 4px 8px; }
+.shell.mobile table.t td[data-label=""] .tdv { justify-content: flex-start; text-align: left; }
+
+/* Web: a button pinned to the bottom of the phone screen sits right under the form instead */
+.phone.web .content > [style*="margin-top: auto"] { margin-top: 8px !important; }
+.phone.web .stepper { max-width: 320px; }
+/* Web log-in card: buttons fill the card */
+.phone.web.auth .btn.full { width: 100%; min-width: 0; }
+/* Phone tables: the column name always uses the normal font, even in a monospace cell */
+.shell.mobile table.t td::before { font-family: Inter, 'Hind Siliguri', system-ui, sans-serif; letter-spacing: 0; }
+/* Web: spacers that push a button to the bottom of the phone screen aren't needed on a wide page */
+.phone.web .content > .spacer { display: none; }

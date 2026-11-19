@@ -6,10 +6,27 @@ JavaScript, with no build step.
 ## Opening it
 
 Open `index.html` in a browser (double-click it). The first page shows the design system (colours, type, status
-badges, components) and links to every screen. Each screen has a bar at the top with **← All screens**.
+badges, components) and links to every screen in both views. Each screen has a bar at the top with **← All screens**.
 
 Screens load the Inter and Hind Siliguri fonts from Google Fonts. Without internet, Bangla text falls back to the
 system font.
+
+## Phone and web views
+
+BariBondhu is a responsive web app (SRS section 2: residents and staff use phones, the manager also uses a laptop,
+the guard may use a tablet). So every screen comes in two views, and both are the reference for the real app:
+
+| Screen group | Phone view | Web view |
+|---|---|---|
+| Shared, Resident, Guard, Committee, Maintenance | `X.html` (the original design) | `X-Web.html`: side menu with the role's sections, desk bar, wider page |
+| Manager, Administrator | `X-Mobile.html`: bottom menu (Home, Claims, Tickets, More), tables shown as one card per row | `X.html` (the original design) |
+
+- **View: Phone · Web** in the bar at the top of every screen switches to the same screen in the other view.
+- Links inside a view stay in that view, so a whole journey can be clicked through as phone or as web.
+- On the phone, the manager's other sections are under **More** (`M-More-Mobile.html`), which has no web
+  counterpart because the web view shows them in the side menu.
+- Phone views fit 360 px with no sideways scrolling and keep 48 px tap targets (NFR-23). Shared styles for both
+  views are in `views.css`.
 
 ## What you can do
 
@@ -46,9 +63,11 @@ All names, flats and amounts are sample data.
 | `G-*.html` | Security guard (gate phone, Bangla first) |
 | `C-*.html` | Committee member (phone) |
 | `T-*.html` | Maintenance staff (phone) |
-| `M-*.html` | Building manager (laptop; stacks at phone width) |
+| `M-*.html` | Building manager (laptop) |
 | `A-*.html` | System administrator (laptop) |
+| `*-Web.html`, `*-Mobile.html` | The other view of each screen (see "Phone and web views") |
 | `bb.css` | Colours and components, which become the shadcn/Tailwind theme in the real app |
+| `views.css` | Layout of the web views of phone screens and the phone views of laptop screens |
 | `proto.css`, `hotspots.js`, `proto.js` | Prototype frame, tap-target outlines, and the small runtime for interactive screens |
 
 ## Known gaps

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Expenses · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="stylesheet" href="views.css">
+</head>
+<body class="proto-mobile">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Manager · Expenses (phone)</span><span class="proto-view">View: <b aria-current="page">Phone</b> · <a href="M-Expenses.html">Web</a></span></div>
+<div class="shell mobile">
+  <nav class="navbar" aria-label="Manager">
+    <a href="M-Dashboard-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>Home</a>
+    <a href="M-Claims-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6"/></svg>Claims</a>
+    <a href="M-Tickets-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4.5 4.5 0 0 0-5.8 5.8L3 17l4 4 5.7-5.7a4.5 4.5 0 0 0 5.8-5.8l-2.8 2.8-3-.5-.5-3z"/></svg>Tickets</a>
+    <a class="on" aria-current="page" href="M-More-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>More</a>
+  </nav>
+  <nav class="side" aria-label="Manager">
+    <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>BariBondhu</div>
+    <a class="nav" href="M-Dashboard-Mobile.html">Dashboard</a>
+    <div class="sect">Money</div>
+    <a class="nav" href="M-Claims-Mobile.html">Payment claims<span class="count">3</span></a>
+    <a class="nav" href="M-Bills-Mobile.html">Monthly bills</a>
+    <a class="nav" href="M-Defaulters-Mobile.html">Unpaid dues</a>
+    <a class="nav on" href="M-Expenses-Mobile.html">Expenses</a>
+    <a class="nav" href="M-Fund-Mobile.html">Fund summary</a>
+    <div class="sect">Building</div>
+    <a class="nav" href="M-Tickets-Mobile.html">Tickets<span class="count">5</span></a>
+    <a class="nav" href="M-Shifts-Mobile.html">Guard shifts</a>
+    <a class="nav" href="M-Accounts-Mobile.html">Accounts</a>
+    <a class="nav" href="M-Announcements-Mobile.html">Announcements</a>
+    <a class="nav" href="M-Emergency-Mobile.html">Emergency numbers</a>
+  </nav>
+  <div class="main">
+    <header class="deskbar">
+      <h1 class="h1 grow">Expenses · November 2026</h1>
+      <a class="lang" href="M-Expenses-Mobile.html" aria-label="বাং: Switch to Bangla">বাং</a>
+      <a class="sos" href="S-Emergency.html"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>Emergency</a>
+    </header>
+    <div class="deskbody" role="main">
+      <div class="panes">
+        <section class="pane-main stack">
+          <div class="tablewrap">
+            <table class="t">
+              <thead><tr><th>Date</th><th>Expense</th><th>Category</th><th class="num">Amount</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+              <tbody>
+                <tr><td data-label="Date"><span class="tdv">13 Nov</span></td><td data-label="Expense"><span class="tdv">Generator diesel, 200 litres</span></td><td data-label="Category"><span class="tdv">Utility</span></td><td data-label="Amount" class="num"><span class="tdv">৳21,400.00</span></td><td data-label="Status"><span class="tdv"><span class="badge b-warn">Waiting for approval</span></span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Expenses-Mobile.html">Edit</a></span></td></tr>
+                <tr><td data-label="Date"><span class="tdv">10 Nov</span></td><td data-label="Expense"><span class="tdv">Water pump motor rewinding</span></td><td data-label="Category"><span class="tdv">Repair</span></td><td data-label="Amount" class="num"><span class="tdv">৳18,500.00</span></td><td data-label="Status"><span class="tdv"><span class="badge b-warn">Waiting for approval</span></span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Expenses-Mobile.html">Edit</a></span></td></tr>
+                <tr><td data-label="Date"><span class="tdv">8 Nov</span></td><td data-label="Expense"><span class="tdv">Lobby paint touch-up<div class="small" style="color: var(--bad)">Committee: "Get a second quote first."</div></span></td><td data-label="Category"><span class="tdv">Repair</span></td><td data-label="Amount" class="num"><span class="tdv">৳12,000.00</span></td><td data-label="Status"><span class="tdv"><span class="badge b-bad">Rejected</span></span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Expenses-Mobile.html">Resubmit</a></span></td></tr>
+                <tr><td data-label="Date"><span class="tdv">5 Nov</span></td><td data-label="Expense"><span class="tdv">Staff salaries, October</span></td><td data-label="Category"><span class="tdv">Salary</span></td><td data-label="Amount" class="num"><span class="tdv">৳1,95,000.00</span></td><td data-label="Status"><span class="tdv"><span class="badge b-ok">Approved</span></span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Expenses-Mobile.html">Add correction</a></span></td></tr>
+                <tr><td data-label="Date"><span class="tdv">5 Nov</span></td><td data-label="Expense"><span class="tdv">Correction: cleaner salary overpaid<div class="small">Linked to "Staff salaries, October"</div></span></td><td data-label="Category"><span class="tdv">Salary</span></td><td data-label="Amount" class="num"><span class="tdv">−৳2,000.00</span></td><td data-label="Status"><span class="tdv"><span class="badge b-ok">Approved</span></span></td><td data-label=""><span class="tdv"></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="small">Approved expenses can't be edited or deleted. Fix them with a correcting expense, which also needs approval.</div>
+        </section>
+        <aside class="pane-side card stack" style="gap: 14px">
+          <div class="h2">Record an expense</div>
+          <div class="grid2"><div class="field"><label for="am">Amount</label><input id="am" class="input money" value="৳6,800.00"></div><div class="field"><label for="ed">Expense date</label><input id="ed" class="input" value="15 Nov 2026"></div></div>
+          <div class="field"><label for="ca">Category</label><select id="ca" class="input"><option>Repair</option><option>Salary</option><option>Utility</option><option>Other</option></select></div>
+          <div class="field"><label for="de">Description</label><textarea id="de" class="input" style="min-height: 64px">Lift 2 door sensor replaced</textarea></div>
+          <button type="button" class="photo" style="height: 80px; border: 1.5px dashed var(--field); font-family: inherit">Add receipt photo (optional)</button>
+          <a class="btn btn-primary full sm" href="M-Expenses-Mobile.html">Send for committee approval</a>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="hotspots.js"></script>
+</body>
+</html>

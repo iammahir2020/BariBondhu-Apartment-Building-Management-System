@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Emergency numbers · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}.num-row{display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:16px 18px;border-bottom:1px solid var(--line)}.num-row:last-child{border-bottom:0}.num-row .input{max-width:260px}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="stylesheet" href="views.css">
+</head>
+<body class="proto-mobile">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Manager · Emergency numbers (phone)</span><span class="proto-view">View: <b aria-current="page">Phone</b> · <a href="M-Emergency.html">Web</a></span></div>
+<div class="shell mobile">
+  <nav class="navbar" aria-label="Manager">
+    <a href="M-Dashboard-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>Home</a>
+    <a href="M-Claims-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6"/></svg>Claims</a>
+    <a href="M-Tickets-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4.5 4.5 0 0 0-5.8 5.8L3 17l4 4 5.7-5.7a4.5 4.5 0 0 0 5.8-5.8l-2.8 2.8-3-.5-.5-3z"/></svg>Tickets</a>
+    <a class="on" aria-current="page" href="M-More-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>More</a>
+  </nav>
+  <nav class="side" aria-label="Manager">
+    <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>BariBondhu</div>
+    <a class="nav" href="M-Dashboard-Mobile.html">Dashboard</a>
+    <div class="sect">Money</div>
+    <a class="nav" href="M-Claims-Mobile.html">Payment claims<span class="count">3</span></a>
+    <a class="nav" href="M-Bills-Mobile.html">Monthly bills</a>
+    <a class="nav" href="M-Defaulters-Mobile.html">Unpaid dues</a>
+    <a class="nav" href="M-Expenses-Mobile.html">Expenses</a>
+    <a class="nav" href="M-Fund-Mobile.html">Fund summary</a>
+    <div class="sect">Building</div>
+    <a class="nav" href="M-Tickets-Mobile.html">Tickets<span class="count">5</span></a>
+    <a class="nav" href="M-Shifts-Mobile.html">Guard shifts</a>
+    <a class="nav" href="M-Accounts-Mobile.html">Accounts</a>
+    <a class="nav" href="M-Announcements-Mobile.html">Announcements</a>
+    <a class="nav on" href="M-Emergency-Mobile.html">Emergency numbers</a>
+  </nav>
+  <div class="main">
+    <header class="deskbar">
+      <h1 class="h1 grow">Emergency numbers</h1>
+      <a class="sos" href="S-Emergency.html"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>Emergency</a>
+    </header>
+    <div class="deskbody" role="main">
+      <div class="panes">
+        <section class="pane-main stack">
+          <p class="small" style="font-size: 15px">Every resident, guard, committee member and repair worker sees these numbers, in this order, on their emergency screen.</p>
+          <div class="card flush">
+            <div class="num-row"><span class="ico red"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><div class="grow"><div class="h3">National emergency · 999</div><div class="small">Always first. Can't be edited or removed.</div></div></div>
+            <div class="num-row"><span class="ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg></span><div class="grow"><label class="h3" for="gd">Guard desk</label><div class="small">Answered at the gate, day and night</div></div><input id="gd" class="input" value="01700-000111"></div>
+            <div class="num-row"><span class="ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg></span><div class="grow"><label class="h3" for="mg">Building manager</label><div class="small">Your number for emergencies</div></div><div class="stack tight"><input id="mg" class="input error" value="0170000"><span class="errtext">Enter a valid phone number</span></div></div>
+          </div>
+          <div class="row" style="gap: 12px"><a class="btn btn-primary sm" href="M-Emergency-Mobile.html">Save numbers</a><span class="small">Bangladeshi numbers, 9 to 11 digits. Neither can be empty.</span></div>
+        </section>
+        <aside class="pane-side stack">
+          <div class="h2">Common-area places</div>
+          <div class="small">Residents pick from this list when they report a common-area fault.</div>
+          <div class="chips"><span class="chip">Lift 1</span><span class="chip">Lift 2</span><span class="chip">Water pump</span><span class="chip">Generator</span><span class="chip">Roof</span><span class="chip">Stairs</span><span class="chip">Parking</span><span class="chip">Lobby</span><span class="chip">Other</span></div>
+          <div class="row" style="gap: 8px"><label for="np" style="position: absolute; left: -9999px">New place</label><input id="np" class="input grow" placeholder="Add a place, e.g. Gym"><a class="tbtn" href="M-Emergency-Mobile.html" style="min-height: 52px">Add</a></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="hotspots.js"></script>
+</body>
+</html>
