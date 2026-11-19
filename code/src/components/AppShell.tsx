@@ -1,9 +1,12 @@
 /**
- * The frame around every signed-in page, copied from the UI prototype. Phone roles (resident, guard, committee,
- * maintenance) get a top bar and a bottom menu; desk roles (manager, admin) get a side menu and a top bar. Both
- * show the role's name, the Emergency button, the Bangla/English switch and Log out.
+ * The frame around every signed-in page, responsive for every role, following the prototype's two views of each
+ * screen (`X.html` and `X-Web.html` / `X-Mobile.html` in `docs/ui-prototype/`):
  *
- * The language switch and Log out are placeholders until login (step 6) and the Bangla feature are built.
+ * - Phones and tablets (under 1024 px): top bar, the page, and a bottom menu with More when needed.
+ * - Laptops (1024 px and up): dark side menu with every section, top bar, and a wider page.
+ *
+ * Both show the role's name, the Bangla/English switch, Emergency and Log out. The language switch and Log out are
+ * placeholders until login (step 6) and the Bangla feature are built.
  *
  * @author Mahir Al Kamal
  */
@@ -11,8 +14,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Building2, LogOut, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { RoleNav } from '@/components/RoleNav';
-import { DESKTOP_ROLES, NAV_ITEMS } from '@/lib/navigation';
+import { BottomNav, SideNav } from '@/components/RoleNav';
 import { ROLE_LABELS, type Role } from '@/lib/roles';
 
 /** Props for {@link AppShell}. */
@@ -24,89 +26,74 @@ export interface AppShellProps {
 }
 
 /**
- * Wraps a role's pages in the shared frame. Each role's `layout.tsx` uses it once.
+ * Wraps a role's pages in the shared, responsive frame. Each role's `layout.tsx` uses it once.
  * @param props - The role and the page.
  * @returns The page inside the frame.
  */
 export function AppShell({ role, children }: AppShellProps) {
-  return DESKTOP_ROLES.has(role) ? (
-    <DesktopShell role={role}>{children}</DesktopShell>
-  ) : (
-    <PhoneShell role={role}>{children}</PhoneShell>
-  );
-}
-
-/** Phone layout: top bar, page, bottom menu. Centred and kept phone-width on large screens. */
-function PhoneShell({ role, children }: AppShellProps) {
+  const roleLabel = ROLE_LABELS[role];
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background">
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border bg-card pr-2 pl-4">
-        <Brand label={ROLE_LABELS[role]} />
-        <span className="flex-1" />
-        <TopBarActions compact />
-      </header>
-      <main className="flex flex-1 flex-col gap-4 p-4">{children}</main>
-      <RoleNav items={NAV_ITEMS[role]} variant="bottom" label="Main" />
-    </div>
-  );
-}
-
-/** Desktop layout: dark side menu on the left, top bar and page on the right. */
-function DesktopShell({ role, children }: AppShellProps) {
-  return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="flex w-64 shrink-0 flex-col gap-1 bg-sidebar px-3.5 py-5 text-sidebar-foreground">
-        <div className="px-2 pb-4">
+    <div className="min-h-screen bg-background lg:grid lg:grid-cols-[264px_minmax(0,1fr)]">
+      <aside className="sticky top-0 hidden h-screen flex-col gap-1 overflow-y-auto bg-sidebar px-3.5 py-5 text-sidebar-foreground lg:flex">
+        <div className="px-2 pb-1">
           <Brand label="BariBondhu" inverted />
         </div>
-        <RoleNav items={NAV_ITEMS[role]} variant="side" label={ROLE_LABELS[role]} />
+        <p className="pb-3.5 pl-12.5 text-[13px] text-[#8fb5af]">{roleLabel}</p>
+        <SideNav role={role} label={roleLabel} />
       </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-card px-6">
-          <p className="flex-1 text-lg font-bold">{ROLE_LABELS[role]}</p>
+
+      <div className="flex min-h-screen min-w-0 flex-col">
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-card pr-2 pl-4 lg:h-17 lg:gap-3 lg:px-7">
+          <div className="min-w-0 flex-1 lg:hidden">
+            <Brand label={roleLabel} />
+          </div>
+          <p className="hidden flex-1 text-[22px] font-bold lg:block">{roleLabel}</p>
           <TopBarActions />
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-6">{children}</main>
+        <main className="flex w-full flex-1 flex-col gap-4 p-4 lg:max-w-295 lg:gap-5 lg:px-7 lg:py-6">
+          {children}
+        </main>
+        <BottomNav role={role} label="Main" className="lg:hidden" />
       </div>
     </div>
   );
 }
 
-/** Logo tile and a name next to it. */
+/** Logo tile and a name next to it. The logo is left out on phones to keep room for the name. */
 function Brand({ label, inverted = false }: { label: string; inverted?: boolean }) {
   return (
     <div
       className={
         inverted
           ? 'flex items-center gap-2.5 text-[17px] font-bold text-white'
-          : 'flex min-w-0 items-center gap-2.5 truncate text-[17px] font-bold text-primary'
+          : 'flex min-w-0 items-center gap-2.5 text-[17px] font-bold text-primary'
       }
     >
       <span
         className={
           inverted
-            ? 'grid size-8 place-items-center rounded-[9px] bg-white text-brand-900'
-            : 'grid size-8 place-items-center rounded-[9px] bg-primary text-primary-foreground'
+            ? 'grid size-8 shrink-0 place-items-center rounded-[9px] bg-white text-brand-900'
+            : 'hidden size-8 shrink-0 place-items-center rounded-[9px] bg-primary text-primary-foreground sm:grid'
         }
         aria-hidden="true"
       >
         <Building2 className="size-4.75" />
       </span>
-      {label}
+      <span className="truncate" title={label}>
+        {label}
+      </span>
     </div>
   );
 }
 
-/**
- * Language switch, Emergency and Log out. `compact` drops the text on Log out to fit a phone's top bar.
- */
-function TopBarActions({ compact = false }: { compact?: boolean }) {
+/** Language switch, Emergency and Log out. Log out shows its text only on wide screens. */
+function TopBarActions() {
   return (
     <>
       <Button
         variant="ghost"
         size="icon"
-        className="rounded-full border border-border bg-card text-sm font-semibold text-foreground"
+        className="shrink-0 rounded-full border border-border bg-card text-sm font-semibold text-foreground"
         lang="bn"
         aria-label="বাং: Switch to Bangla (coming soon)"
         title="Bangla is coming soon"
@@ -114,21 +101,29 @@ function TopBarActions({ compact = false }: { compact?: boolean }) {
       >
         বাং
       </Button>
-      <Button asChild variant="destructive" size="sm" className="rounded-full">
+      {/* On phones (under 640 px) the button is round with only the phone icon, like the prototype's `.sos.round`, so the
+          role's name keeps its room; the text stays for screen readers. */}
+      <Button
+        asChild
+        variant="destructive"
+        size="sm"
+        className="shrink-0 rounded-full max-sm:size-12 max-sm:px-0"
+      >
         <Link href="/emergency" prefetch={false}>
           <Phone aria-hidden="true" />
-          Emergency
+          <span className="max-sm:sr-only">Emergency</span>
         </Link>
       </Button>
       <Button
         variant="ghost"
-        size={compact ? 'icon' : 'sm'}
+        size="sm"
+        className="size-12 shrink-0 px-0 lg:w-auto lg:px-4"
         aria-label="Log out (coming with login)"
         title="Log out comes with login"
         disabled
       >
         <LogOut aria-hidden="true" />
-        {compact ? null : 'Log out'}
+        <span className="hidden lg:inline">Log out</span>
       </Button>
     </>
   );

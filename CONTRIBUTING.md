@@ -32,6 +32,9 @@ The reasons behind these rules are in [docs/decisions.md](docs/decisions.md).
 - Models and types are singular `PascalCase` (`Bill`, `GuestPass`). API routes are plural nouns (`/api/bills`).
 - Business rules go in `code/src/services/`, never in pages or API routes.
 - Every exported function gets a TSDoc comment (`@param`, `@returns`, `@throws`).
+- Every page works on a phone and on a laptop. Build it from both prototype views of its screen (`X.html` and
+  `X-Web.html`, or `X-Mobile.html` and `X.html` for the manager and admin), phone layout first, and check it at
+  360 px wide (no sideways scrolling, tap targets at least 48 px) and at 1280 px (NFR-23).
 - Don't edit formatting by hand. Prettier formats on save in VS Code, and the pre-commit hook runs ESLint and Prettier
   on your changed files.
 - Run `npm run lint` and `npx tsc --noEmit` in `code/` before opening a pull request. Both must pass.
