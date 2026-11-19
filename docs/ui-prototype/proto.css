@@ -16,3 +16,6 @@ body.proto-phone { background: #D5DDDA; }
   .proto-stage { padding: 0; }
   .proto-stage > .phone { border-radius: 0; box-shadow: none; }
 }
+/* Phone / Web switch: every screen links to its other view */
+.proto-view { display: inline-flex; align-items: center; gap: 6px; color: #9FB0AC; }
+.proto-view b { color: #fff; }

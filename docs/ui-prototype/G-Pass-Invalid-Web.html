@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>পাস বৈধ নয় · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@600&amp;display=swap">
+<style>body{margin:0}.result{color:#fff;padding:22px 20px;display:flex;gap:14px;align-items:center}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="stylesheet" href="views.css">
+</head>
+<body class="proto-web">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Guard · Pass not valid (web)</span><span class="proto-view">View: <a href="G-Pass-Invalid.html">Phone</a> · <b aria-current="page">Web</b></span><span id="proto-controls" class="row wrap" style="gap: 12px"></span></div>
+<div class="proto-stage">
+<template id="screen">
+<div class="phone web bn" style="height: 780px">
+  <nav class="webnav" aria-label="প্রধান"><div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>BariBondhu</div><div class="who">গেট · সেলিম</div>
+    <a class="on" aria-current="page" href="G-Home-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM18 18h3v3h-3z"/></svg>পাস যাচাই</a>
+    <a href="G-Inside-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M16 4a4 4 0 0 1 0 8M22 21c0-3-1.5-5-4-5.6"/></svg>ভেতরে আছেন · ৭</a>
+    <a href="G-Duty-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>ডিউটি</a>
+  </nav>
+  <header class="topbar sub">
+    <a class="iconbtn" href="G-Home-Web.html" aria-label="Back"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
+    <div class="stack" style="gap: 0"><div class="h3" role="heading" aria-level="1">কোড <span class="mono">111 111</span></div><div class="en-hint">Code checked 7:05 pm</div></div>
+    <span class="spacer"></span>
+    <a class="sos" href="S-Emergency-Web.html"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>জরুরি</a>
+  </header>
+  <div class="result" role="alert" style="background: {{ bg }}">
+    <span style="width: 56px; height: 56px; border-radius: 28px; background: rgba(255,255,255,.18); display: grid; place-items: center; flex: none"><svg class="i lg" viewBox="0 0 24 24" aria-hidden="true" style="stroke-width: 2.8"><path d="M6 6l12 12M18 6 6 18"/></svg></span>
+    <div><div style="font-size: 26px; font-weight: 700; line-height: 1.2">{{ title }}</div><div class="en-hint" style="color: rgba(255,255,255,.85)">{{ titleEn }}</div></div>
+  </div>
+  <main class="content" style="gap: 14px">
+    <section class="card stack tight">
+      <div class="h2">{{ reason }}</div>
+      <div class="en-hint" style="font-size: 13px">{{ reasonEn }}</div>
+    </section>
+    <sc-if value="{{ hasPass }}" hint-placeholder-val="{{ true }}">
+      <section class="card" style="padding: 4px 16px">
+        <div class="line"><span class="small">অতিথি <span class="en-hint">Guest</span></span><span class="h3">নাসরিন আক্তার</span></div>
+        <div class="line"><span class="small">ফ্ল্যাট <span class="en-hint">Flat</span></span><span class="h2">8C</span></div>
+      </section>
+    </sc-if>
+    <div class="alert alert-info"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg><div><div class="h3">ইন্টারকমে ফ্ল্যাটে জিজ্ঞেস করুন</div><div class="en-hint">Ask the flat on the intercom. Don't let the guest in on this code.</div></div></div>
+    <span class="spacer"></span>
+    <a class="btn btn-primary full" href="G-Home-Web.html" style="min-height: 60px; font-size: 18px">অন্য কোড লিখুন</a>
+    <div class="en-hint" style="text-align: center">Check another code</div>
+  </main>
+</div>
+</template>
+<div id="mount"></div>
+</div>
+<script type="text/x-dc" data-dc-script data-props='{"reason":{"editor":"enum","options":["Expired","Cancelled","Not yet valid","No pass with this code","Fully used"],"default":"Expired"},"$preview":{"width":360,"height":780}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const r = this.props.reason ?? 'Expired';
+    const m = {
+      'Expired': ['পাস বৈধ নয়', 'Pass not valid', 'মেয়াদ শেষ', 'Expired: valid until 11:00 pm yesterday'],
+      'Cancelled': ['পাস বৈধ নয়', 'Pass not valid', 'বাসিন্দা পাসটি বাতিল করেছেন', 'Cancelled by the resident'],
+      'Not yet valid': ['পাস বৈধ নয়', 'Pass not valid', 'এখনও শুরু হয়নি · কাল সকাল ১০:০০ থেকে বৈধ', 'Valid from 10:00 am tomorrow'],
+      'No pass with this code': ['পাস পাওয়া যায়নি', 'No pass found', 'এই কোডে কোনো পাস নেই', 'No pass with this code. Check the digits with the guest.'],
+      'Fully used': ['পুরো ব্যবহার হয়েছে', 'Fully used', 'অনুমতি পাওয়া সবাই ঢুকে গেছেন (৩ জনের ৩ জন)', 'All 3 approved guests are already in']
+    }[r];
+    return {
+      title: m[0], titleEn: m[1], reason: m[2], reasonEn: m[3],
+      hasPass: r !== 'No pass with this code',
+      bg: r === 'Fully used' ? '#4A5553' : '#A12C1F'
+    };
+  }
+}
+</script>
+<script src="proto.js"></script>
+<script src="hotspots.js"></script>
+</body>
+</html>

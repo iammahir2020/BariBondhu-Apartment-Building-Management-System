@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Payment claims · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="stylesheet" href="views.css">
+</head>
+<body class="proto-mobile">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Manager · Payment claims (phone)</span><span class="proto-view">View: <b aria-current="page">Phone</b> · <a href="M-Claims.html">Web</a></span></div>
+<div class="shell mobile">
+  <nav class="navbar" aria-label="Manager">
+    <a href="M-Dashboard-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>Home</a>
+    <a class="on" aria-current="page" href="M-Claims-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6"/></svg>Claims</a>
+    <a href="M-Tickets-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4.5 4.5 0 0 0-5.8 5.8L3 17l4 4 5.7-5.7a4.5 4.5 0 0 0 5.8-5.8l-2.8 2.8-3-.5-.5-3z"/></svg>Tickets</a>
+    <a href="M-More-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>More</a>
+  </nav>
+  <nav class="side" aria-label="Manager">
+    <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>BariBondhu</div>
+    <a class="nav" href="M-Dashboard-Mobile.html">Dashboard</a>
+    <div class="sect">Money</div>
+    <a class="nav on" href="M-Claims-Mobile.html">Payment claims<span class="count">3</span></a>
+    <a class="nav" href="M-Bills-Mobile.html">Monthly bills</a>
+    <a class="nav" href="M-Defaulters-Mobile.html">Unpaid dues</a>
+    <a class="nav" href="M-Expenses-Mobile.html">Expenses</a>
+    <a class="nav" href="M-Fund-Mobile.html">Fund summary</a>
+    <div class="sect">Building</div>
+    <a class="nav" href="M-Tickets-Mobile.html">Tickets<span class="count">5</span></a>
+    <a class="nav" href="M-Shifts-Mobile.html">Guard shifts</a>
+    <a class="nav" href="M-Accounts-Mobile.html">Accounts</a>
+    <a class="nav" href="M-Announcements-Mobile.html">Announcements</a>
+    <a class="nav" href="M-Emergency-Mobile.html">Emergency numbers</a>
+  </nav>
+  <div class="main">
+    <header class="deskbar">
+      <h1 class="h1 grow">Payment claims</h1>
+      <a class="tbtn" href="M-Claims-Mobile.html"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Record a payment handed to me</a>
+      <a class="lang" href="M-Claims-Mobile.html" aria-label="বাং: Switch to Bangla">বাং</a>
+      <a class="sos" href="S-Emergency.html"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>Emergency</a>
+    </header>
+    <div class="deskbody" role="main">
+      <div class="panes">
+        <div class="pane-main stack">
+          <div class="tablewrap">
+            <table class="t">
+              <thead><tr><th>Flat</th><th>Bill</th><th class="num">Amount</th><th>Paid on</th><th>Method</th><th>Waiting</th></tr></thead>
+              <tbody>
+                <tr class="sel"><td data-label="Flat"><span class="tdv"><b>7D</b></span></td><td data-label="Bill"><span class="tdv">Nov 2026</span></td><td data-label="Amount" class="num"><span class="tdv">৳4,850.00</span></td><td data-label="Paid on"><span class="tdv">15 Nov</span></td><td data-label="Method"><span class="tdv">Cash</span></td><td data-label="Waiting"><span class="tdv">4 hours</span></td></tr>
+                <tr><td data-label="Flat"><span class="tdv"><b>3A</b></span></td><td data-label="Bill"><span class="tdv">Nov 2026</span></td><td data-label="Amount" class="num"><span class="tdv">৳4,850.00</span></td><td data-label="Paid on"><span class="tdv">13 Nov</span></td><td data-label="Method"><span class="tdv">Bank transfer</span></td><td data-label="Waiting"><span class="tdv">2 days</span></td></tr>
+                <tr><td data-label="Flat"><span class="tdv"><b>11B</b></span></td><td data-label="Bill"><span class="tdv">Oct 2026</span></td><td data-label="Amount" class="num"><span class="tdv">৳9,450.00</span></td><td data-label="Paid on"><span class="tdv">14 Nov</span></td><td data-label="Method"><span class="tdv">Cash</span></td><td data-label="Waiting"><span class="tdv">1 day</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="h2" style="margin-top: 8px">Overpayments to refund</div>
+          <div class="tablewrap">
+            <table class="t">
+              <thead><tr><th>Flat</th><th>Why it's flagged</th><th class="num">Amount</th><th><span class="sr-only">Actions</span></th></tr></thead>
+              <tbody>
+                <tr><td data-label="Flat"><span class="tdv"><b>9A</b></span></td><td data-label="Why it&#x27;s flagged"><span class="tdv">Gateway payment arrived after the bill was already Paid in cash</span></td><td data-label="Amount" class="num"><span class="tdv">৳4,850.00</span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Claims-Mobile.html">Mark refunded</a></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="small">Refund the money outside the app, then mark it refunded.</div>
+        </div>
+        <aside class="pane-side card stack" style="gap: 14px">
+          <div class="row between"><div class="h2">Flat 7D · November</div><span class="badge b-info">Awaiting verification</span></div>
+          <div class="money" style="font-size: 28px">৳4,850.00</div>
+          <div class="small">Bill total ৳4,850.00 · matches</div>
+          <div class="photo" style="height: 180px" role="img" aria-label="Payment slip photo">Slip photo from the resident</div>
+          <div class="stack tight" style="font-size: 14px"><div><span class="label">Method</span> Cash to manager</div><div><span class="label">Paid on</span> 15 Nov 2026</div><div><span class="label">Recorded</span> 15 Nov, 3:30 pm</div></div>
+          <div class="field"><label for="rs">Reason (needed to reject)</label><textarea id="rs" class="input" placeholder="For example: no cash received on this date" style="min-height: 72px"></textarea></div>
+          <div class="row" style="gap: 10px"><a class="btn btn-danger-outline grow sm" href="M-Claims-Mobile.html">Reject</a><a class="btn btn-primary grow sm" href="M-Claims-Mobile.html">Accept, mark Paid</a></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="hotspots.js"></script>
+</body>
+</html>

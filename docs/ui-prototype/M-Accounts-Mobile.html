@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Accounts and occupancies · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@600&amp;display=swap">
+<style>body{margin:0}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="stylesheet" href="views.css">
+</head>
+<body class="proto-mobile">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Manager · Accounts and occupancies (phone)</span><span class="proto-view">View: <b aria-current="page">Phone</b> · <a href="M-Accounts.html">Web</a></span><span id="proto-controls" class="row wrap" style="gap: 12px"></span></div>
+<template id="screen">
+<div class="shell mobile">
+  <nav class="navbar" aria-label="Manager">
+    <a href="M-Dashboard-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>Home</a>
+    <a href="M-Claims-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6"/></svg>Claims</a>
+    <a href="M-Tickets-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4.5 4.5 0 0 0-5.8 5.8L3 17l4 4 5.7-5.7a4.5 4.5 0 0 0 5.8-5.8l-2.8 2.8-3-.5-.5-3z"/></svg>Tickets</a>
+    <a class="on" aria-current="page" href="M-More-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>More</a>
+  </nav>
+  <nav class="side" aria-label="Manager">
+    <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>BariBondhu</div>
+    <a class="nav" href="M-Dashboard-Mobile.html">Dashboard</a>
+    <div class="sect">Money</div>
+    <a class="nav" href="M-Claims-Mobile.html">Payment claims<span class="count">3</span></a>
+    <a class="nav" href="M-Bills-Mobile.html">Monthly bills</a>
+    <a class="nav" href="M-Defaulters-Mobile.html">Unpaid dues</a>
+    <a class="nav" href="M-Expenses-Mobile.html">Expenses</a>
+    <a class="nav" href="M-Fund-Mobile.html">Fund summary</a>
+    <div class="sect">Building</div>
+    <a class="nav" href="M-Tickets-Mobile.html">Tickets<span class="count">5</span></a>
+    <a class="nav" href="M-Shifts-Mobile.html">Guard shifts</a>
+    <a class="nav on" href="M-Accounts-Mobile.html">Accounts</a>
+    <a class="nav" href="M-Announcements-Mobile.html">Announcements</a>
+    <a class="nav" href="M-Emergency-Mobile.html">Emergency numbers</a>
+  </nav>
+  <div class="main">
+    <header class="deskbar">
+      <h1 class="h1 grow">Accounts</h1>
+      <div class="seg" role="group" aria-label="Account type" style="min-width: 300px"><button type="button" class="{{ hhCls }}" onClick="{{ pickHouseholds }}">Households · 96</button><button type="button" class="{{ staffCls }}" onClick="{{ pickStaff }}">Staff and committee · 14</button></div>
+      <a class="sos" href="S-Emergency.html"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>Emergency</a>
+    </header>
+    <div class="deskbody" role="main">
+      <div class="panes">
+        <sc-if value="{{ households }}" hint-placeholder-val="{{ true }}">
+        <div class="pane-main stack">
+          <div class="tablewrap">
+            <table class="t">
+              <thead><tr><th>Flat</th><th>Household</th><th>Type</th><th>Phone</th><th>Username</th><th>Account</th><th><span class="sr-only">Actions</span></th></tr></thead>
+              <tbody>
+                <tr class="sel"><td data-label="Flat"><span class="tdv"><b>1B</b></span></td><td data-label="Household" class="small"><span class="tdv">No household · moved out 31 Oct</span></td><td data-label="Type"><span class="tdv">—</span></td><td data-label="Phone"><span class="tdv">—</span></td><td data-label="Username"><span class="tdv">—</span></td><td data-label="Account"><span class="tdv"><span class="badge b-mute">Ended</span></span></td><td data-label=""><span class="tdv"><a class="tbtn primary" href="M-Accounts-Mobile.html">New household</a></span></td></tr>
+                <tr><td data-label="Flat"><span class="tdv"><b>2C</b></span></td><td data-label="Household"><span class="tdv">Imran Khan</span></td><td data-label="Type"><span class="tdv">Tenant</span></td><td data-label="Phone"><span class="tdv">01700-000310</span></td><td data-label="Username" class="mono" style="font-size: 13px"><span class="tdv">bb-7h2k9p</span></td><td data-label="Account"><span class="tdv"><span class="badge b-ok">Active</span></span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Accounts-Mobile.html">End occupancy</a></span></td></tr>
+                <tr><td data-label="Flat"><span class="tdv"><b>3A</b></span></td><td data-label="Household"><span class="tdv">Tanvir Ahmed</span></td><td data-label="Type"><span class="tdv">Owner</span></td><td data-label="Phone"><span class="tdv">01700-000412</span></td><td data-label="Username" class="mono" style="font-size: 13px"><span class="tdv">bb-q4m8x2</span></td><td data-label="Account"><span class="tdv"><span class="badge b-info">Temporary password</span></span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Accounts-Mobile.html">Reset password</a></span></td></tr>
+                <tr><td data-label="Flat"><span class="tdv"><b>5B</b></span></td><td data-label="Household"><span class="tdv">Hossain family</span></td><td data-label="Type"><span class="tdv">Tenant</span></td><td data-label="Phone"><span class="tdv">01700-000533</span></td><td data-label="Username" class="mono" style="font-size: 13px"><span class="tdv">bb-4k7q2m</span></td><td data-label="Account"><span class="tdv"><span class="badge b-ok">Active</span></span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Accounts-Mobile.html">Edit</a></span></td></tr>
+                <tr><td data-label="Flat"><span class="tdv"><b>12A</b></span></td><td data-label="Household"><span class="tdv">Sultana Akter</span></td><td data-label="Type"><span class="tdv">Owner</span></td><td data-label="Phone"><span class="tdv">01700-000901</span></td><td data-label="Username" class="mono" style="font-size: 13px"><span class="tdv">bb-z8c3n6</span></td><td data-label="Account"><span class="tdv"><span class="badge b-warn">Temp. password expired</span></span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Accounts-Mobile.html">Issue new one</a></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="alert alert-warn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg><div><div class="h3">Settle the payment in progress first</div><div>Flat 7D has a cash payment Awaiting verification. Decide it before ending this occupancy.</div></div></div>
+          <div class="small">Only you and the household can see residents' phone numbers. Every change here is logged.</div>
+        </div>
+        <aside class="pane-side card stack" style="gap: 14px">
+          <div class="h2">New household for flat 1B</div>
+          <div class="small">Starts with an empty history. The last household's records stay with them.</div>
+          <div class="field"><label for="on">Occupant name</label><input id="on" class="input" value="Mahbub Alam"></div>
+          <div class="field"><span class="flabel">Occupancy type</span><div class="seg" role="group" aria-label="Occupancy type"><button type="button">Owner</button><button type="button" class="on">Tenant</button></div></div>
+          <div class="grid2"><div class="field"><label for="sd">Start date</label><input id="sd" class="input" value="16 Nov 2026"></div><div class="field"><label for="ph">Phone</label><input id="ph" class="input" value="01700-000144"></div></div>
+          <div class="field"><label for="em">Email (optional)</label><input id="em" class="input" placeholder="For bills and password resets"></div>
+          <a class="btn btn-primary full sm" href="M-Accounts-Mobile.html">Create account</a>
+          <div class="small">A username (not the flat number) and a 7-day temporary password are made for you to hand over.</div>
+        </aside>
+        </sc-if>
+        <sc-if value="{{ staff }}" hint-placeholder-val="{{ false }}">
+        <div class="pane-main stack">
+          <div class="tablewrap">
+            <table class="t">
+              <thead><tr><th>Name and email</th><th>Role</th><th>Phone</th><th>Username</th><th>Account</th><th><span class="sr-only">Actions</span></th></tr></thead>
+              <tbody>
+                <tr><td data-label="Name and email"><span class="tdv">Nasir Uddin<div class="small">nasir.office@example.com</div></span></td><td data-label="Role"><span class="tdv">Manager (you)</span></td><td data-label="Phone"><span class="tdv">01700-000222</span></td><td data-label="Username" class="mono" style="font-size: 13px"><span class="tdv">bb-m1n4s7</span></td><td data-label="Account"><span class="tdv"><span class="badge b-ok">Active</span></span></td><td data-label="" class="small"><span class="tdv">Admin only</span></td></tr>
+                <tr><td data-label="Name and email"><span class="tdv">Selim Mia<div class="small">No email</div></span></td><td data-label="Role"><span class="tdv">Guard</span></td><td data-label="Phone"><span class="tdv">01700-000611</span></td><td data-label="Username" class="mono" style="font-size: 13px"><span class="tdv">bb-g7s2l4</span></td><td data-label="Account"><span class="tdv"><span class="badge b-ok">Active</span></span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Accounts-Mobile.html">Reset password</a></span></td></tr>
+                <tr><td data-label="Name and email"><span class="tdv">Babul Hossain<div class="small">No email</div></span></td><td data-label="Role"><span class="tdv">Guard</span></td><td data-label="Phone"><span class="tdv">01700-000612</span></td><td data-label="Username" class="mono" style="font-size: 13px"><span class="tdv">bb-g3b8h1</span></td><td data-label="Account"><span class="tdv"><span class="badge b-ok">Active</span></span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Accounts-Mobile.html">Deactivate</a></span></td></tr>
+                <tr class="sel"><td data-label="Name and email"><span class="tdv">Karim Sheikh<div class="small">No email</div></span></td><td data-label="Role"><span class="tdv">Maintenance · plumber</span></td><td data-label="Phone"><span class="tdv">01700-000731</span></td><td data-label="Username" class="mono" style="font-size: 13px"><span class="tdv">bb-t5k9r2</span></td><td data-label="Account"><span class="tdv"><span class="badge b-ok">Active</span></span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Accounts-Mobile.html">Deactivate</a></span></td></tr>
+                <tr><td data-label="Name and email"><span class="tdv">Jalal Ahmed<div class="small">jalal.elec@example.com</div></span></td><td data-label="Role"><span class="tdv">Maintenance · electrician</span></td><td data-label="Phone"><span class="tdv">01700-000732</span></td><td data-label="Username" class="mono" style="font-size: 13px"><span class="tdv">bb-t2j6d8</span></td><td data-label="Account"><span class="tdv"><span class="badge b-info">Temp. password</span></span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Accounts-Mobile.html">Edit</a></span></td></tr>
+                <tr><td data-label="Name and email"><span class="tdv">Farida Khanam<div class="small">farida.k@example.com</div></span></td><td data-label="Role"><span class="tdv">Committee</span></td><td data-label="Phone"><span class="tdv">01700-000815</span></td><td data-label="Username" class="mono" style="font-size: 13px"><span class="tdv">bb-c8f3k5</span></td><td data-label="Account"><span class="tdv"><span class="badge b-ok">Active</span></span></td><td data-label=""><span class="tdv"><a class="tbtn" href="M-Accounts-Mobile.html">Edit</a></span></td></tr>
+                <tr><td data-label="Name and email"><span class="tdv">Kamal Hossain<div class="small">No email</div></span></td><td data-label="Role"><span class="tdv">Committee</span></td><td data-label="Phone"><span class="tdv">01700-000816</span></td><td data-label="Username" class="mono" style="font-size: 13px"><span class="tdv">bb-c4k7h9</span></td><td data-label="Account"><span class="tdv"><span class="badge b-mute">Deactivated</span></span></td><td data-label="" class="small"><span class="tdv">Decisions kept</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="alert alert-warn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg><div><div class="h3">Reassign their open tickets first</div><div>Karim has 3 tickets that are Assigned, In progress or On hold. Reassign them in Tickets, then deactivate the account.</div></div></div>
+          <div class="small">Deactivating a guard removes their future shifts, and the gaps show in Guard shifts. Your own account can only be replaced by the administrator. Without an email, a forgotten password is reset by you here. Every change is logged.</div>
+        </div>
+        <aside class="pane-side card stack" style="gap: 14px">
+          <div class="h2">New staff or committee account</div>
+          <div class="field"><label for="sn">Name</label><input id="sn" class="input" value="Rafiq Islam"></div>
+          <div class="field"><label for="sr">Role</label><select id="sr" class="input"><option>Guard</option><option selected>Maintenance</option><option>Committee</option></select></div>
+          <div class="field"><label for="sp">Phone</label><input id="sp" class="input" value="01700-000733"></div>
+          <div class="field"><label for="se">Email (optional)</label><input id="se" class="input" placeholder="For password reset links"></div>
+          <a class="btn btn-primary full sm" href="M-Accounts-Mobile.html">Create account</a>
+          <div class="small">A username and a 7-day temporary password are made for you to hand over. They must set their own password at first log-in.</div>
+        </aside>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+</div>
+</template>
+<div id="mount"></div>
+<script type="text/x-dc" data-dc-script data-props='{"show":{"editor":"enum","options":["Households","Staff and committee"],"default":"Households"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const v = this.state.view ?? ((this.props.show ?? 'Households') === 'Households' ? 'hh' : 'staff');
+    return {
+      households: v === 'hh', staff: v === 'staff',
+      hhCls: v === 'hh' ? 'on' : '', staffCls: v === 'staff' ? 'on' : '',
+      pickHouseholds: () => this.setState({ view: 'hh' }),
+      pickStaff: () => this.setState({ view: 'staff' })
+    };
+  }
+}
+</script>
+<script src="proto.js"></script>
+<script src="hotspots.js"></script>
+</body>
+</html>

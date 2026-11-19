@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Tickets · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}.seg3{grid-template-columns:repeat(3,minmax(0,1fr))}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="stylesheet" href="views.css">
+</head>
+<body class="proto-mobile">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Manager · Tickets and assigning (phone)</span><span class="proto-view">View: <b aria-current="page">Phone</b> · <a href="M-Tickets.html">Web</a></span></div>
+<div class="shell mobile">
+  <nav class="navbar" aria-label="Manager">
+    <a href="M-Dashboard-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>Home</a>
+    <a href="M-Claims-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6"/></svg>Claims</a>
+    <a class="on" aria-current="page" href="M-Tickets-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4.5 4.5 0 0 0-5.8 5.8L3 17l4 4 5.7-5.7a4.5 4.5 0 0 0 5.8-5.8l-2.8 2.8-3-.5-.5-3z"/></svg>Tickets</a>
+    <a href="M-More-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>More</a>
+  </nav>
+  <nav class="side" aria-label="Manager">
+    <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>BariBondhu</div>
+    <a class="nav" href="M-Dashboard-Mobile.html">Dashboard</a>
+    <div class="sect">Money</div>
+    <a class="nav" href="M-Claims-Mobile.html">Payment claims<span class="count">3</span></a>
+    <a class="nav" href="M-Bills-Mobile.html">Monthly bills</a>
+    <a class="nav" href="M-Defaulters-Mobile.html">Unpaid dues</a>
+    <a class="nav" href="M-Expenses-Mobile.html">Expenses</a>
+    <a class="nav" href="M-Fund-Mobile.html">Fund summary</a>
+    <div class="sect">Building</div>
+    <a class="nav on" href="M-Tickets-Mobile.html">Tickets<span class="count">5</span></a>
+    <a class="nav" href="M-Shifts-Mobile.html">Guard shifts</a>
+    <a class="nav" href="M-Accounts-Mobile.html">Accounts</a>
+    <a class="nav" href="M-Announcements-Mobile.html">Announcements</a>
+    <a class="nav" href="M-Emergency-Mobile.html">Emergency numbers</a>
+  </nav>
+  <div class="main">
+    <header class="deskbar">
+      <h1 class="h1 grow">Tickets</h1>
+      <div class="chips"><span class="chip on">Open · 11</span><span class="chip">Reported · 5</span><span class="chip">Fixed, to close · 2</span><span class="chip">Closed</span></div>
+      <a class="sos" href="S-Emergency.html"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>Emergency</a>
+    </header>
+    <div class="deskbody" role="main">
+      <div class="panes">
+        <div class="pane-main stack">
+          <div class="tablewrap">
+            <table class="t">
+              <thead><tr><th>Ticket</th><th>Place</th><th>Me too</th><th>Status</th><th>Assigned to</th><th>Due</th></tr></thead>
+              <tbody>
+                <tr class="late sel"><td data-label="Ticket"><span class="tdv"><b>Lift 2 stuck between floors</b><div class="small">Lift · reported 6:10 pm</div></span></td><td data-label="Place"><span class="tdv">Lift 2</span></td><td data-label="Me too"><span class="tdv">4</span></td><td data-label="Status"><span class="tdv"><span class="badge b-bad">Urgent · late</span></span></td><td data-label="Assigned to" class="small"><span class="tdv">Nobody</span></td><td data-label="Due"><span class="tdv">—</span></td></tr>
+                <tr class="late"><td data-label="Ticket"><span class="tdv"><b>Parking light flickering</b><div class="small">Electrical · reported 13 Nov</div></span></td><td data-label="Place"><span class="tdv">Parking</span></td><td data-label="Me too"><span class="tdv">1</span></td><td data-label="Status"><span class="tdv"><span class="badge b-warn">Reported · late</span></span></td><td data-label="Assigned to" class="small"><span class="tdv">Nobody</span></td><td data-label="Due"><span class="tdv">—</span></td></tr>
+                <tr><td data-label="Ticket"><span class="tdv"><b>Water pump not starting</b><div class="small">Plumbing · Found by staff</div></span></td><td data-label="Place"><span class="tdv">Water pump</span></td><td data-label="Me too"><span class="tdv">6</span></td><td data-label="Status"><span class="tdv"><span class="badge b-info">In progress</span></span></td><td data-label="Assigned to"><span class="tdv">Karim <a class="tbtn" href="M-Tickets-Mobile.html" title="Give it to someone else. It stays In progress.">Reassign</a></span></td><td data-label="Due"><span class="tdv">Today</span></td></tr>
+                <tr class="late"><td data-label="Ticket"><span class="tdv"><b>Kitchen tap leaking</b><div class="small">Plumbing · Flat 5B</div></span></td><td data-label="Place"><span class="tdv">Flat 5B</span></td><td data-label="Me too"><span class="tdv">—</span></td><td data-label="Status"><span class="tdv"><span class="badge b-bad">Overdue</span></span></td><td data-label="Assigned to"><span class="tdv">Karim</span></td><td data-label="Due"><span class="tdv">14 Nov</span></td></tr>
+                <tr><td data-label="Ticket"><span class="tdv"><b>Corridor socket sparking</b><div class="small">Electrical · Flat 8C</div></span></td><td data-label="Place"><span class="tdv">Flat 8C</span></td><td data-label="Me too"><span class="tdv">—</span></td><td data-label="Status"><span class="tdv"><span class="badge b-ok">Fixed</span></span></td><td data-label="Assigned to"><span class="tdv">Jalal</span></td><td data-label="Due"><span class="tdv">15 Nov</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="small">Red rows: Reported over 24 hours (1 hour if urgent) with nobody assigned, or past their due date. This highlight can't be turned off. Reassigning an open ticket keeps its status.</div>
+        </div>
+        <aside class="pane-side card stack" style="gap: 14px">
+          <div class="stack tight"><div class="row between"><span class="badge b-bad">Urgent · late</span><span class="small">#T-1051</span></div><div class="h2">Lift 2 stuck between floors</div><div class="small">Reported by Flat 6A · 4 residents tapped Me too</div></div>
+          <div class="photo" style="height: 110px" role="img" aria-label="Resident's photo">Photo from the resident</div>
+          <div class="field"><label for="st">Staff member</label><select id="st" class="input"><option>Rafiq (lift technician)</option><option>Karim (plumber)</option><option>Jalal (electrician)</option></select></div>
+          <div class="field"><span class="flabel">Priority</span><div class="seg seg3" role="group" aria-label="Priority"><button type="button" class="on">Urgent</button><button type="button">High</button><button type="button">Normal</button></div></div>
+          <div class="field"><label for="dd">Due</label><input id="dd" class="input" value="Today, 9:00 pm"></div>
+          <div class="field"><label for="in">Instructions</label><textarea id="in" class="input" style="min-height: 64px">Check the door sensor first. Call me when done.</textarea></div>
+          <a class="btn btn-primary full sm" href="M-Tickets-Mobile.html">Assign</a>
+          <div class="row" style="gap: 8px"><a class="tbtn grow" href="M-Tickets-Mobile.html" style="justify-content: center">Duplicate of…</a><a class="tbtn grow" href="M-Tickets-Mobile.html" style="justify-content: center">Won't fix</a></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="hotspots.js"></script>
+</body>
+</html>

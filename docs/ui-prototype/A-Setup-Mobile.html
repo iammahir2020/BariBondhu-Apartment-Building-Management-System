@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Building setup · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@600&amp;display=swap">
+<style>body{margin:0}.step{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:12px;color:#CFE3DF;text-decoration:none}.step.on{background:rgba(255,255,255,.12);color:#fff}.step .n{width:28px;height:28px;border-radius:14px;border:2px solid currentColor;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}.step.done .n{background:#7FD1B9;border-color:#7FD1B9;color:var(--brand-900)}.fl{display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:32px;border-radius:8px;background:var(--brand-50);color:var(--brand-900);font-weight:600;font-size:13px}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="stylesheet" href="views.css">
+</head>
+<body class="proto-mobile">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Administrator · Building setup (phone)</span><span class="proto-view">View: <b aria-current="page">Phone</b> · <a href="A-Setup.html">Web</a></span></div>
+<div class="shell mobile setup">
+  <nav class="side" aria-label="Setup steps">
+    <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>BariBondhu admin</div>
+    <a class="step done" href="A-Setup-Mobile.html"><span class="n">✓</span><span><b>Building</b><br><span style="font-size: 13px">Lakeview Residence, Dhanmondi</span></span></a>
+    <a class="step on" href="A-Setup-Mobile.html"><span class="n">2</span><span><b>Blocks and flats</b><br><span style="font-size: 13px">Who lives where</span></span></a>
+    <a class="step" href="A-Setup-Mobile.html"><span class="n">3</span><span><b>Manager account</b><br><span style="font-size: 13px">Username and temporary password</span></span></a>
+    <span class="spacer"></span>
+    <div style="font-size: 12px; color: #8FB5AF; padding: 12px">The administrator can't open bills, payments, tickets or feedback. Sessions end after 15 minutes idle.</div>
+  </nav>
+  <div class="main">
+    <header class="deskbar">
+      <div class="grow"><div class="small">Step 2 of 3</div><h1 class="h1">Blocks and flats</h1></div>
+      <a class="tbtn" href="S-Login.html">Log out</a>
+    </header>
+    <div class="deskbody" role="main">
+      <div class="panes">
+        <section class="pane-main card stack" style="gap: 16px">
+          <div class="h2">Add a block</div>
+          <div class="grid3" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr))">
+            <div class="field"><label for="bn">Block name</label><input id="bn" class="input" value="A"></div>
+            <div class="field"><label for="fl">Floors</label><input id="fl" class="input" value="1 to 12"></div>
+            <div class="field"><label for="pf">Flats per floor</label><input id="pf" class="input" value="A, B, C, D"></div>
+          </div>
+          <div class="stack tight">
+            <div class="label">Preview · 48 flats in Block A</div>
+            <div class="row wrap" style="gap: 6px"><span class="fl">1A</span><span class="fl">1B</span><span class="fl">1C</span><span class="fl">1D</span><span class="fl">2A</span><span class="fl">2B</span><span class="fl">2C</span><span class="fl">2D</span><span class="fl">3A</span><span class="fl">3B</span><span class="fl">3C</span><span class="fl">3D</span><span class="small" style="align-self: center">… 12D</span></div>
+          </div>
+          <div class="row wrap" style="gap: 10px"><a class="btn btn-secondary sm" href="A-Setup-Mobile.html">Add Block A</a><a class="btn btn-primary sm" href="A-Setup-Mobile.html">Next: manager account</a></div>
+        </section>
+        <aside class="pane-side stack">
+          <div class="card stack tight">
+            <div class="h3">Blocks so far</div>
+            <div class="line"><span>Block B</span><span class="small">13 floors · 52 flats</span></div>
+            <div class="line"><span>Block A</span><span class="small">not added yet</span></div>
+            <div class="small">Up to 200 flats per installation. Flats then appear in the manager's flat list.</div>
+          </div>
+          <div class="card stack tight">
+            <div class="h3">Replace the manager</div>
+            <div class="small">If the manager leaves: deactivate their account and create a new one. All past records are kept.</div>
+            <a class="tbtn" href="A-Setup-Mobile.html" style="align-self: flex-start; margin-top: 6px">Replace manager account</a>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="hotspots.js"></script>
+</body>
+</html>
