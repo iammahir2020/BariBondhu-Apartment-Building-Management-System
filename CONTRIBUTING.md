@@ -5,6 +5,7 @@
 1. Ask the repository owner to add you as a collaborator, then accept the invitation from your email or GitHub
    notifications.
 2. Clone the repository and create your branch from `main`.
+3. Install Node.js 24 LTS. The app lives in the `code/` folder, so run every `npm` command from there.
 
 ## Branches
 
@@ -29,11 +30,11 @@ The reasons behind these rules are in [docs/decisions.md](docs/decisions.md).
 - TypeScript in `strict` mode. Don't use `any`; if a type is unknown, use `unknown` and narrow it.
 - Component files are `PascalCase.tsx` (`BillTable.tsx`). Other files are `camelCase.ts` (`billService.ts`).
 - Models and types are singular `PascalCase` (`Bill`, `GuestPass`). API routes are plural nouns (`/api/bills`).
-- Business rules go in `src/services/`, never in pages or API routes.
+- Business rules go in `code/src/services/`, never in pages or API routes.
 - Every exported function gets a TSDoc comment (`@param`, `@returns`, `@throws`).
 - Don't edit formatting by hand. Prettier formats on save in VS Code, and the pre-commit hook runs ESLint and Prettier
   on your changed files.
-- Run `npm run lint` and `npx tsc --noEmit` before opening a pull request. Both must pass.
+- Run `npm run lint` and `npx tsc --noEmit` in `code/` before opening a pull request. Both must pass.
 
 ## Commits
 
