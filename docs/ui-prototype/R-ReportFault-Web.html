@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Report a fault · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="stylesheet" href="views.css">
+</head>
+<body class="proto-web">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Resident · Report a fault (web)</span><span class="proto-view">View: <a href="R-ReportFault.html">Phone</a> · <b aria-current="page">Web</b></span><span id="proto-controls" class="row wrap" style="gap: 12px"></span></div>
+<div class="proto-stage">
+<template id="screen">
+<div class="phone web" style="height: 980px">
+  <nav class="webnav" aria-label="Main"><div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>BariBondhu</div><div class="who">Flat 5B · Resident</div>
+    <a href="R-Home-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>Home</a>
+    <a href="R-Dues-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>Dues</a>
+    <a href="R-GuestPass-New-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M16 4a4 4 0 0 1 0 8M22 21c0-3-1.5-5-4-5.6"/></svg>Guests</a>
+    <a href="R-Tickets-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4.5 4.5 0 0 0-5.8 5.8L3 17l4 4 5.7-5.7a4.5 4.5 0 0 0 5.8-5.8l-2.8 2.8-3-.5-.5-3z"/></svg>Tickets</a>
+    <div class="sect">More</div>
+    <a class="on" aria-current="page" href="R-ReportFault-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4.5 4.5 0 0 0-5.8 5.8L3 17l4 4 5.7-5.7a4.5 4.5 0 0 0 5.8-5.8l-2.8 2.8-3-.5-.5-3z"/></svg>Report a fault</a>
+    <a href="R-Fund-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/></svg>Fund summary</a>
+    <a href="R-Announcements-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l8 5V5L7 10z"/><path d="M19 9a4 4 0 0 1 0 6"/></svg>Announcements</a>
+    <a href="R-Feedback-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>Rate services</a>
+  </nav>
+  <header class="topbar sub">
+    <a class="iconbtn" href="R-Home-Web.html" aria-label="Back"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
+    <h1 class="title">Report a fault</h1>
+    <span class="spacer"></span>
+    <a class="sos round" href="S-Emergency-Web.html" aria-label="Emergency numbers"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg></a>
+  </header>
+  <main class="content" style="gap: 16px">
+    <div class="field"><span class="flabel">Is it an emergency?</span>
+      <div class="chips">
+        <a class="chip danger" href="S-Emergency-Web.html">Fire or gas smell</a>
+        <a class="chip danger" href="S-Emergency-Web.html">Someone stuck in a lift</a>
+      </div>
+      <span class="hint">These show 999 and the building numbers first.</span>
+    </div>
+    <div class="divider"></div>
+    <div class="field"><span class="flabel">Where is the problem?</span>
+      <div class="seg" role="group" aria-label="Where is the problem">
+        <button type="button" class="{{ flatCls }}" onClick="{{ pickFlat }}">Inside my flat</button>
+        <button type="button" class="{{ commonCls }}" onClick="{{ pickCommon }}">Common area</button>
+      </div>
+    </div>
+    <div class="field"><span class="flabel">What kind?</span>
+      <div class="chips"><button type="button" class="chip on">Plumbing</button><button type="button" class="chip">Electrical</button><button type="button" class="chip">Lift</button><button type="button" class="chip">Water supply</button><button type="button" class="chip">Other</button></div>
+    </div>
+
+    <sc-if value="{{ common }}" hint-placeholder-val="{{ false }}">
+      <div class="stack" style="gap: 16px">
+        <div class="field"><label for="pl">Place</label><select id="pl" class="input"><option>Water pump</option><option>Lift 1</option><option>Lift 2</option><option>Generator</option><option>Roof</option><option>Stairs</option><option>Parking</option><option>Lobby</option><option>Other</option></select></div>
+        <section class="card stack" style="gap: 10px; border-color: var(--brand-700); background: var(--brand-50)">
+          <div class="label" style="color: var(--brand-900)">Already reported by a neighbour</div>
+          <div class="row between top"><div><div class="h3">No water pressure on floors 5 to 8</div><div class="small">Water pump · Plumbing · 6 residents follow</div></div><span class="badge b-info">Assigned</span></div>
+          <a class="btn btn-primary full sm" href="R-Tickets-Web.html">Me too: follow this ticket</a>
+          <div class="small">You'll get the same updates. No new ticket is made.</div>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ flat }}" hint-placeholder-val="{{ true }}">
+      <div class="stack" style="gap: 14px">
+        <div class="field"><label for="tt">Short title</label><input id="tt" class="input" value="Kitchen tap leaking"></div>
+        <div class="field"><label for="ds">Describe the problem</label><textarea id="ds" class="input">Water drips from the tap base all the time, even when closed.</textarea></div>
+        <div class="row" style="gap: 12px">
+          <button type="button" class="photo" aria-label="Add a photo" style="width: 96px; height: 72px; border: 1.5px dashed var(--field); font-family: inherit"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4l2-3h4l2 3h4v13H4z"/><circle cx="12" cy="13" r="4"/></svg></button>
+          <div class="small">Add a photo (optional). The repair person sees your flat number, photo and home times, never your phone number.</div>
+        </div>
+        <div class="field"><label for="ht">When is someone home?</label><input id="ht" class="input" value="Weekdays after 5 pm, Fri all day"></div>
+      </div>
+    </sc-if>
+
+    <span class="spacer"></span>
+    <a class="btn btn-primary full" href="R-Tickets-Web.html">Send report</a>
+  </main>
+</div>
+</template>
+<div id="mount"></div>
+</div>
+<script type="text/x-dc" data-dc-script data-props='{"startIn":{"editor":"enum","options":["Inside my flat","Common area"],"default":"Inside my flat"},"$preview":{"width":360,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const area = this.state.area ?? ((this.props.startIn ?? 'Inside my flat') === 'Common area' ? 'common' : 'flat');
+    return {
+      flat: area === 'flat', common: area === 'common',
+      flatCls: area === 'flat' ? 'on' : '', commonCls: area === 'common' ? 'on' : '',
+      pickFlat: () => this.setState({ area: 'flat' }),
+      pickCommon: () => this.setState({ area: 'common' })
+    };
+  }
+}
+</script>
+<script src="proto.js"></script>
+<script src="hotspots.js"></script>
+</body>
+</html>

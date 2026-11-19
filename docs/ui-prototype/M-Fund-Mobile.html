@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Fund summary · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="stylesheet" href="views.css">
+</head>
+<body class="proto-mobile">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Manager · Publish fund summary (phone)</span><span class="proto-view">View: <b aria-current="page">Phone</b> · <a href="M-Fund.html">Web</a></span><span id="proto-controls" class="row wrap" style="gap: 12px"></span></div>
+<template id="screen">
+<div class="shell mobile">
+  <nav class="navbar" aria-label="Manager">
+    <a href="M-Dashboard-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>Home</a>
+    <a href="M-Claims-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6"/></svg>Claims</a>
+    <a href="M-Tickets-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4.5 4.5 0 0 0-5.8 5.8L3 17l4 4 5.7-5.7a4.5 4.5 0 0 0 5.8-5.8l-2.8 2.8-3-.5-.5-3z"/></svg>Tickets</a>
+    <a class="on" aria-current="page" href="M-More-Mobile.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>More</a>
+  </nav>
+  <nav class="side" aria-label="Manager">
+    <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>BariBondhu</div>
+    <a class="nav" href="M-Dashboard-Mobile.html">Dashboard</a>
+    <div class="sect">Money</div>
+    <a class="nav" href="M-Claims-Mobile.html">Payment claims<span class="count">3</span></a>
+    <a class="nav" href="M-Bills-Mobile.html">Monthly bills</a>
+    <a class="nav" href="M-Defaulters-Mobile.html">Unpaid dues</a>
+    <a class="nav" href="M-Expenses-Mobile.html">Expenses</a>
+    <a class="nav on" href="M-Fund-Mobile.html">Fund summary</a>
+    <div class="sect">Building</div>
+    <a class="nav" href="M-Tickets-Mobile.html">Tickets<span class="count">5</span></a>
+    <a class="nav" href="M-Shifts-Mobile.html">Guard shifts</a>
+    <a class="nav" href="M-Accounts-Mobile.html">Accounts</a>
+    <a class="nav" href="M-Announcements-Mobile.html">Announcements</a>
+    <a class="nav" href="M-Emergency-Mobile.html">Emergency numbers</a>
+  </nav>
+  <div class="main">
+    <header class="deskbar">
+      <h1 class="h1 grow">Fund summary</h1>
+      <a class="sos" href="S-Emergency.html"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>Emergency</a>
+    </header>
+    <div class="deskbody" role="main">
+      <div class="panes">
+        <sc-if value="{{ normal }}" hint-placeholder-val="{{ true }}">
+        <section class="pane-main card stack" style="gap: 14px">
+          <div class="row between"><div><div class="h2">November 2026 so far</div><div class="small">Draft · updates as payments and approvals come in</div></div><span class="badge b-warn">Draft</span></div>
+          <div class="grid2" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
+            <div><div class="label">Opening balance (October's closing)</div><div class="money" style="font-size: 22px">৳3,74,150.00</div></div>
+            <div><div class="label">Collected (by date confirmed)</div><div class="money" style="font-size: 22px; color: var(--ok)">৳3,10,250.00</div></div>
+            <div><div class="label">Spent (approved only)</div><div class="money" style="font-size: 22px">৳1,93,000.00</div></div>
+            <div><div class="label">Closing so far</div><div class="money" style="font-size: 22px">৳4,91,400.00</div></div>
+          </div>
+          <div class="divider"></div>
+          <div class="row wrap" style="gap: 24px; font-size: 14px"><span>Salaries <b class="money">৳1,93,000</b></span><span>Utilities <b class="money">৳0</b></span><span>Repairs <b class="money">৳0</b></span><span>Other <b class="money">৳0</b></span><span class="small">Outstanding (total only): <b class="money">৳1,74,750</b></span></div>
+          <div class="alert alert-warn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div>2 expenses (৳39,900) are waiting for the committee and aren't counted yet.</div></div>
+          <label class="check"><input type="checkbox" checked="checked">Also send it as an announcement, for members who don't log in</label>
+          <div class="row wrap" style="gap: 12px"><span class="btn disabled sm">Publish November</span><span class="errtext">You can publish once the month has ended.</span></div>
+        </section>
+        <aside class="pane-side stack">
+          <div class="h2">Months</div>
+          <div class="card flush">
+            <div class="listitem"><div class="grow"><div class="h3">October 2026</div><div class="small">Published 3 Nov · closing ৳3,74,150</div></div><span class="badge b-ok">Published</span></div>
+            <div class="listitem"><div class="grow"><div class="h3">September 2026</div><div class="small">A late approval changed it on 28 Oct</div></div><span class="badge b-info">Revised</span></div>
+            <div class="listitem"><div class="grow"><div class="h3">August 2026</div><div class="small">First month · opening balance approved by the committee</div></div><span class="badge b-ok">Published</span></div>
+          </div>
+          <div class="small">Residents and committee see totals only, never which flats owe money.</div>
+        </aside>
+        </sc-if>
+        <sc-if value="{{ first }}" hint-placeholder-val="{{ false }}">
+        <section class="pane-main card stack" style="gap: 14px">
+          <div class="row between"><div><div class="h2">October 2026 · first month</div><div class="small">The month has ended. Its opening balance needs the committee's approval first.</div></div><span class="badge b-warn">Draft</span></div>
+          <div class="card stack" style="gap: 10px; background: var(--bg)">
+            <div class="row between wrap" style="gap: 12px">
+              <div><div class="label">Opening balance on 1 Oct 2026 (entered by you)</div><div class="money" style="font-size: 22px">{{ openingFigure }}</div></div>
+              <sc-if value="{{ waiting }}" hint-placeholder-val="{{ true }}"><span class="badge b-info">Waiting for the committee</span></sc-if>
+              <sc-if value="{{ rejected }}" hint-placeholder-val="{{ false }}"><span class="badge b-bad">Rejected</span></sc-if>
+            </div>
+            <sc-if value="{{ waiting }}" hint-placeholder-val="{{ true }}"><div class="small">Sent 4 Nov 2026. Committee members see it on their home screen.</div></sc-if>
+            <sc-if value="{{ rejected }}" hint-placeholder-val="{{ false }}">
+              <div class="alert alert-warn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg><div><div class="h3">Rejected by Farida K., 6 Nov</div><div>"The paper accounts show ৳3,12,400. Please check the September closing page."</div></div></div>
+              <div class="grid2" style="gap: 12px; align-items: end"><div class="field"><label for="ob">Corrected opening balance</label><input id="ob" class="input money" value="3,12,400.00"></div><a class="btn btn-primary sm" href="M-Fund-Mobile.html">Send for approval again</a></div>
+            </sc-if>
+          </div>
+          <div class="grid2" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
+            <div><div class="label">Collected (by date confirmed)</div><div class="money" style="font-size: 22px; color: var(--ok)">৳4,26,850.00</div></div>
+            <div><div class="label">Spent (approved only)</div><div class="money" style="font-size: 22px">৳3,65,100.00</div></div>
+            <div><div class="label">Closing balance</div><div class="money" style="font-size: 22px">{{ closingFigure }}</div></div>
+            <div><div class="label">Outstanding (total only)</div><div class="money" style="font-size: 22px">৳58,200.00</div></div>
+          </div>
+          <label class="check"><input type="checkbox" checked="checked">Also send it as an announcement, for members who don't log in</label>
+          <div class="row wrap" style="gap: 12px"><span class="btn disabled sm">Publish October</span><span class="errtext">The committee must approve the opening balance before you can publish.</span></div>
+        </section>
+        <aside class="pane-side stack">
+          <div class="h2">Months</div>
+          <div class="card"><div class="small">No month published yet. Residents see "Not ready yet" until October is published.</div></div>
+          <div class="small">The first month's opening balance is entered once. After that, each month opens with the previous month's closing balance.</div>
+        </aside>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+</div>
+</template>
+<div id="mount"></div>
+<script type="text/x-dc" data-dc-script data-props='{"month":{"editor":"enum","options":["Normal month","First month: waiting for approval","First month: opening balance rejected"],"default":"Normal month"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const m = this.props.month ?? 'Normal month';
+    const rejected = m.indexOf('rejected') !== -1;
+    return {
+      normal: m === 'Normal month', first: m !== 'Normal month',
+      waiting: m.indexOf('waiting') !== -1, rejected,
+      openingFigure: rejected ? '৳3,21,400.00' : '৳3,12,400.00',
+      closingFigure: rejected ? '৳3,83,150.00' : '৳3,74,150.00'
+    };
+  }
+}
+</script>
+<script src="proto.js"></script>
+<script src="hotspots.js"></script>
+</body>
+</html>

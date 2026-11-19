@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>বাসিন্দার হোম · BariBondhu prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+<link rel="stylesheet" href="bb.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="stylesheet" href="views.css">
+</head>
+<body class="proto-web">
+<div class="proto-bar"><a href="index.html">← All screens</a><span class="proto-title">Resident · Home (Bangla) (web)</span><span class="proto-view">View: <a href="R-Home-Bangla.html">Phone</a> · <b aria-current="page">Web</b></span></div>
+<div class="proto-stage">
+<div class="phone web bn" style="height: 860px">
+  <nav class="webnav" aria-label="Main"><div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>BariBondhu</div><div class="who">ফ্ল্যাট 5B · বাসিন্দা</div>
+    <a href="R-Home-Bangla-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>হোম</a>
+    <a href="R-Dues-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>বকেয়া</a>
+    <a href="R-GuestPass-New-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M16 4a4 4 0 0 1 0 8M22 21c0-3-1.5-5-4-5.6"/></svg>অতিথি</a>
+    <a href="R-Tickets-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4.5 4.5 0 0 0-5.8 5.8L3 17l4 4 5.7-5.7a4.5 4.5 0 0 0 5.8-5.8l-2.8 2.8-3-.5-.5-3z"/></svg>মেরামত</a>
+    <div class="sect">আরও</div>
+    <a href="R-ReportFault-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4.5 4.5 0 0 0-5.8 5.8L3 17l4 4 5.7-5.7a4.5 4.5 0 0 0 5.8-5.8l-2.8 2.8-3-.5-.5-3z"/></svg>সমস্যা জানান</a>
+    <a href="R-Fund-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/></svg>তহবিলের হিসাব</a>
+    <a href="R-Announcements-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l8 5V5L7 10z"/><path d="M19 9a4 4 0 0 1 0 6"/></svg>ঘোষণা</a>
+    <a href="R-Feedback-Web.html"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>সেবার মূল্যায়ন</a>
+  </nav>
+  <header class="topbar">
+    <div class="brand" role="heading" aria-level="1"><span class="logo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h10v17M14 9h6v12M7.5 8h3M7.5 12h3M7.5 16h3M2 21h20"/></svg></span>ফ্ল্যাট 5B</div>
+    <span class="spacer"></span>
+    <a class="lang" href="R-Home-Web.html" aria-label="EN: Switch to English" style="font-family: Inter, sans-serif">EN</a>
+    <a class="sos" href="S-Emergency-Web.html"><svg class="i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>জরুরি</a>
+  </header>
+  <main class="content" style="gap: 14px">
+    <a class="alert alert-urgent" href="R-Announcements-Web.html" style="text-decoration: none">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 21h20z"/><path d="M12 10v5M12 18v.5"/></svg>
+      <div class="grow"><div class="h3">আজ পানি বন্ধ, সকাল ১০টা থেকে দুপুর ২টা</div><div>ট্যাংক পরিষ্কার চলবে। ১০টার আগে পানি ধরে রাখুন।</div></div>
+    </a>
+
+    <section class="card hero stack" style="gap: 12px">
+      <div class="row between"><span class="label">নভেম্বর ২০২৬-এর বিল</span><span class="badge b-warn">বকেয়া</span></div>
+      <div><div class="money big">৳৪,৮৫০.০০</div><div class="small">শেষ তারিখ ২০ নভেম্বর ২০২৬ · আর ৫ দিন</div></div>
+      <div class="row" style="gap: 10px">
+        <a class="btn btn-white grow" href="R-Dues-Web.html">এখনই পরিশোধ</a>
+        <a class="btn grow" href="R-Dues-Web.html" style="background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.55)">বিল দেখুন</a>
+      </div>
+    </section>
+
+    <div class="grid2">
+      <a class="tile" href="R-GuestPass-New-Web.html"><span class="ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M19 8v6M16 11h6"/></svg></span>নতুন অতিথি পাস</a>
+      <a class="tile" href="R-ReportFault-Web.html"><span class="ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4.5 4.5 0 0 0-5.8 5.8L3 17l4 4 5.7-5.7a4.5 4.5 0 0 0 5.8-5.8l-2.8 2.8-3-.5-.5-3z"/></svg></span>সমস্যা জানান</a>
+      <a class="tile" href="R-Fund-Web.html"><span class="ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/></svg></span>তহবিলের হিসাব</a>
+      <a class="tile" href="R-Feedback-Web.html"><span class="ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg></span>সেবার রেটিং দিন</a>
+    </div>
+
+    <section class="card flush">
+      <a class="listitem" href="R-GuestPass-Code-Web.html">
+        <span class="ico blue"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM18 18h3v3h-3z"/></svg></span>
+        <div class="grow"><div class="h3">রফিক হাসান + ৩</div><div class="small">৪ জনের ২ জন এসেছেন, সন্ধ্যা ৬:৪২</div></div>
+        <span class="badge b-info">আংশিক ব্যবহৃত</span>
+      </a>
+      <a class="listitem" href="R-Tickets-Web.html">
+        <span class="ico amber"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4.5 4.5 0 0 0-5.8 5.8L3 17l4 4 5.7-5.7a4.5 4.5 0 0 0 5.8-5.8l-2.8 2.8-3-.5-.5-3z"/></svg></span>
+        <div class="grow"><div class="h3">রান্নাঘরের কল দিয়ে পানি পড়ছে</div><div class="small">করিম আসবেন ১৪ নভেম্বর</div></div>
+        <span class="badge b-info">নিযুক্ত</span>
+      </a>
+      <a class="listitem" href="R-Announcements-Web.html">
+        <span class="ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l8 5V5L7 10z"/><path d="M19 9a4 4 0 0 1 0 6"/></svg></span>
+        <div class="grow"><div class="h3">ঘোষণা</div><div class="small">এই সপ্তাহে ২টি নতুন</div></div>
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--muted)"><path d="M9 6l6 6-6 6"/></svg>
+      </a>
+    </section>
+  </main>
+</div>
+</div>
+<script src="hotspots.js"></script>
+</body>
+</html>
