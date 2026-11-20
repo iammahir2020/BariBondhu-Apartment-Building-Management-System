@@ -2,7 +2,7 @@
 
 **BariBondhu: Apartment Building Management System**
 
-Release 1 · Version 1.5 · 17 November 2026
+Release 1 · Version 1.6 · 20 November 2026
 
 CSE 451 Software Engineering, Autumn 2026 · Independent University, Bangladesh
 
@@ -28,6 +28,7 @@ Course instructor: Dr. Md. Mushfique Anwar
 | 1.3 | Moved to Markdown; final team review of move-out, double-payment, guest-pass and night-shift cases. | 15 Nov 2026 |
 | 1.4 | Shortened: criteria that repeat a business rule or NFR, most story notes and all "Touches" lines removed; risks and user needs trimmed; 1.3 rewritten as a paragraph; "In scope" table removed; permissions table moved to the SDS design inputs. | 15 Nov 2026 |
 | 1.5 | Consistency fixes after the SDS review: optional email on staff and committee accounts (BM-02); the first fund summary is published only after the opening balance is approved (BM-12); total outstanding added to RES-05; R-13 and NFR-07 reworded to match the stories. | 17 Nov 2026 |
+| 1.6 | Online payments in Release 1 may use a simulated gateway with the same flow as a real gateway sandbox (sections 1.4, 2, 2.3 and 2.4). | 20 Nov 2026 |
 
 **Contents**
 
@@ -86,7 +87,7 @@ We discussed these and left them out of Release 1 on purpose:
 - Partial or advance payments, and different charge rates for different flats.
 - Two-person approval for large expenses, and budgets or forecasts.
 - SMS, an SOS button, native Android or iOS apps, and more than one building per installation.
-- Real payments. Release 1 runs only against a payment-gateway sandbox.
+- Real payments. Release 1 runs only against a payment-gateway sandbox or a simulated gateway with the same flow.
 
 ### 1.5 Risk Definitions
 
@@ -111,7 +112,7 @@ R-03, R-04, R-08, R-10, R-15 and R-16 were dropped in version 1.4 to shorten the
 
 BariBondhu is a new product; the building has no system today that it replaces. People open it in the browser on a phone or laptop, and can add it to the phone's home screen like an app.
 
-One installation serves one building. It uses two outside services: a payment-gateway sandbox for online payments, and an email service for notifications and password resets.
+One installation serves one building. It uses two outside services: a payment-gateway sandbox (or a simulated gateway with the same flow) for online payments, and an email service for notifications and password resets.
 
 ![System context: the six user roles and the two external services](figures/system-context.png)
 
@@ -178,12 +179,12 @@ For each class, the table compares how things work today with what goes wrong. T
 | Security guard | One shared Android phone or tablet at the gate, with a rear camera for scanning QR codes, kept charged on mains power with a power bank for load-shedding. |
 | Building manager | Own phone and an office laptop. |
 | Network | Mobile data or home Wi-Fi. Load-shedding often takes Wi-Fi down, so the system must work on slow mobile data. |
-| Server side | Cloud hosting with a relational database, backed up every hour (NFR-20); an email service; a payment-gateway sandbox. |
+| Server side | Cloud hosting with a relational database, backed up every hour (NFR-20); an email service; a payment-gateway sandbox or a simulated gateway with the same flow. |
 | Locale | Bangladesh: time zone Asia/Dhaka, currency BDT (৳), Bangla and English. |
 
 ### 2.4 Constraints
 
-- Payments go through a payment-gateway sandbox. No real money moves in Release 1.
+- Payments go through a payment-gateway sandbox or a simulated gateway with the same flow. No real money moves in Release 1.
 - No SMS. Notifications are in-app (with web push where the browser allows it) and by email.
 - Web application only; it must run in the browsers listed in NFR-28.
 - All interface text must be kept up to date in both Bangla and English.
