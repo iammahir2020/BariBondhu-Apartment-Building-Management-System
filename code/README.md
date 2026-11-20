@@ -1,13 +1,98 @@
 # BariBondhu app
 
-The Next.js app for BariBondhu. Run every command from this `code/` folder with Node.js 24 LTS.
+The Next.js app for BariBondhu, the building management system described in the
+[SRS](../docs/srs/SRS.md) and [SDS](../docs/sds/SDS.md). This guide is for a team member who is about to build a
+feature: how to get the app running, how the code is laid out, and how to add a feature the way the rest of the
+code does it. The reasons behind each choice are in [docs/decisions.md](../docs/decisions.md); branch, commit and
+review rules are in [CONTRIBUTING.md](../CONTRIBUTING.md).
+
+What the shared skeleton already gives you:
+
+- Log in by username for all six roles, first-login password change, the wrong-password limit and forgot password
+  (feature 1: RES-06, SG-01, BM-01, CM-05, MNT-06, BR-14, BR-15)
+- The role check for every API route and page, from the permissions table (NFR-06)
+- The app shell for every role, on phone and laptop, themed like the UI prototype
+- Tables for buildings, blocks, flats, occupancies, profiles, wrong-password counts and the audit log, with demo
+  data (in place of features 2 and 3)
+- Jest and React Testing Library, TypeDoc, SonarCloud and a GitHub Actions check on every pull request
+
+## Stack
+
+| Part | Choice |
+|---|---|
+| Language and runtime | TypeScript (strict) on Node.js 24 LTS |
+| Web app | Next.js 15, App Router. Pages call our API routes with `fetch`; no server actions |
+| UI | shadcn/ui with Tailwind CSS 4, themed from `docs/ui-prototype/bb.css` |
+| Database | Supabase (PostgreSQL) through Drizzle ORM; migrations in `drizzle/` |
+| Log-in | Supabase Auth, accounts made by the server under `<username>@users.baribondhu.invalid` |
+| Email | Our own SMTP account (Gmail), through nodemailer |
+| Tests | Jest 30 and React Testing Library |
+| Docs and review | TypeDoc, ESLint, Prettier, SonarCloud |
+
+## Before you start
+
+You need:
+
+- **Node.js 24 LTS.** With nvm: `nvm install 24` and `nvm use` in this folder (it reads `.nvmrc`). Check with
+  `node -v`.
+- **Git** and a GitHub account with access to this repository.
+- **VS Code** with the *ESLint* and *Prettier* extensions. The repository's `.vscode/settings.json` formats on
+  save.
+- **The secret values for `.env.local`.** Ask Mahir privately (a Discord DM, never a public channel). They give
+  access to the shared database and to the demo accounts, and the repository is public.
+
+## Set up
+
+Run everything from this `code/` folder.
 
 ```bash
-npm install
+git clone https://github.com/iammahir2020/BariBondhu-Apartment-Building-Management-System.git
+cd BariBondhu-Apartment-Building-Management-System/code
+npm install            # also turns on the pre-commit hook
+cp .env.example .env.local
+# fill in .env.local with the values from Mahir
 npm run dev
 ```
 
-The full developer guide (setup, environment variables, how to add a feature) comes with the project skeleton PR.
+Open http://localhost:3000. You land on Log in; use one of the [demo accounts](#demo-accounts).
+
+You don't need to run `npm run db:migrate` or `npm run db:seed` to start: the shared Supabase database already has
+the tables and the demo data. See [Database changes](#database-changes) before you change a table.
+
+## Environment variables
+
+All of them go in `code/.env.local`, which git ignores. `.env.example` lists the names with no values.
+
+| Variable | What it is | Where it comes from |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | The project's address, `https://<id>.supabase.co`, with nothing after `.co` | Supabase → Connect |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Publishable key (`sb_publishable_...`); the browser may see it | Supabase → Project Settings → API Keys |
+| `SUPABASE_SERVICE_ROLE_KEY` | Secret key (`sb_secret_...`); can do anything, server only | Same page |
+| `DATABASE_URL` | Transaction pooler, port 6543; the app uses it | Supabase → Connect |
+| `DATABASE_URL_MIGRATE` | Session pooler, port 5432; `drizzle-kit` uses it for migrations | Supabase → Connect |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | The Gmail account that sends reset links (`smtp.gmail.com`, 465, an app password) | Mahir |
+| `MAIL_FROM` | Sender shown in emails, `BariBondhu <...@gmail.com>` | Mahir |
+| `APP_URL` | The app's own address, used in links inside emails | `http://localhost:3000` locally |
+| `SEED_DEMO_PASSWORD` | Password of every demo account made by `npm run db:seed` | Mahir |
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | Starts the app at http://localhost:3000 and reloads on save |
+| `npm run build` / `npm start` | Production build, then serves it |
+| `npm run lint` | ESLint; `any` is an error |
+| `npm run typecheck` | TypeScript with no output (`tsc --noEmit`) |
+| `npm test` | All Jest tests |
+| `npm run test:coverage` | Tests plus a coverage report in `coverage/` (open `coverage/lcov-report/index.html`) |
+| `npm run docs` | TypeDoc site in `../docs/api/`. Fails if an export has no TSDoc comment |
+| `npm run format` | Prettier on `src/` and the config files |
+| `npm run db:generate` | Writes a migration in `drizzle/` from changes in `src/models/` |
+| `npm run db:migrate` | Applies new migrations to the shared database |
+| `npm run db:seed` | Adds the demo building, flats and accounts; safe to run again |
+
+Before you push, `npm run lint`, `npm run typecheck` and `npm test` must pass. The pull request check runs them
+again, plus `npm run docs`.
 
 ## Demo accounts
 
@@ -30,4 +115,181 @@ written in the repository, because the repository is public.
 | `bb-firstlogin` | Resident | Chowdhury family, flat A-2B. Must choose a new password at log-in (BR-15). |
 
 Real accounts always get generated usernames like `bb-4k7q2m` (NFR-05). The readable demo names are only for
-demos.
+demos. If you change a demo account's password while testing, run `npm run db:seed` to put it back.
+
+## Folder layout
+
+The code follows MVC with a service layer (decisions §5).
+
+```text
+code/
+├── drizzle/                 migrations (generated SQL, committed) and their snapshots
+├── scripts/seed.ts          demo data (npm run db:seed)
+├── src/
+│   ├── models/              Model: one Drizzle table per file (Bill.ts), all listed in index.ts
+│   ├── services/            business rules as plain functions, with their tests (billService.ts + .test.ts)
+│   ├── app/
+│   │   ├── api/<resource>/  Controller: route.ts per resource, plural (api/bills/route.ts)
+│   │   ├── <role>/          View: pages for each role (resident, guard, manager, committee, maintenance, admin)
+│   │   └── login/ ...       signed-out pages: login, set-password, forgot-password, reset-password
+│   ├── components/          shared React components; ui/ is shadcn (generated, leave it alone)
+│   ├── lib/                 shared helpers with no business rules (see lib/README.md)
+│   │   ├── adapters/        database and Supabase versions of what services need
+│   │   ├── auth.ts          requireRole for routes, requirePageRole for layouts
+│   │   ├── permissions.ts   the role permissions table
+│   │   └── navigation.ts    menu links for each role
+│   └── middleware.ts        session refresh, idle time-out, redirects
+├── jest.config.mjs          tests and the coverage list
+└── typedoc.json             API docs settings
+```
+
+`src/models/`, `src/services/`, `src/app/api/`, `src/components/` and `src/lib/` each have a short `README.md` with
+their rules.
+
+## How a request works
+
+A page never touches the database. It calls an API route, the route checks the role and calls a service, and the
+service uses a store passed in to it:
+
+```text
+page.tsx ──fetch('/api/bills')──▶ route.ts ──▶ requireRole() ──▶ billService.ts ──▶ adapter ──▶ database
+                                                                                     (or a fake in tests)
+```
+
+- **Routes** (`src/app/api/`) only check, read the input, call a service and shape the response.
+- **Services** (`src/services/`) hold every business rule. A function takes small interfaces as parameters (a
+  store, an email sender), never the database client itself, so tests can pass fakes.
+- **Adapters** (`src/lib/adapters/<entity>Adapters.ts`) are the real versions of those interfaces, built on Drizzle
+  or Supabase. Routes create them and pass them in.
+- **Errors**: services throw `AppError(code, message)` from `src/lib/errors.ts` with the SRS wording; every route
+  ends with `toErrorResponse(error)`, so all errors have the same JSON shape and pages can show `error.message`.
+
+## How to add a feature
+
+Branch from `main` as `feature/<your-first-name>-<short-name>` (CONTRIBUTING.md). Then build in this order.
+
+**1. Read first.** Find the story in the SRS (ID, confirmation criteria, business rules, error wording), the
+object's state diagram in `docs/sds/design-inputs-from-srs.md`, the rows for your action in its "Role permissions"
+table, and the screen in `docs/ui-prototype/` (both views). If they disagree, ask before you code.
+
+**2. Model.** Add `src/models/<Entity>.ts` (states as a `pgEnum` with the exact names from the state diagram; a
+foreign key for every link; money as whole poisha or `numeric`, never float), export it from
+`src/models/index.ts`, and make the migration (see [Database changes](#database-changes)).
+
+**3. Service and its tests.** Write `src/services/<entity>Service.ts` and `<entity>Service.test.ts` together. Name
+tests after the rule (`it('refuses a claim on a bill that is already Paid (BR-04)')`) and cover normal, boundary,
+invalid input and exception cases. Reuse the fakes in `src/services/testFakes.ts`.
+
+**4. Adapter.** Add the Drizzle or Supabase version of each interface your service takes, in
+`src/lib/adapters/<entity>Adapters.ts`. Use `src/lib/adapters/authAdapters.ts` as the example.
+
+**5. Route.** Check the role on the first line. If your action isn't in `PERMISSIONS` in `src/lib/permissions.ts`,
+add its row there (and to the design inputs table) first. `src/app/api/me/route.ts` is the smallest real example;
+this one shows the full shape (the bill and claim names are made up):
+
+```ts
+export async function POST(request: Request): Promise<Response> {
+  try {
+    const user = await requireRole(request, 'recordPaymentClaim'); // always first
+    const body = await readJsonObject(request);
+    const billId = requireString(body, 'billId', 'bill');
+    const bill = await findBill(billStore(db), billId);
+    requireOwnOccupancy(user, bill.occupancyId); // only for "Own" rows
+    const claim = await recordPaymentClaim(claimDeps(db), user.actor, bill, body);
+    return Response.json(claim, { status: 201 });
+  } catch (error) {
+    return toErrorResponse(error);
+  }
+}
+```
+
+`requireRole` answers 401 when nobody is signed in and 403 when the role may not do it (or the user still has a
+temporary password). For "Own" rows, load the record and call `requireOwnOccupancy` (households: BR-09, NFR-13) or
+`requireOwnTicket` (maintenance staff).
+
+**6. Page.** Put it under `src/app/<role>/...`; the role's `layout.tsx` already adds the app shell and blocks other
+roles. Add its link to that role's `NAV_SECTIONS` in `src/lib/navigation.ts`. Build it from the prototype screen
+with the components in `src/components/ui/`, and call your route with `callApi` from `src/lib/apiClient.ts`. See
+[Pages on phone and laptop](#pages-on-phone-and-laptop).
+
+**7. Before you push.** Run the checks in [Commands](#commands), then open a pull request into `main` with the
+template filled in and the Trello card linked. A teammate must review it.
+
+## Pages on phone and laptop
+
+Every page must work on both (NFR-23). The prototype has both views of every screen: `X.html` and `X-Web.html` for
+the phone-first roles (resident, guard, committee, maintenance), and `X-Mobile.html` and `X.html` for the manager
+and the administrator.
+
+- Write mobile-first: plain Tailwind classes are the phone layout, `lg:` (1024 px and up) changes it for laptops.
+- The shell does the frame: under 1024 px a top bar and a bottom menu, from 1024 px a dark side menu. Mark a link
+  `onPhone` in `NAV_SECTIONS` only if it is one of the role's main phone tabs; the rest go under More
+  (`/<role>/more`, see `src/app/manager/more/page.tsx`).
+- Tables become one card per row on phones (column name left, value right), like the `-Mobile` prototype screens.
+- A page is done when it works at 360 px (no sideways scrolling, 48 px tap targets, readable at 150 % text) and at
+  1280 px. Check both in the browser's device toolbar.
+
+## Writing tests
+
+- Tests sit next to the code as `*.test.ts` or `*.test.tsx`.
+- Service tests run in Node and use fakes, never the real database. `src/services/testFakes.ts` has
+  `makeProfile`, an in-memory attempt store and `memoryAudit`.
+- Component tests start with a `/** @jest-environment jsdom */` comment. jsdom has no `fetch`, so use
+  `answerFetch(status, body)` or `failFetch()` from `src/components/auth/testFetch.ts`, and mock `next/navigation`
+  as `LoginForm.test.tsx` does.
+- SonarCloud fails a pull request if less than 80 % of new code is covered. Connection code, the schema, pages,
+  layouts, API routes and the middleware are left out of that count, so the 80 % applies to services, `lib`
+  helpers and components with logic. The list of left-out files is in two places, `collectCoverageFrom` in
+  `jest.config.mjs` and `sonar.coverage.exclusions` in `../sonar-project.properties`, and the two must match.
+  Don't add business code to an excluded file.
+
+## Documentation in the code
+
+- Every file starts with a comment saying what it is for, with `@author <your full name>`.
+- Every exported function, type, interface and constant has a TSDoc comment (`@param`, `@returns`, `@throws`).
+  Explain what and why; TypeDoc reads the types from the code. `npm run docs` fails if one is missing.
+
+## Database changes
+
+Everyone shares one Supabase database, so a migration you apply changes it for the whole team.
+
+1. Pull the latest `main` into your branch first, so your migration is numbered after everyone else's.
+2. Change or add the model in `src/models/` and export it from `index.ts`.
+3. `npm run db:generate -- --name <what-changed>` writes `drizzle/00NN_<what-changed>.sql`. Read the SQL.
+4. `npm run db:migrate` applies it. Say on Discord (#code-implementation) which migration you applied.
+5. Commit the model, the `.sql` file and the `drizzle/meta/` changes together.
+
+Never edit or delete a migration that has been applied; write a new one instead. Never use `drizzle-kit push`.
+Anything drizzle-kit can't write (a trigger, for example) goes in a custom migration:
+`npx drizzle-kit generate --custom --name <name>`, as `0001_audit_log_append_only.sql` does. Two branches that
+both add migration `00NN` will clash in `drizzle/meta/_journal.json`: the second to merge deletes its migration
+files, pulls `main` and generates again.
+
+Every table has row-level security switched on with no policies, so Supabase's public Data API can't read it. The
+app is unaffected because Drizzle connects as the database owner; the role checks in the routes are the access
+control (NFR-06). Every change to accounts, occupancies, bills, payments, claims, rates, expenses, tickets, passes
+and gate records must also write an audit log entry (NFR-27) through the `AuditWriter` a service takes. The audit
+log refuses edits and deletes.
+
+## Continuous integration
+
+`.github/workflows/build.yml` runs on every pull request and every push to `main`: `npm ci`, lint, typecheck,
+tests with coverage, TypeDoc, then the SonarCloud scan. The result shows on the pull request. Fix SonarCloud
+findings, or explain in a PR comment why one stays.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `X is not set. Copy .env.example to .env.local` | A variable is missing from `.env.local`. Restart `npm run dev` after editing the file. |
+| `Invalid path specified in request URL` from Supabase | `NEXT_PUBLIC_SUPABASE_URL` has a path such as `/rest/v1/` on the end. Keep only `https://<id>.supabase.co`. |
+| "Too many wrong passwords" while testing | Wait 15 minutes, or delete your row in the `login_attempts` table (Supabase → Table Editor). |
+| A demo account no longer works | `npm run db:seed` puts every demo account back to its starting password and state. |
+| Logged out at once, or sent back to Log in | Your session was idle past its limit (15 minutes for guard, maintenance, admin). Log in again. |
+| The commit hook doesn't run | Run `npm install` in `code/`; it points git at `code/.husky`. |
+| `This module cannot be imported from a Client Component` / `server-only` error | A browser component imported `db.ts`, `auth.ts` or an adapter. Pages must call API routes instead. Scripts (like `seed.ts`) make their own clients for the same reason. |
+| `fetch is not defined` in a component test | Use `answerFetch` from `src/components/auth/testFetch.ts`. |
+| `npm run docs` fails with "does not have any documentation" | Add a TSDoc comment to the export it names. |
+| A Tailwind class has no effect in a file git ignores | Tailwind skips git-ignored files. Use the class in a tracked file. |
+| Windows: port 3000 still busy after stopping the dev server | A `node` process is left over. `Get-NetTCPConnection -LocalPort 3000` gives its id; stop it with `Stop-Process -Id <id>`. |
+| Reset email doesn't arrive | Check spam. Only accounts with a real email get a link; the others are told to ask the manager. |

@@ -5,7 +5,8 @@
 1. Ask the repository owner to add you as a collaborator, then accept the invitation from your email or GitHub
    notifications.
 2. Clone the repository and create your branch from `main`.
-3. Install Node.js 24 LTS. The app lives in the `code/` folder, so run every `npm` command from there.
+3. Install Node.js 24 LTS. The app lives in the `code/` folder, so run every `npm` command from there. Follow
+   [code/README.md](code/README.md) to set it up and to see how a feature is built.
 
 ## Branches
 
@@ -37,7 +38,8 @@ The reasons behind these rules are in [docs/decisions.md](docs/decisions.md).
   360 px wide (no sideways scrolling, tap targets at least 48 px) and at 1280 px (NFR-23).
 - Don't edit formatting by hand. Prettier formats on save in VS Code, and the pre-commit hook runs ESLint and Prettier
   on your changed files.
-- Run `npm run lint` and `npx tsc --noEmit` in `code/` before opening a pull request. Both must pass.
+- Run `npm run lint`, `npm run typecheck` and `npm test` in `code/` before opening a pull request. All three must
+  pass; the pull request check runs them again.
 
 ## Commits
 
