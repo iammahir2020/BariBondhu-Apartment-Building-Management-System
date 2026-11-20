@@ -6,9 +6,6 @@
  * @author Mahir Al Kamal
  */
 import { randomInt } from 'node:crypto';
-import { eq } from 'drizzle-orm';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/lib/db';
 import { AppError } from '@/lib/errors';
 import type { Role } from '@/lib/roles';
 import { profiles, type Profile } from '@/models';
@@ -208,50 +205,4 @@ export async function createAccount(
     },
   });
   return { profile, username, temporaryPassword };
-}
-
-/**
- * An {@link AuthUserAdmin} backed by Supabase's admin API.
- * @param admin - The service-role client.
- * @returns The user admin.
- */
-export function supabaseUserAdmin(admin: SupabaseClient): AuthUserAdmin {
-  return {
-    async createUser(email, password) {
-      const { data, error } = await admin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-      });
-      if (error) throw error;
-      return data.user.id;
-    },
-    async deleteUser(id) {
-      const { error } = await admin.auth.admin.deleteUser(id);
-      if (error) throw error;
-    },
-  };
-}
-
-/**
- * An {@link AccountProfileStore} backed by the `profiles` table.
- * @param db - Database to use.
- * @returns The store.
- */
-export function databaseAccountProfileStore(db: Database): AccountProfileStore {
-  return {
-    async usernameTaken(username) {
-      const rows = await db
-        .select({ id: profiles.id })
-        .from(profiles)
-        .where(eq(profiles.username, username))
-        .limit(1);
-      return rows.length > 0;
-    },
-    async insert(profile) {
-      const [row] = await db.insert(profiles).values(profile).returning();
-      if (!row) throw new Error('Profile insert returned no row.');
-      return row;
-    },
-  };
 }

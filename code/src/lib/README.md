@@ -9,6 +9,8 @@ Code every feature uses, with no business rules of its own:
 - `env.ts`: `requireEnv`, which names the missing variable.
 - `parse.ts`: `readJsonObject` and `requireString` for reading request bodies in routes.
 - `apiClient.ts`: `callApi`, how pages call the API and read its errors.
+- `adapters/`: the database and Supabase versions of the interfaces services take (`databaseProfileFinder`,
+  `supabaseSessionAuth` ...), one file per service. Routes pass them in. Left out of the coverage count.
 - `session.ts`: the app's own session cookie (last activity, for the idle limits).
 - `permissions.ts`: the role permissions table as `PERMISSIONS`, plus `checkRole`, `requireOwnOccupancy` and
   `requireOwnTicket` (pure, so tests need no database).

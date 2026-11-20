@@ -1,16 +1,18 @@
 /**
  * Runs before every page and API request: refreshes the Supabase session, ends sessions that were idle too long
  * (NFR-07) or belong to a deactivated account, sends signed-out users to Log in, keeps users with a temporary
- * password on Set new password (BR-15), and sends signed-in users from Log in or `/` to their role's home. API routes still check the role themselves (step 7, NFR-06).
+ * password on Set new password (BR-15), and sends signed-in users from Log in or `/` to their role's home. API
+ * routes still check the role themselves (NFR-06).
  *
  * @author Mahir Al Kamal
  */
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { databaseProfileFinder } from '@/lib/adapters/authAdapters';
 import { db } from '@/lib/db';
 import { requireEnv } from '@/lib/env';
 import { LAST_ACTIVE_COOKIE, lastActiveCookie } from '@/lib/session';
-import { databaseProfileFinder, isIdleExpired } from '@/services/authService';
+import { isIdleExpired } from '@/services/authService';
 
 /** Pages anyone can open without logging in. */
 const PUBLIC_PAGES = ['/login', '/forgot-password', '/reset-password', '/emergency'];

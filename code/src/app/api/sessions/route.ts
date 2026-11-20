@@ -5,6 +5,11 @@
  * @author Mahir Al Kamal
  */
 import { cookies } from 'next/headers';
+import {
+  databaseLoginAttemptStore,
+  databaseProfileFinder,
+  supabaseSessionAuth,
+} from '@/lib/adapters/authAdapters';
 import { db } from '@/lib/db';
 import { toErrorResponse } from '@/lib/errors';
 import { readJsonObject, requireString } from '@/lib/parse';
@@ -18,13 +23,7 @@ import {
   lastActiveCookie,
 } from '@/lib/session';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import {
-  attemptKey,
-  databaseLoginAttemptStore,
-  databaseProfileFinder,
-  logIn,
-  supabaseSessionAuth,
-} from '@/services/authService';
+import { attemptKey, logIn } from '@/services/authService';
 
 /**
  * Logs in with `{ username, password }`.

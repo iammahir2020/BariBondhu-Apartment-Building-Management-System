@@ -5,13 +5,9 @@
  *
  * @author Mahir Al Kamal
  */
-import { eq } from 'drizzle-orm';
-import type { Database } from '@/lib/db';
 import { AppError } from '@/lib/errors';
-import type { SupabaseServerClient } from '@/lib/supabase/server';
-import { profiles } from '@/models';
 import type { AuditWriter } from '@/services/auditService';
-import { PASSWORD_TOO_SHORT_MESSAGE, passwordProblem } from '@/services/passwordRules';
+import { passwordProblem } from '@/services/passwordRules';
 
 /** Shown when the new password is the same as the current one. */
 export const SAME_PASSWORD_MESSAGE = 'Choose a password different from the one you have now.';
@@ -65,39 +61,4 @@ export async function setOwnPassword(
     oldValues: null,
     newValues: { mustChangePassword: false },
   });
-}
-
-/**
- * A {@link PasswordUpdater} for the user signed in on this request.
- * @param client - Supabase server client for the request.
- * @returns The updater.
- */
-export function supabasePasswordUpdater(client: SupabaseServerClient): PasswordUpdater {
-  return {
-    async update(password) {
-      const { error } = await client.auth.updateUser({ password });
-      if (!error) return true;
-      if (error.code === 'same_password') return false;
-      if (error.code === 'weak_password') {
-        throw new AppError('BAD_REQUEST', PASSWORD_TOO_SHORT_MESSAGE);
-      }
-      throw error;
-    },
-  };
-}
-
-/**
- * A {@link PasswordProfileStore} backed by the `profiles` table.
- * @param db - Database to use.
- * @returns The store.
- */
-export function databasePasswordProfileStore(db: Database): PasswordProfileStore {
-  return {
-    async markPasswordChanged(profileId) {
-      await db
-        .update(profiles)
-        .set({ mustChangePassword: false, tempPasswordExpiresAt: null })
-        .where(eq(profiles.id, profileId));
-    },
-  };
 }

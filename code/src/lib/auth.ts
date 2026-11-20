@@ -7,6 +7,7 @@
  */
 import 'server-only';
 import { redirect } from 'next/navigation';
+import { databaseProfileFinder } from '@/lib/adapters/authAdapters';
 import { db } from '@/lib/db';
 import { AppError } from '@/lib/errors';
 import { checkRole, type Action, type Authorized } from '@/lib/permissions';
@@ -17,7 +18,6 @@ import {
   type SupabaseServerClient,
 } from '@/lib/supabase/server';
 import type { Profile } from '@/models';
-import { databaseProfileFinder } from '@/services/authService';
 
 /** Shown when a request needs a signed-in user and there isn't one. */
 export const NOT_LOGGED_IN_MESSAGE = 'Your session has ended. Log in again.';

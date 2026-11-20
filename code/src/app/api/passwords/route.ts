@@ -4,17 +4,17 @@
  *
  * @author Mahir Al Kamal
  */
+import {
+  databasePasswordProfileStore,
+  supabasePasswordUpdater,
+} from '@/lib/adapters/passwordAdapters';
 import { requireCurrentProfile } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { toErrorResponse } from '@/lib/errors';
 import { readJsonObject, requireString } from '@/lib/parse';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { databaseAuditWriter } from '@/services/auditService';
-import {
-  databasePasswordProfileStore,
-  setOwnPassword,
-  supabasePasswordUpdater,
-} from '@/services/passwordService';
+import { setOwnPassword } from '@/services/passwordService';
 
 /**
  * Sets a new password from `{ password }`.

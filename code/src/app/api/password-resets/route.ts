@@ -5,6 +5,15 @@
  * @author Mahir Al Kamal
  */
 import { cookies } from 'next/headers';
+import { databaseProfileFinder } from '@/lib/adapters/authAdapters';
+import {
+  databasePasswordProfileStore,
+  supabasePasswordUpdater,
+} from '@/lib/adapters/passwordAdapters';
+import {
+  databaseProfileByUsername,
+  supabaseRecoveryTokens,
+} from '@/lib/adapters/passwordResetAdapters';
 import { db } from '@/lib/db';
 import { requireEnv } from '@/lib/env';
 import { toErrorResponse } from '@/lib/errors';
@@ -14,14 +23,7 @@ import { lastActiveCookie } from '@/lib/session';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { databaseAuditWriter } from '@/services/auditService';
-import { databaseProfileFinder } from '@/services/authService';
-import {
-  databaseProfileByUsername,
-  requestPasswordReset,
-  resetPassword,
-  supabaseRecoveryTokens,
-} from '@/services/passwordResetService';
-import { databasePasswordProfileStore, supabasePasswordUpdater } from '@/services/passwordService';
+import { requestPasswordReset, resetPassword } from '@/services/passwordResetService';
 
 /**
  * Sends a reset link for `{ username }`.
