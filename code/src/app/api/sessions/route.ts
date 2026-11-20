@@ -8,14 +8,29 @@ import { cookies } from 'next/headers';
 import { db } from '@/lib/db';
 import { toErrorResponse } from '@/lib/errors';
 import { readJsonObject, requireString } from '@/lib/parse';
-import { LAST_ACTIVE_COOKIE, lastActiveCookie } from '@/lib/session';
+import {
+  DEVICE_COOKIE,
+  GATE_DEVICE_COOKIE,
+  LAST_ACTIVE_COOKIE,
+  deviceCookie,
+  deviceIdFrom,
+  gateDeviceCookie,
+  lastActiveCookie,
+} from '@/lib/session';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { databaseProfileFinder, logIn, supabaseSessionAuth } from '@/services/authService';
+import {
+  attemptKey,
+  databaseLoginAttemptStore,
+  databaseProfileFinder,
+  logIn,
+  supabaseSessionAuth,
+} from '@/services/authService';
 
 /**
  * Logs in with `{ username, password }`.
  * @param request - The request.
- * @returns 200 with `{ role, home, mustChangePassword }`, or an error (401 wrong details, 403 refused).
+ * @returns 200 with `{ role, home, mustChangePassword }`, or an error (401 wrong details, 403 refused, 429 must
+ * wait, with `retryAfterSeconds`).
  */
 export async function POST(request: Request): Promise<Response> {
   try {
@@ -23,13 +38,23 @@ export async function POST(request: Request): Promise<Response> {
     const username = requireString(body, 'username', 'username');
     const password = requireString(body, 'password', 'password', { trim: false });
 
+    const cookieStore = await cookies();
+    const deviceId = deviceIdFrom(cookieStore.get(DEVICE_COOKIE)?.value);
+    cookieStore.set(deviceCookie(deviceId));
+    const onGateDevice = cookieStore.get(GATE_DEVICE_COOKIE)?.value === '1';
+
     const supabase = await createSupabaseServerClient();
     const profile = await logIn(
-      { auth: supabaseSessionAuth(supabase), profiles: databaseProfileFinder(db) },
-      { username, password },
+      {
+        auth: supabaseSessionAuth(supabase),
+        profiles: databaseProfileFinder(db),
+        attempts: databaseLoginAttemptStore(db),
+      },
+      { username, password, attemptKey: attemptKey(deviceId, username, onGateDevice) },
     );
 
-    (await cookies()).set(lastActiveCookie(profile.role, new Date()));
+    cookieStore.set(lastActiveCookie(profile.role, new Date()));
+    if (profile.role === 'guard') cookieStore.set(gateDeviceCookie());
     return Response.json({
       role: profile.role,
       home: profile.mustChangePassword ? '/set-password' : `/${profile.role}`,

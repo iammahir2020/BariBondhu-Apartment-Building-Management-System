@@ -8,7 +8,7 @@ import { integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 /** Login attempts: one row per counting key. */
 export const loginAttempts = pgTable('login_attempts', {
-  /** `device:<device id>` for an ordinary browser, `gate:<username>` on the gate device. */
+  /** `device:<device id>` for an ordinary browser, `gate:<device id>:<username>` on the gate device. */
   key: text().primaryKey(),
   /** Wrong passwords in a row; reset by a successful log-in. */
   failedCount: integer().notNull().default(0),

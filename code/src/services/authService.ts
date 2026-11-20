@@ -1,7 +1,7 @@
 /**
- * Logging in and out for every role (RES-06, SG-01, BM-01, CM-05, MNT-06): username and password, refusing
- * deactivated accounts and expired temporary passwords (BR-15, NFR-04), and the idle limits that end a session
- * (NFR-07).
+ * Logging in and out for every role (RES-06, SG-01, BM-01, CM-05, MNT-06): username and password, the
+ * wrong-password limit (BR-14), refusing deactivated accounts and expired temporary passwords (BR-15, NFR-04), and
+ * the idle limits that end a session (NFR-07).
  *
  * @author Mahir Al Kamal
  */
@@ -10,7 +10,7 @@ import type { Database } from '@/lib/db';
 import { AppError } from '@/lib/errors';
 import type { Role } from '@/lib/roles';
 import type { SupabaseServerClient } from '@/lib/supabase/server';
-import { profiles, type Profile } from '@/models';
+import { loginAttempts, profiles, type Profile } from '@/models';
 import { internalEmail } from '@/services/accountService';
 
 /** Shown for an unknown username or a wrong password, so the screen never tells which one it was. */
@@ -19,6 +19,18 @@ export const WRONG_LOGIN_MESSAGE = 'Wrong username or password.';
 /** Shown when a deactivated account tries to log in (CM-05, BM-02). */
 export const DEACTIVATED_MESSAGE =
   'This account has been deactivated. Ask the building manager if you think this is a mistake.';
+
+/** Shown, with the time left, when a device or gate username must wait (BR-14). */
+export const TOO_MANY_WRONG_MESSAGE = 'Too many wrong passwords.';
+
+/** Wrong passwords in a row that start a wait (BR-14). */
+export const MAX_WRONG_PASSWORDS = 5;
+
+/** How long the wait lasts (BR-14). */
+export const LOCKOUT_MINUTES = 15;
+
+/** Longest username kept in a counting key; real usernames are 9 characters. */
+const MAX_KEY_USERNAME_LENGTH = 64;
 
 /** Shown when a temporary password was not used within 7 days (NFR-04). */
 export const TEMP_PASSWORD_EXPIRED_MESSAGE =
@@ -50,10 +62,75 @@ export interface ProfileFinder {
   findById(id: string): Promise<Profile | undefined>;
 }
 
+/** A counting key's wrong-password state. */
+export interface AttemptState {
+  failedCount: number;
+  lockedUntil: Date | null;
+}
+
+/** Keeps wrong-password counts (BR-14). */
+export interface LoginAttemptStore {
+  get(key: string): Promise<AttemptState | undefined>;
+  save(key: string, state: AttemptState, now: Date): Promise<void>;
+  clear(key: string): Promise<void>;
+}
+
 /** What {@link logIn} works with. */
 export interface LogInDeps {
   auth: SessionAuth;
   profiles: ProfileFinder;
+  attempts: LoginAttemptStore;
+}
+
+/**
+ * The key wrong passwords are counted under (BR-14). An ordinary browser counts per device, so nobody can lock
+ * another person out. The gate device counts per username on that device, so one guard's mistakes, or a
+ * stranger's, never block another guard.
+ * @param deviceId - The browser's random device id.
+ * @param username - The username as typed.
+ * @param onGateDevice - True on the shared gate device.
+ * @returns `device:<id>` or `gate:<id>:<username>`.
+ */
+export function attemptKey(deviceId: string, username: string, onGateDevice: boolean): string {
+  if (!onGateDevice) return `device:${deviceId}`;
+  return `gate:${deviceId}:${normaliseUsername(username).slice(0, MAX_KEY_USERNAME_LENGTH)}`;
+}
+
+/**
+ * How long a key must still wait.
+ * @param state - The key's state, if it has one.
+ * @param now - The current time.
+ * @returns Whole seconds left, rounded up; 0 when it may try.
+ */
+export function lockSecondsLeft(state: AttemptState | undefined, now: Date): number {
+  if (!state?.lockedUntil) return 0;
+  return Math.max(0, Math.ceil((state.lockedUntil.getTime() - now.getTime()) / 1000));
+}
+
+/**
+ * The state after one more wrong password. The 5th in a row starts a 15-minute wait; after a wait ends, counting
+ * starts again from zero (BR-14).
+ * @param state - The key's state before, if it has one.
+ * @param now - The current time.
+ * @returns The new state.
+ */
+export function afterWrongPassword(state: AttemptState | undefined, now: Date): AttemptState {
+  const waitEnded = state?.lockedUntil != null && state.lockedUntil.getTime() <= now.getTime();
+  const failedCount = (waitEnded ? 0 : (state?.failedCount ?? 0)) + 1;
+  return {
+    failedCount,
+    lockedUntil:
+      failedCount >= MAX_WRONG_PASSWORDS
+        ? new Date(now.getTime() + LOCKOUT_MINUTES * MINUTE_MS)
+        : null,
+  };
+}
+
+/** The error for a key that must wait, with the seconds left for the screen. */
+function tooManyWrong(secondsLeft: number): AppError {
+  return new AppError('TOO_MANY_REQUESTS', TOO_MANY_WRONG_MESSAGE, {
+    retryAfterSeconds: secondsLeft,
+  });
 }
 
 /**
@@ -66,27 +143,37 @@ export function normaliseUsername(username: string): string {
 }
 
 /**
- * Logs a user in by username. The password is checked first, so the account's state is only revealed to someone
- * who knows it.
- * @param deps - Session auth and profile finder.
- * @param input - Username and password as typed.
+ * Logs a user in by username. A key that is waiting is refused before the password is tried (BR-14). The password
+ * is checked before the account's state, so that state is only revealed to someone who knows the password.
+ * @param deps - Session auth, profile finder and wrong-password store.
+ * @param input - Username and password as typed, and the key to count wrong passwords under ({@link attemptKey}).
  * @param now - The current time.
  * @returns The logged-in user's profile.
+ * @throws AppError 429 with `retryAfterSeconds` if the key must wait, including after the 5th wrong password.
  * @throws AppError 401 with {@link WRONG_LOGIN_MESSAGE} if the username or password is wrong.
  * @throws AppError 403 if the account is deactivated or its temporary password has expired; the session is ended.
  */
 export async function logIn(
   deps: LogInDeps,
-  input: { username: string; password: string },
+  input: { username: string; password: string; attemptKey: string },
   now: Date = new Date(),
 ): Promise<Profile> {
+  const before = await deps.attempts.get(input.attemptKey);
+  const waiting = lockSecondsLeft(before, now);
+  if (waiting > 0) throw tooManyWrong(waiting);
+
   const userId = await deps.auth.signIn(
     internalEmail(normaliseUsername(input.username)),
     input.password,
   );
   if (userId === null) {
+    const after = afterWrongPassword(before, now);
+    await deps.attempts.save(input.attemptKey, after, now);
+    const nowWaiting = lockSecondsLeft(after, now);
+    if (nowWaiting > 0) throw tooManyWrong(nowWaiting);
     throw new AppError('UNAUTHORIZED', WRONG_LOGIN_MESSAGE);
   }
+  if (before) await deps.attempts.clear(input.attemptKey);
 
   const profile = await deps.profiles.findById(userId);
   if (!profile) {
@@ -151,6 +238,34 @@ export function supabaseSessionAuth(client: SupabaseServerClient): SessionAuth {
     async signOut() {
       const { error } = await client.auth.signOut({ scope: 'local' });
       if (error) throw error;
+    },
+  };
+}
+
+/**
+ * A {@link LoginAttemptStore} backed by the `login_attempts` table.
+ * @param db - Database to use.
+ * @returns The store.
+ */
+export function databaseLoginAttemptStore(db: Database): LoginAttemptStore {
+  return {
+    async get(key) {
+      const [row] = await db
+        .select({ failedCount: loginAttempts.failedCount, lockedUntil: loginAttempts.lockedUntil })
+        .from(loginAttempts)
+        .where(eq(loginAttempts.key, key))
+        .limit(1);
+      return row;
+    },
+    async save(key, state, now) {
+      const values = { ...state, updatedAt: now };
+      await db
+        .insert(loginAttempts)
+        .values({ key, ...values })
+        .onConflictDoUpdate({ target: loginAttempts.key, set: values });
+    },
+    async clear(key) {
+      await db.delete(loginAttempts).where(eq(loginAttempts.key, key));
     },
   };
 }
