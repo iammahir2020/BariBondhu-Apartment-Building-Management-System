@@ -45,6 +45,7 @@ npm run dev
 | `docs/srs/latex/` | LaTeX source of the SRS for the PDF (`main.tex` and `figures/`), made from `SRS.md`. Compile with XeLaTeX |
 | `docs/sds/` | Software Design Specification: `SDS.md` (index and notation), one part per user class with its use case narratives and state diagrams, `system/` for the data flow diagrams, and `design-inputs-from-srs.md` (states, use case links, data flows and entities shared by all parts) |
 | `docs/decisions.md` | Technology and design decisions with their reasons |
+| `docs/sprint-plan/` | Sprint plan for Release 1: `feature-tickets.md` (every ticket with its owner, dates and dependencies) and `sprint-timeline.html` (the same tickets as a timeline; open it in a browser) |
 | `diagrams/` | Diagram sources (`.drawio.svg`), one folder per user class, plus `system/` (data flow diagrams) and `system-administrator/` |
 | `docs/ui-prototype/` | Clickable HTML prototype of every screen, in a phone and a web view (`index.html` lists them); the theme in `bb.css` is the one the app uses |
 | `code/` | The Next.js app: source in `code/src/`, tests next to the code, migrations in `code/drizzle/`. See [code/README.md](code/README.md) |
