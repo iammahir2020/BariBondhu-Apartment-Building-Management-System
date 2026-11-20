@@ -1,7 +1,7 @@
 /**
  * Runs before every page and API request: refreshes the Supabase session, ends sessions that were idle too long
- * (NFR-07) or belong to a deactivated account, sends signed-out users to Log in, and sends signed-in users from
- * Log in or `/` to their role's home. API routes still check the role themselves (step 7, NFR-06).
+ * (NFR-07) or belong to a deactivated account, sends signed-out users to Log in, keeps users with a temporary
+ * password on Set new password (BR-15), and sends signed-in users from Log in or `/` to their role's home. API routes still check the role themselves (step 7, NFR-06).
  *
  * @author Mahir Al Kamal
  */
@@ -71,7 +71,11 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     if (isPublic && !endedForIdle) return response;
     return redirect(request, response, endedForIdle ? '/login?reason=idle' : '/login');
   }
-  if (path === '/' || path === '/login') {
+  // A temporary password must be replaced before anything else (BR-15).
+  if (profile.mustChangePassword) {
+    return path === '/set-password' ? response : redirect(request, response, '/set-password');
+  }
+  if (path === '/' || path === '/login' || path === '/set-password') {
     return redirect(request, response, `/${profile.role}`);
   }
   return response;
