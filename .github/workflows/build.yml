@@ -1,0 +1,42 @@
+# Checks every pull request and every push to main: lint, typecheck, tests with coverage, TypeDoc, then the
+# SonarQube Cloud analysis, which reads the coverage report. SONAR_TOKEN is a repository secret.
+name: Build and analyse
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Lint, test and SonarQube Cloud
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: code
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          # Full history, so SonarQube Cloud can tell new code from old.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: code/.nvmrc
+          cache: npm
+          cache-dependency-path: code/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:coverage
+      - run: npm run docs
+
+      - name: SonarQube Cloud scan
+        uses: SonarSource/sonarqube-scan-action@v8.4.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

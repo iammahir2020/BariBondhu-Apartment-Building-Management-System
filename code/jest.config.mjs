@@ -23,6 +23,20 @@ const config = {
     '!**/*.test.{ts,tsx}',
     '!**/test*.ts',
     '!**/README.md',
+    // Connection code (database, Supabase, email, cookies) and page frames: no business rules, checked by running
+    // the app. Keep this list the same as sonar.coverage.exclusions in ../sonar-project.properties.
+    '!src/lib/db.ts',
+    '!src/lib/env.ts',
+    '!src/lib/auth.ts',
+    '!src/lib/session.ts',
+    '!src/lib/mailer.ts',
+    '!src/lib/supabase/**',
+    '!src/lib/adapters/**',
+    '!src/lib/utils.ts',
+    '!src/services/auditService.ts',
+    '!src/components/AppShell.tsx',
+    '!src/components/RoleNav.tsx',
+    '!src/components/auth/AuthFrame.tsx',
   ],
   coverageReporters: ['text-summary', 'lcov', 'html'],
 };
