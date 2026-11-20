@@ -97,7 +97,9 @@ export interface AuthUserAdmin {
 
 /** The profile reads and writes account creation needs. */
 export interface AccountProfileStore {
+  /** Whether any profile already has this username. */
   usernameTaken(username: string): Promise<boolean>;
+  /** Saves a new profile and returns it as stored. */
   insert(profile: typeof profiles.$inferInsert): Promise<Profile>;
 }
 

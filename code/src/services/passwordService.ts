@@ -24,6 +24,7 @@ export interface PasswordUpdater {
 
 /** Clears the first-login flag once the user has their own password. */
 export interface PasswordProfileStore {
+  /** Turns off `mustChangePassword` and clears the temporary password's expiry. */
   markPasswordChanged(profileId: string): Promise<void>;
 }
 

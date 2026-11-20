@@ -15,7 +15,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx scripts/seed.ts",
     "test": "jest",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "docs": "typedoc"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -58,6 +59,7 @@
     "prettier": "^3.10.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
+    "typedoc": "^0.28.20",
     "typescript": "^5"
   },
   "engines": {

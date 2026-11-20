@@ -59,6 +59,7 @@ export interface SessionAuth {
 
 /** Finds a profile by its user id. */
 export interface ProfileFinder {
+  /** The profile with this Supabase user id, if there is one. */
   findById(id: string): Promise<Profile | undefined>;
 }
 
@@ -70,8 +71,11 @@ export interface AttemptState {
 
 /** Keeps wrong-password counts (BR-14). */
 export interface LoginAttemptStore {
+  /** The key's state, or undefined if it has no wrong passwords on record. */
   get(key: string): Promise<AttemptState | undefined>;
+  /** Stores the key's new state, noting when it changed. */
   save(key: string, state: AttemptState, now: Date): Promise<void>;
+  /** Forgets the key, after a successful log-in. */
   clear(key: string): Promise<void>;
 }
 

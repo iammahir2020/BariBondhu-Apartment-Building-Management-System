@@ -14,7 +14,7 @@ import type { SupabaseServerClient } from '@/lib/supabase/server';
 import { profiles, type Profile } from '@/models';
 import { internalEmail } from '@/services/accountService';
 import type { AuditWriter } from '@/services/auditService';
-import { DEACTIVATED_MESSAGE, normaliseUsername } from '@/services/authService';
+import { DEACTIVATED_MESSAGE, normaliseUsername, type ProfileFinder } from '@/services/authService';
 import { passwordProblem } from '@/services/passwordRules';
 import type { PasswordProfileStore, PasswordUpdater } from '@/services/passwordService';
 
@@ -37,6 +37,7 @@ export type ResetRequestResult = { sent: true; maskedEmail: string } | { sent: f
 
 /** Finds a profile by username. */
 export interface ProfileByUsername {
+  /** The profile with this username (already normalised), if there is one. */
   findByUsername(username: string): Promise<Profile | undefined>;
 }
 
@@ -118,7 +119,7 @@ export async function requestPasswordReset(
 /** What {@link resetPassword} works with. */
 export interface ResetPasswordDeps {
   tokens: RecoveryTokens;
-  profiles: { findById(id: string): Promise<Profile | undefined> } & PasswordProfileStore;
+  profiles: ProfileFinder & PasswordProfileStore;
   passwords: PasswordUpdater;
   audit: AuditWriter;
 }
