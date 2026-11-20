@@ -5,14 +5,15 @@
  * - Phones and tablets (under 1024 px): top bar, the page, and a bottom menu with More when needed.
  * - Laptops (1024 px and up): dark side menu with every section, top bar, and a wider page.
  *
- * Both show the role's name, the Bangla/English switch, Emergency and Log out. The language switch and Log out are
- * placeholders until login (step 6) and the Bangla feature are built.
+ * Both show the role's name, the Bangla/English switch, Emergency and Log out. The language switch is a placeholder
+ * until the Bangla feature is built.
  *
  * @author Mahir Al Kamal
  */
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Building2, LogOut, Phone } from 'lucide-react';
+import { Building2, Phone } from 'lucide-react';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 import { Button } from '@/components/ui/button';
 import { BottomNav, SideNav } from '@/components/RoleNav';
 import { ROLE_LABELS, type Role } from '@/lib/roles';
@@ -114,17 +115,7 @@ function TopBarActions() {
           <span className="max-sm:sr-only">Emergency</span>
         </Link>
       </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="size-12 shrink-0 px-0 lg:w-auto lg:px-4"
-        aria-label="Log out (coming with login)"
-        title="Log out comes with login"
-        disabled
-      >
-        <LogOut aria-hidden="true" />
-        <span className="hidden lg:inline">Log out</span>
-      </Button>
+      <LogoutButton />
     </>
   );
 }
