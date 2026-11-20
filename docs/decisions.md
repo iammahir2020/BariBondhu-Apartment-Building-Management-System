@@ -80,13 +80,15 @@ picked a stack that catches mistakes early and is quick for all of us to learn.
   - Models and types are singular `PascalCase` (`Bill`, `GuestPass`). API routes are plural nouns (`/api/bills`).
   - No `any`. If a type is unknown, use `unknown` and narrow it.
   - Business rules go in `code/src/services/`, never in pages or routes.
-  - Every exported function gets a TSDoc comment (`@param`, `@returns`, `@throws`).
+  - Every file starts with a header comment saying what it is for, with `@author`. Every export (function, class,
+    type, interface, constant) gets a TSDoc comment, with `@param`, `@returns` and `@throws` where they apply.
   - Branches are named `<kind>/<first-name>-<short-name>`, in lowercase with hyphens, where kind is `feature`, `docs`
     or `fix` (for example `feature/mahir-guest-pass`). Shared setup work uses `chore/<short-name>`.
   - The same rules, plus commit and pull request steps, are in `CONTRIBUTING.md`.
 - **How it is enforced:** VS Code formats on save. A pre-commit hook (husky and lint-staged) runs ESLint and Prettier
-  on changed files. `npm run lint` and `npx tsc --noEmit`, run in `code/`, must pass before a pull request is opened. Each pull request
-  needs one review from a teammate and is checked by SonarCloud before merging into `main`.
+  on changed files. `npm run lint`, `npm run typecheck`, `npm test` and `npm run docs`, run in `code/`, must pass
+  before a pull request is opened, and a GitHub Actions check runs them again on every pull request. Each pull
+  request needs one review from a teammate and is checked by SonarCloud before merging into `main`.
 - **Alternatives considered:** The Airbnb style guide (strict for beginners, and its config lags behind ESLint 9).
   StandardJS (clashes with Prettier).
 
@@ -108,6 +110,18 @@ picked a stack that catches mistakes early and is quick for all of us to learn.
   export async function verifyPaymentClaim(claimId: string, managerId: string): Promise<Bill> { ... }
   ```
 
+- **What must be documented** (agreed by the team on 20 Nov 2026): every file has a header comment with `@author`,
+  and every export has a TSDoc comment: functions, classes, types, interfaces (including their methods) and
+  constants. The course marks documentation coverage of modules, classes, functions and variables, so the rule covers
+  all of them, not only functions. A type or constant needs one line:
+
+  ```ts
+  /** A guest pass as read from the database. */
+  export type GuestPass = typeof guestPasses.$inferSelect;
+  ```
+
+- **How it is checked:** `code/typedoc.json` turns on TypeDoc's `notDocumented` check and treats its warnings as
+  errors, so `npm run docs` fails and names any export without a comment. The pull request check runs it.
 - **Where the generated docs live:** `docs/api/`, not committed, since anyone can rebuild it. Screenshots go on the
   wiki. The shadcn code in `code/src/components/ui/` is left out.
 - **Alternatives considered:** JSDoc (made for JavaScript; with TypeScript it makes you write each type twice).
