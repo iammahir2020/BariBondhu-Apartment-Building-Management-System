@@ -45,11 +45,14 @@ The reasons behind these rules are in [docs/decisions.md](docs/decisions.md).
 
 - Write the message in the imperative: "Add guest pass state diagram", not "added diagrams".
 - Keep each commit to one change. Commit your own work from your own account, so contributions are traceable.
+- Code work: end the message with the ticket ID from `docs/sprint-plan/feature-tickets.md`, e.g.
+  "Add ticket tables (BB-1202)".
 
 ## Pull requests
 
 1. Push your branch and open a pull request into `main`.
-2. Fill in the template, including the link to the Trello card.
+2. Fill in the template, including the link to the Trello card. For code work, start the title with the ticket IDs
+   it delivers ("BB-1202, BB-1203: Add ticket tables") and add the PR link to each ticket's Trello card.
 3. At least one other member reviews it. The reviewer comments on specific lines and approves or asks for changes.
    SonarCloud also checks every pull request; fix what it flags or explain in a comment why not.
 4. The author merges after approval and moves the Trello card to Done.
