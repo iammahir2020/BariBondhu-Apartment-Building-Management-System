@@ -4,7 +4,7 @@
  *
  * @author Mahir Al Kamal
  */
-import { requireCurrentProfile } from '@/lib/currentUser';
+import { requireCurrentProfile } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { toErrorResponse } from '@/lib/errors';
 import { readJsonObject, requireString } from '@/lib/parse';

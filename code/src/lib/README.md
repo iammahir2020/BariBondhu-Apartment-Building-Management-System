@@ -10,4 +10,7 @@ Code every feature uses, with no business rules of its own:
 - `parse.ts`: `readJsonObject` and `requireString` for reading request bodies in routes.
 - `apiClient.ts`: `callApi`, how pages call the API and read its errors.
 - `session.ts`: the app's own session cookie (last activity, for the idle limits).
-- Coming in the skeleton: the role check (`permissions.ts`).
+- `permissions.ts`: the role permissions table as `PERMISSIONS`, plus `checkRole`, `requireOwnOccupancy` and
+  `requireOwnTicket` (pure, so tests need no database).
+- `auth.ts`: `requireRole(request, action)`, the first line of every API route; `requirePageRole(role)` in the role
+  layouts; `requireCurrentProfile` for routes any signed-in user may call.

@@ -6,7 +6,7 @@
  */
 import 'server-only';
 import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, parseCookieHeader } from '@supabase/ssr';
 import { requireEnv } from '@/lib/env';
 
 /**
@@ -37,3 +37,26 @@ export async function createSupabaseServerClient() {
 
 /** The client returned by {@link createSupabaseServerClient}. */
 export type SupabaseServerClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
+
+/**
+ * Creates a read-only Supabase client from a request's `Cookie` header, for checking who sent it. It never writes
+ * cookies: the middleware has already refreshed the session before the route runs.
+ * @param request - The incoming request.
+ * @returns The client.
+ */
+export function createSupabaseRequestClient(request: Request): SupabaseServerClient {
+  return createServerClient(
+    requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
+    requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+    {
+      cookies: {
+        getAll: () =>
+          parseCookieHeader(request.headers.get('cookie') ?? '').map(({ name, value }) => ({
+            name,
+            value: value ?? '',
+          })),
+        setAll: () => {},
+      },
+    },
+  );
+}
