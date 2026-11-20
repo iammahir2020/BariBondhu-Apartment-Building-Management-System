@@ -17,6 +17,24 @@ Course project for CSE 451 Software Engineering, Autumn 2026, Independent Univer
 | Ayesha Siddiqa | 2211155 | Committee Member |
 | Adika Rahman | 2221975 | Maintenance Staff |
 
+## Features
+
+Release 1 builds 15 of the 22 features in the SRS, three per member, each in the member's own user class (agreed
+20 Nov 2026).
+
+| Member | Features |
+|---|---|
+| Mahir Al Kamal | 16 Guest passes (RES-03) · 12 Report a fault (RES-02) · 6 View bill, pay online, receipt (RES-01) |
+| Tawhid Moslim | 17 Check a pass, record entry (SG-02, SG-03) · 18 Record exit, visitors inside (SG-04, SG-07) · 19 Guard shifts (BM-09, SG-05) |
+| Jannatul Ferdus Nishi | 5 Monthly bills (BM-03) · 13 Assign, close and reopen tickets (BM-06, BM-07) · 21 Announcements (BM-11, RES-08) |
+| Ayesha Siddiqa | 4 Charge rates (CM-01) · 9 Expenses and approval (BM-08, CM-02) · 10 Monthly fund summary (BM-12, RES-05) |
+| Adika Rahman | 14 Assigned tickets (MNT-01 to MNT-04) · 15 Report an extra problem (MNT-05) · 20 Emergency numbers (BM-10, SG-06) |
+
+Shared by everyone and built first: 1 Log in (RES-06, SG-01, BM-01, CM-05, MNT-06), with seed data standing in
+for 2 Building setup and 3 Accounts. Not built in Release 1: 7 Cash and bank claims, 8 Unpaid dues, 11 Committee
+dashboard, 22 Service feedback. Online payment (feature 6) uses a simulated gateway with the same flow as a real
+gateway sandbox (SRS v1.6); no real money moves.
+
 ## Project links
 
 - Task board: [Trello](https://trello.com/b/eChz8VrJ)
@@ -26,7 +44,7 @@ Course project for CSE 451 Software Engineering, Autumn 2026, Independent Univer
 
 | Path | What it holds |
 |---|---|
-| `docs/srs/SRS.md` | Software Requirements Specification, v1.5. This is the copy we edit |
+| `docs/srs/SRS.md` | Software Requirements Specification, v1.6. This is the copy we edit |
 | `archive/` folders under `docs/srs/` and `docs/sds/<class>/` | Archived Word versions, not maintained. The `.md` files are the current copies |
 | `docs/srs/figures/` | Figures used in the SRS |
 | `docs/srs/latex/` | LaTeX source of the SRS for the PDF (`main.tex` and `figures/`), made from `SRS.md`. Compile with XeLaTeX |

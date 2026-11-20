@@ -60,7 +60,7 @@
   \vspace{1cm}
   {\huge BariBondhu: Apartment Building Management System\par}
   \vspace{0.6cm}
-  {\large Release 1 \textperiodcentered{} Version 1.5\par}
+  {\large Release 1 \textperiodcentered{} Version 1.6\par}
   \vspace{2.5cm}
   {\large Prepared by\par}
   \vspace{0.5cm}
@@ -78,14 +78,14 @@
   \vspace{0.2cm}
   {\large Course instructor: Dr. Md. Mushfique Anwar\par}
   \vspace{1cm}
-  {\large Dhaka, 17. November 2026\par}
+  {\large Dhaka, 20. November 2026\par}
 \end{titlepage}
 
 \pagenumbering{roman}
 \pagestyle{plain}
 \chapter*{Revision History}
 {\setlength{\LTpre}{6pt}\setlength{\LTpost}{6pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{0.092\linewidth}>{\raggedright\arraybackslash}p{0.697\linewidth}>{\raggedright\arraybackslash}p{0.135\linewidth}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.092\linewidth}>{\raggedright\arraybackslash}p{0.698\linewidth}>{\raggedright\arraybackslash}p{0.135\linewidth}}
 \toprule
 \textbf{Version} & \textbf{What changed} & \textbf{Date} \\
 \midrule
@@ -102,6 +102,7 @@
 1.3 & Moved to Markdown; final team review of move-out, double-payment, guest-pass and night-shift cases. & 15 Nov 2026 \\
 1.4 & Shortened: criteria that repeat a business rule or NFR, most story notes and all ``Touches'' lines removed; risks and user needs trimmed; 1.3 rewritten as a paragraph; ``In scope'' table removed; permissions table moved to the SDS design inputs. & 15 Nov 2026 \\
 1.5 & Consistency fixes after the SDS review: optional email on staff and committee accounts (BM-02); the first fund summary is published only after the opening balance is approved (BM-12); total outstanding added to RES-05; R-13 and NFR-07 reworded to match the stories. & 17 Nov 2026 \\
+1.6 & Online payments in Release 1 may use a simulated gateway with the same flow as a real gateway sandbox (sections 1.4, 2, 2.3 and 2.4). & 20 Nov 2026 \\
 \end{longtable}
 }
 
@@ -191,7 +192,7 @@ We discussed these and left them out of Release 1 on purpose:
   \item Partial or advance payments, and different charge rates for different flats.
   \item Two-person approval for large expenses, and budgets or forecasts.
   \item SMS, an SOS button, native Android or iOS apps, and more than one building per installation.
-  \item Real payments. Release 1 runs only against a payment-gateway sandbox.
+  \item Real payments. Release 1 runs only against a payment-gateway sandbox or a simulated gateway with the same flow.
 \end{itemize}
 
 \section{Risk Definitions}
@@ -229,7 +230,7 @@ R-14 & The manager leaves or is unavailable and nobody can administer the buildi
 
 BariBondhu is a new product; the building has no system today that it replaces. People open it in the browser on a phone or laptop, and can add it to the phone's home screen like an app.
 
-One installation serves one building. It uses two outside services: a payment-gateway sandbox for online payments, and an email service for notifications and password resets.
+One installation serves one building. It uses two outside services: a payment-gateway sandbox (or a simulated gateway with the same flow) for online payments, and an email service for notifications and password resets.
 
 \begin{figure}[htbp]
   \centering
@@ -316,7 +317,7 @@ All classes & Paper registers and group chats with no sign-in & Anyone can claim
 \section{Operating Environment}
 
 {\setlength{\LTpre}{6pt}\setlength{\LTpost}{6pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{0.150\linewidth}>{\raggedright\arraybackslash}p{0.800\linewidth}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.149\linewidth}>{\raggedright\arraybackslash}p{0.801\linewidth}}
 \toprule
 \textbf{Item} & \textbf{Environment} \\
 \midrule
@@ -332,7 +333,7 @@ Resident, committee, maintenance & Their own phones (mostly Android, Chrome brow
 Security guard & One shared Android phone or tablet at the gate, with a rear camera for scanning QR codes, kept charged on mains power with a power bank for load-shedding. \\
 Building manager & Own phone and an office laptop. \\
 Network & Mobile data or home Wi-Fi. Load-shedding often takes Wi-Fi down, so the system must work on slow mobile data. \\
-Server side & Cloud hosting with a relational database, backed up every hour (NFR-20); an email service; a payment-gateway sandbox. \\
+Server side & Cloud hosting with a relational database, backed up every hour (NFR-20); an email service; a payment-gateway sandbox or a simulated gateway with the same flow. \\
 Locale & Bangladesh: time zone Asia/Dhaka, currency BDT (\taka{}), Bangla and English. \\
 \end{longtable}
 }
@@ -340,7 +341,7 @@ Locale & Bangladesh: time zone Asia/Dhaka, currency BDT (\taka{}), Bangla and En
 \section{Constraints}
 
 \begin{itemize}
-  \item Payments go through a payment-gateway sandbox. No real money moves in Release 1.
+  \item Payments go through a payment-gateway sandbox or a simulated gateway with the same flow. No real money moves in Release 1.
   \item No SMS. Notifications are in-app (with web push where the browser allows it) and by email.
   \item Web application only; it must run in the browsers listed in NFR-28.
   \item All interface text must be kept up to date in both Bangla and English.
