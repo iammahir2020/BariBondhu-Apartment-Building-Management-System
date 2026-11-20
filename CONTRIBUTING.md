@@ -32,7 +32,9 @@ The reasons behind these rules are in [docs/decisions.md](docs/decisions.md).
 - Component files are `PascalCase.tsx` (`BillTable.tsx`). Other files are `camelCase.ts` (`billService.ts`).
 - Models and types are singular `PascalCase` (`Bill`, `GuestPass`). API routes are plural nouns (`/api/bills`).
 - Business rules go in `code/src/services/`, never in pages or API routes.
-- Every exported function gets a TSDoc comment (`@param`, `@returns`, `@throws`).
+- Every file starts with a header comment with `@author`. Every export (function, class, type, interface, constant)
+  gets a TSDoc comment, with `@param`, `@returns` and `@throws` where they apply. `npm run docs` fails if one is
+  missing.
 - Every page works on a phone and on a laptop. Build it from both prototype views of its screen (`X.html` and
   `X-Web.html`, or `X-Mobile.html` and `X.html` for the manager and admin), phone layout first, and check it at
   360 px wide (no sideways scrolling, tap targets at least 48 px) and at 1280 px (NFR-23).
