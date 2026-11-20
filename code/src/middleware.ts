@@ -53,7 +53,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   let endedForIdle = false;
 
   if (user && profile) {
-    const lastActive = Number(request.cookies.get(LAST_ACTIVE_COOKIE)?.value ?? NaN);
+    const lastActive = Number(request.cookies.get(LAST_ACTIVE_COOKIE)?.value ?? Number.NaN);
     const loggingIn = path === '/api/sessions' && request.method === 'POST';
     const idle = isIdleExpired(profile.role, lastActive, now);
     if (!loggingIn && (!profile.active || idle)) {
