@@ -384,8 +384,9 @@ Mahir carries the most, mostly in Sprint 2 (feature 6 on Thu 26 and Fri 27), whi
 
 ## Every day
 
-- A short stand-up message on Discord: what I finished, what I start next, what blocks me.
-- Move your Trello cards as you go (To do → Doing → Done).
+- Stand-up call on Discord at **23:00 every night** (calendar invite sent): what I finished, what I start next, what
+  blocks me.
+- Move your Trello cards as you go (To do → Doing → Review → Done).
 - If a ★ ticket is late, say so on Discord at once: other members are waiting for it.
 
 ## If something slips
