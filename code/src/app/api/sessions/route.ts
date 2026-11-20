@@ -1,0 +1,80 @@
+/**
+ * Sessions: log in (POST) and log out (DELETE) for every role (RES-06, SG-01, BM-01, CM-05, MNT-06). Logging in
+ * is the one action open to signed-out users, so there is no role check here.
+ *
+ * @author Mahir Al Kamal
+ */
+import { cookies } from 'next/headers';
+import {
+  databaseLoginAttemptStore,
+  databaseProfileFinder,
+  supabaseSessionAuth,
+} from '@/lib/adapters/authAdapters';
+import { db } from '@/lib/db';
+import { toErrorResponse } from '@/lib/errors';
+import { readJsonObject, requireString } from '@/lib/parse';
+import {
+  DEVICE_COOKIE,
+  GATE_DEVICE_COOKIE,
+  LAST_ACTIVE_COOKIE,
+  deviceCookie,
+  deviceIdFrom,
+  gateDeviceCookie,
+  lastActiveCookie,
+} from '@/lib/session';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { attemptKey, logIn } from '@/services/authService';
+
+/**
+ * Logs in with `{ username, password }`.
+ * @param request - The request.
+ * @returns 200 with `{ role, home, mustChangePassword }`, or an error (401 wrong details, 403 refused, 429 must
+ * wait, with `retryAfterSeconds`).
+ */
+export async function POST(request: Request): Promise<Response> {
+  try {
+    const body = await readJsonObject(request);
+    const username = requireString(body, 'username', 'username');
+    const password = requireString(body, 'password', 'password', { trim: false });
+
+    const cookieStore = await cookies();
+    const deviceId = deviceIdFrom(cookieStore.get(DEVICE_COOKIE)?.value);
+    cookieStore.set(deviceCookie(deviceId));
+    const onGateDevice = cookieStore.get(GATE_DEVICE_COOKIE)?.value === '1';
+
+    const supabase = await createSupabaseServerClient();
+    const profile = await logIn(
+      {
+        auth: supabaseSessionAuth(supabase),
+        profiles: databaseProfileFinder(db),
+        attempts: databaseLoginAttemptStore(db),
+      },
+      { username, password, attemptKey: attemptKey(deviceId, username, onGateDevice) },
+    );
+
+    cookieStore.set(lastActiveCookie(profile.role, new Date()));
+    if (profile.role === 'guard') cookieStore.set(gateDeviceCookie());
+    return Response.json({
+      role: profile.role,
+      home: profile.mustChangePassword ? '/set-password' : `/${profile.role}`,
+      mustChangePassword: profile.mustChangePassword,
+    });
+  } catch (error) {
+    return toErrorResponse(error);
+  }
+}
+
+/**
+ * Logs out of this browser only; the household's other devices stay logged in.
+ * @returns 204.
+ */
+export async function DELETE(): Promise<Response> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    await supabaseSessionAuth(supabase).signOut();
+    (await cookies()).delete(LAST_ACTIVE_COOKIE);
+    return new Response(null, { status: 204 });
+  } catch (error) {
+    return toErrorResponse(error);
+  }
+}

@@ -8,3 +8,6 @@
 
 # draw.io SVGs embed a compressed diagram, so line diffs are not useful
 *.drawio.svg -diff
+
+# Git hooks run in sh, which breaks on CRLF line endings
+code/.husky/** text eol=lf
