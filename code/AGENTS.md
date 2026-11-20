@@ -4,6 +4,10 @@ Instructions for AI coding agents (Claude, ChatGPT, Codex, Copilot, Cursor ...) 
 It is self-contained: an agent that can't see the repository can still follow it if you paste it into the chat,
 together with the files of the feature you are working on.
 
+This file sits in `code/`, where the app is; coding agents that read `AGENTS.md` (Claude Code, Codex, Cursor,
+Copilot ...) pick it up when they work in this folder. **Paths below are from the repository root**: the app is
+`code/...`, the documents are `docs/...`.
+
 If anything here disagrees with the code, the code wins; tell the team so this file gets fixed.
 
 ## 1. The project
