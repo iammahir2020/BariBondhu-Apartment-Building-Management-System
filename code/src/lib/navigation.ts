@@ -68,10 +68,10 @@ export function allNavItems(role: Role): NavItem[] {
  * Links for the phone's bottom menu: the ones marked `onPhone`, plus "More" when some links don't fit. With More,
  * only three phone links are kept so the menu still has four places.
  * @param role - The signed-in user's role.
+ * @param all - The role's links; defaults to {@link allNavItems}. Tests pass longer lists.
  * @returns At most {@link PHONE_NAV_LIMIT} links.
  */
-export function phoneNavItems(role: Role): NavItem[] {
-  const all = allNavItems(role);
+export function phoneNavItems(role: Role, all: readonly NavItem[] = allNavItems(role)): NavItem[] {
   const onPhone = all.filter((item) => item.onPhone);
   const needsMore = onPhone.length < all.length || onPhone.length > PHONE_NAV_LIMIT;
   if (!needsMore) return onPhone;

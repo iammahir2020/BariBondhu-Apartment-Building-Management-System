@@ -13,7 +13,9 @@
     "prepare": "cd .. && husky code/.husky",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -36,6 +38,11 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^8.0.0",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24",
     "@types/nodemailer": "^8.0.2",
     "@types/react": "^19",
@@ -45,6 +52,8 @@
     "eslint-config-next": "15.5.29",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
+    "jest": "^30.5.2",
+    "jest-environment-jsdom": "^30.5.2",
     "lint-staged": "^17.6.1",
     "prettier": "^3.10.1",
     "tailwindcss": "^4",
