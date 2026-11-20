@@ -11,6 +11,8 @@ on:
 permissions:
   contents: read
 
+# Actions are pinned to full commit SHAs (the tag is in the comment), so a moved tag can't change what runs.
+
 jobs:
   build:
     name: Lint, test and SonarQube Cloud
@@ -19,24 +21,25 @@ jobs:
       run:
         working-directory: code
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Full history, so SonarQube Cloud can tell new code from old.
           fetch-depth: 0
 
-      - uses: actions/setup-node@v7.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: code/.nvmrc
           cache: npm
           cache-dependency-path: code/package-lock.json
 
-      - run: npm ci
+      # No install scripts: CI needs none of them (husky's hook is only for local commits).
+      - run: npm ci --ignore-scripts
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:coverage
       - run: npm run docs
 
       - name: SonarQube Cloud scan
-        uses: SonarSource/sonarqube-scan-action@v8.4.0
+        uses: SonarSource/sonarqube-scan-action@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304 # v8.4.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
