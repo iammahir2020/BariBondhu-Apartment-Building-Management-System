@@ -2,7 +2,7 @@
  * The ticket state machine: which status changes are allowed, who may make each one, and which need a reason.
  * It follows the ticket state diagram in `docs/sds/design-inputs-from-srs.md` word for word (RES-02, BM-06, BM-07,
  * MNT-03). The ticket services of features 12, 13 and 14 call {@link checkTicketTransition} before saving a
- * change; only the owner of feature 12 changes this file.
+ * change. If you need a change here, ask me (Mahir) rather than editing it in your own PR.
  *
  * Rules that need more than the two statuses stay in the calling service: a resident cancels only while nobody
  * else follows the ticket (RES-02), and Assigned needs a staff member and a due date (BM-06).
