@@ -119,3 +119,25 @@ in the test):
 3. RES-03: the message for a guest count outside 1 to 20, and for an empty guest name.
 4. RES-03: a pass whose start time has already passed but whose end time hasn't. The tables above allow it (it
    starts as Active), since c2 only refuses an end time that is past.
+## SG-02 · Check a guest pass
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-SG02-01 | Normal | Check a pass that is currently valid | Guest name, flat, approved guest count and remaining guest count are displayed; check-in is offered | SG-02, BR-11 | BB-1701 |
+| TC-SG02-02 | Exception | Check an expired pass | "Pass not valid" with reason "Expired"; check-in is refused | SG-02 | BB-1701 |
+| TC-SG02-03 | Exception | Check a cancelled pass | "Pass not valid" with reason "Cancelled"; check-in is refused | SG-02 | BB-1701 |
+| TC-SG02-04 | Exception | Check a pass before its valid-from time | "Pass not valid" with the valid-from time; check-in is refused | SG-02 | BB-1701 |
+| TC-SG02-05 | Exception | Check a code that matches no pass | "No pass with this code" is displayed | SG-02 | BB-1701 |
+| TC-SG02-06 | Boundary | Check a fully used pass | "Fully used" is displayed; check-in is not offered | SG-02, RES-03 c3 | BB-1701 |
+| TC-SG02-07 | Normal | Check any pass result | The resident's phone number is never displayed | SG-02 | BB-1701 |
+
+## SG-03 · Record guest entry
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-SG03-01 | Normal | Check in 2 guests against a valid pass with at least 2 remaining | Entry time, guest count and guard account are saved; pass usage is updated | SG-03 | BB-1701 |
+| TC-SG03-02 | Boundary | Check in exactly the remaining guest count | Entry is saved; remaining allowance becomes zero and the pass becomes Fully used | SG-03, RES-03 c3 | BB-1701 |
+| TC-SG03-03 | Invalid | Enter more guests than remain on the pass | Check-in is refused; no entry is saved; the number of remaining guests is displayed | SG-03 | BB-1701 |
+| TC-SG03-04 | Exception | Try to check a pass or confirm an entry while the device cannot reach the server | Within 5 seconds, "No connection: use the intercom and paper register" is displayed; nothing is shown as saved | SG-03 | BB-1701 |
+| TC-SG03-05 | Normal | Restore connection and enter a visit from the paper register using its actual entry time | Visit is saved with the actual entry time and marked "Entered later" | SG-03 | BB-1701 |
+| TC-SG03-06 | Normal | A guest entry is successfully saved | The resident receives a notification containing the number of guests who arrived | SG-03, RES-03 c5, NFR-29 | BB-1701, Feature 23 |
