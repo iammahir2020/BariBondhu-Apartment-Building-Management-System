@@ -119,3 +119,24 @@ in the test):
 3. RES-03: the message for a guest count outside 1 to 20, and for an empty guest name.
 4. RES-03: a pass whose start time has already passed but whose end time hasn't. The tables above allow it (it
    starts as Active), since c2 only refuses an end time that is past.
+
+
+# Test cases: BM-09 and SG-05
+
+## BM-09 — Plan guard shifts
+
+| Test Case ID | Test Scenario | Expected Result |
+|---|---|---|
+| TC-BM09-01 | Given the building manager selects a guard, date, start time, and end time, when the manager saves the shift, then the shift is added to the duty list and the guard's Duty screen. | System saves the shift and displays it in both the manager's duty list and the assigned guard's Duty screen. |
+| TC-BM09-02 | Given a guard already has a shift, when the building manager creates another shift that overlaps the existing shift and saves it, then the system refuses the operation. | System displays `This guard already has a shift then` and saves nothing. |
+| TC-BM09-03 | Given there are hours in the next 7 days with no guard on duty, when the building manager opens the duty list, then those gaps are highlighted. | System highlights all duty coverage gaps within the next 7 days. |
+
+## SG-05 — See my shift
+
+| Test Case ID | Test Scenario | Expected Result |
+|---|---|---|
+| TC-SG05-01 | Given the building manager has assigned shifts to a guard, when the guard opens Duty, then the assigned shifts for the next 7 days are displayed. | System displays the date, start time, and end time of each assigned shift. |
+| TC-SG05-02 | Given a guard has no shift today, when the guard opens Duty, then the system displays a message. | System displays `No shift today`. |
+| TC-SG05-03 | Given a guard opens Duty, when the guard attempts to create a new shift, then the system prevents the action. | Guard cannot create shifts. |
+| TC-SG05-04 | Given a guard opens Duty, when the guard attempts to edit an assigned shift, then the system prevents the action. | Guard cannot edit assigned shifts. |
+| TC-SG05-05 | Given a guard opens Duty, when the guard attempts to swap an assigned shift, then the system prevents the action. | Guard cannot swap shifts. |
