@@ -1,7 +1,7 @@
 # Test cases: RES-01, RES-02 and RES-03
 
-The test cases for Mahir's three features, written from each story's confirmation criteria and the business rules and
-NFRs it cites in [SRS.md](srs/SRS.md). Each case becomes one or more Jest tests in the ticket named in **Built in**,
+The test cases for my three features. I wrote them from each story's confirmation criteria and the business rules
+and NFRs it cites in [SRS.md](srs/SRS.md). Each case becomes one or more Jest tests in the ticket named in **Built in**,
 and the case ID goes in the test name, so a failing test points back to this table.
 
 | Feature | Story | Tickets |
