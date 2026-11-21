@@ -140,3 +140,43 @@ in the test):
 | TC-SG05-03 | Given a guard opens Duty, when the guard attempts to create a new shift, then the system prevents the action. | Guard cannot create shifts. |
 | TC-SG05-04 | Given a guard opens Duty, when the guard attempts to edit an assigned shift, then the system prevents the action. | Guard cannot edit assigned shifts. |
 | TC-SG05-05 | Given a guard opens Duty, when the guard attempts to swap an assigned shift, then the system prevents the action. | Guard cannot swap shifts. |
+# Test cases: SG-04 and SG-07
+
+## SG-04 — Record guest exit
+
+| Test Case ID | Test Scenario | Expected Result |
+|---|---|---|
+| TC-SG04-01 | Given a pass has guests inside, when the guard enters how many guests are leaving and confirms, then the exit time, count, and guard account are saved. | System saves the exit time, number of guests leaving, and the authenticated guard account. |
+| TC-SG04-02 | Given all guests on a pass have left, when the exit is saved, then the pass no longer appears in Visitors inside. | Pass is removed from the Visitors inside list after all guests have left. |
+| TC-SG04-03 | Given a pass has nobody inside, when the guard tries to record an exit, then the system refuses the operation. | System displays `No guests from this pass are inside` and saves nothing. |
+
+## SG-07 — See visitors inside
+
+| Test Case ID | Test Scenario | Expected Result |
+|---|---|---|
+| TC-SG07-01 | Given guests have entered and not all have left, when the guard opens Visitors inside, then each pass is displayed with the required details. | System displays each pass with the guest name, flat, number of guests inside, and entry time. |
+| TC-SG07-02 | Given a pass's end time has passed and guests from it are still inside, when the guard views Visitors inside, then the pass is highlighted. | System highlights the pass with the status `Overstayed`. |
+| TC-SG07-03 | Given the guard opens an entry, when its details are displayed, then only gate details are shown and the resident's phone number is not displayed. | System displays gate details and never displays the resident's phone number. |
+| TC-SG07-04 | Given walk-in visitors handled by intercom are not recorded in Release 1, when the guard opens Visitors inside, then the list contains pass guests only. | Walk-in visitors handled by intercom do not appear in the Visitors inside list. |
+## SG-02 · Check a guest pass
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-SG02-01 | Normal | Check a pass that is currently valid | Guest name, flat, approved guest count and remaining guest count are displayed; check-in is offered | SG-02, BR-11 | BB-1701 |
+| TC-SG02-02 | Exception | Check an expired pass | "Pass not valid" with reason "Expired"; check-in is refused | SG-02 | BB-1701 |
+| TC-SG02-03 | Exception | Check a cancelled pass | "Pass not valid" with reason "Cancelled"; check-in is refused | SG-02 | BB-1701 |
+| TC-SG02-04 | Exception | Check a pass before its valid-from time | "Pass not valid" with the valid-from time; check-in is refused | SG-02 | BB-1701 |
+| TC-SG02-05 | Exception | Check a code that matches no pass | "No pass with this code" is displayed | SG-02 | BB-1701 |
+| TC-SG02-06 | Boundary | Check a fully used pass | "Fully used" is displayed; check-in is not offered | SG-02, RES-03 c3 | BB-1701 |
+| TC-SG02-07 | Normal | Check any pass result | The resident's phone number is never displayed | SG-02 | BB-1701 |
+
+## SG-03 · Record guest entry
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-SG03-01 | Normal | Check in 2 guests against a valid pass with at least 2 remaining | Entry time, guest count and guard account are saved; pass usage is updated | SG-03 | BB-1701 |
+| TC-SG03-02 | Boundary | Check in exactly the remaining guest count | Entry is saved; remaining allowance becomes zero and the pass becomes Fully used | SG-03, RES-03 c3 | BB-1701 |
+| TC-SG03-03 | Invalid | Enter more guests than remain on the pass | Check-in is refused; no entry is saved; the number of remaining guests is displayed | SG-03 | BB-1701 |
+| TC-SG03-04 | Exception | Try to check a pass or confirm an entry while the device cannot reach the server | Within 5 seconds, "No connection: use the intercom and paper register" is displayed; nothing is shown as saved | SG-03 | BB-1701 |
+| TC-SG03-05 | Normal | Restore connection and enter a visit from the paper register using its actual entry time | Visit is saved with the actual entry time and marked "Entered later" | SG-03 | BB-1701 |
+| TC-SG03-06 | Normal | A guest entry is successfully saved | The resident receives a notification containing the number of guests who arrived | SG-03, RES-03 c5, NFR-29 | BB-1701, Feature 23 |
