@@ -119,6 +119,24 @@ in the test):
 3. RES-03: the message for a guest count outside 1 to 20, and for an empty guest name.
 4. RES-03: a pass whose start time has already passed but whose end time hasn't. The tables above allow it (it
    starts as Active), since c2 only refuses an end time that is past.
+# Test cases: SG-04 and SG-07
+
+## SG-04 — Record guest exit
+
+| Test Case ID | Test Scenario | Expected Result |
+|---|---|---|
+| TC-SG04-01 | Given a pass has guests inside, when the guard enters how many guests are leaving and confirms, then the exit time, count, and guard account are saved. | System saves the exit time, number of guests leaving, and the authenticated guard account. |
+| TC-SG04-02 | Given all guests on a pass have left, when the exit is saved, then the pass no longer appears in Visitors inside. | Pass is removed from the Visitors inside list after all guests have left. |
+| TC-SG04-03 | Given a pass has nobody inside, when the guard tries to record an exit, then the system refuses the operation. | System displays `No guests from this pass are inside` and saves nothing. |
+
+## SG-07 — See visitors inside
+
+| Test Case ID | Test Scenario | Expected Result |
+|---|---|---|
+| TC-SG07-01 | Given guests have entered and not all have left, when the guard opens Visitors inside, then each pass is displayed with the required details. | System displays each pass with the guest name, flat, number of guests inside, and entry time. |
+| TC-SG07-02 | Given a pass's end time has passed and guests from it are still inside, when the guard views Visitors inside, then the pass is highlighted. | System highlights the pass with the status `Overstayed`. |
+| TC-SG07-03 | Given the guard opens an entry, when its details are displayed, then only gate details are shown and the resident's phone number is not displayed. | System displays gate details and never displays the resident's phone number. |
+| TC-SG07-04 | Given walk-in visitors handled by intercom are not recorded in Release 1, when the guard opens Visitors inside, then the list contains pass guests only. | Walk-in visitors handled by intercom do not appear in the Visitors inside list. |
 ## SG-02 · Check a guest pass
 
 | ID | Type | Case | Expected result | Source | Built in |
