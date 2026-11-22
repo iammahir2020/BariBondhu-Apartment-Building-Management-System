@@ -218,3 +218,15 @@ in the test):
 | TC-MNT04-04 | Normal | Reopen a ticket after saving a work note | The previously saved work note is displayed | MNT-04 | BB-1401 |
 | TC-MNT04-05 | Normal | Building Manager views a ticket with a saved work note | The saved work note is visible to the Building Manager | MNT-04 | BB-1401 |
 | TC-MNT04-06 | Exception | Save a work note when the save operation fails | An error message is displayed; the note is not shown as successfully saved | MNT-04 | BB-1401 |
+## MNT-05 � Report an extra problem
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-MNT05-01 | Normal | While working on an assigned ticket, submit a new problem with a category, description and place | A new ticket is created as "Reported", marked "Found by staff", linked to the original ticket, and the manager is notified | MNT-05 | BB-1501 |
+| TC-MNT05-02 | Normal | Open the Tickets list as the Building Manager after a maintenance staff member reports an extra problem | The new ticket appears with its description and place and can be assigned like any other ticket | MNT-05, BM-06 | BB-1501 |
+| TC-MNT05-03 | Boundary | Submit an extra problem with the minimum non-empty values accepted by the fields | The report is accepted and a new ticket is created with the submitted information | MNT-05 | BB-1501 |
+| TC-MNT05-04 | Invalid | Submit an extra problem with the category empty | The missing category is identified; no new ticket is saved | MNT-05 | BB-1501 |
+| TC-MNT05-05 | Invalid | Submit an extra problem with the description empty | The missing description is identified; no new ticket is saved | MNT-05 | BB-1501 |
+| TC-MNT05-06 | Invalid | Submit an extra problem with the place empty | The missing place is identified; no new ticket is saved | MNT-05 | BB-1501 |
+| TC-MNT05-07 | Exception | Try to report an extra problem from a ticket assigned to another staff member | Access is refused; no new ticket is created | MNT-05, NFR-MNT-02 | BB-1501 |
+| TC-MNT05-08 | Exception | Submit an extra problem when the save operation fails | An error is displayed; the report is not shown as successfully created | MNT-05 | BB-1501 |
