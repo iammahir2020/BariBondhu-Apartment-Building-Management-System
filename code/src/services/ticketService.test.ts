@@ -1,16 +1,19 @@
 /**
- * Tests for reporting a fault (RES-02, NFR-09): inside my flat and in a common area, the emergency path, the
- * wording for missing input, the photo rules, and nothing left behind when a report fails. Case IDs are from
- * `docs/test-cases.md`.
+ * Tests for reporting a fault and "Me too" (RES-02, BR-13, NFR-09): inside my flat and in a common area, the match
+ * with an open ticket, the emergency path, the wording for missing input, the photo rules, nothing left behind when a
+ * report fails, and following a ticket. Case IDs are from `docs/test-cases.md`.
  *
  * @author Mahir Al Kamal
  */
 import { AppError } from '@/lib/errors';
-import type { Profile } from '@/models';
+import type { NewTicketFollower, Profile, Ticket, TicketCategory } from '@/models';
 import {
   MAX_PHOTO_BYTES,
+  ME_TOO_ERRORS,
   REPORT_ERRORS,
+  findOpenMatch,
   isAcceptedPhoto,
+  meToo,
   reportFault,
   type NewReportedTicket,
   type PhotoStore,
@@ -23,13 +26,23 @@ import { makeProfile, memoryAudit } from '@/services/testFakes';
 
 const NOW = new Date('2026-11-23T10:00:00+06:00');
 
-/** An in-memory ticket store: flat 1A for occupancy-1A, an active Lift 1 and a switched-off Roof. */
+/**
+ * An in-memory ticket store: flats 1A and 1B for their households, an active Lift 1 and Water pump, a switched-off
+ * Roof, and whatever tickets and followers a test adds.
+ */
 class MemoryTicketStore implements TicketStore {
   readonly saved: NewReportedTicket[] = [];
+  readonly tickets: Ticket[] = [];
+  readonly followers: NewTicketFollower[] = [];
   failSave = false;
-  flats = new Map([['occupancy-1A', 'flat-1A']]);
+  flats = new Map([
+    ['occupancy-1A', 'flat-1A'],
+    ['occupancy-1B', 'flat-1B'],
+    ['occupancy-2B', 'flat-2B'],
+  ]);
   places = new Map([
     ['place-lift-1', true],
+    ['place-pump', true],
     ['place-roof', false],
   ]);
 
@@ -44,6 +57,62 @@ class MemoryTicketStore implements TicketStore {
   async saveReported(rows: NewReportedTicket): Promise<void> {
     if (this.failSave) throw new Error('database is down');
     this.saved.push(rows);
+    this.tickets.push(rows.ticket);
+    this.followers.push(rows.follower);
+  }
+
+  async ticketsAt(placeId: string, category: TicketCategory): Promise<Ticket[]> {
+    return this.tickets
+      .filter((t) => t.placeId === placeId && t.category === category)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
+  async findById(ticketId: string): Promise<Ticket | null> {
+    return this.tickets.find((t) => t.id === ticketId) ?? null;
+  }
+
+  async isFollowing(ticketId: string, occupancyId: string): Promise<boolean> {
+    return this.followers.some((f) => f.ticketId === ticketId && f.occupancyId === occupancyId);
+  }
+
+  async addFollower(row: NewTicketFollower): Promise<void> {
+    if (!(await this.isFollowing(row.ticketId, row.occupancyId))) this.followers.push(row);
+  }
+
+  async followerCount(ticketId: string): Promise<number> {
+    return this.followers.filter((f) => f.ticketId === ticketId).length;
+  }
+
+  /** Adds an existing ticket, reported by another household, that its reporter follows. */
+  add(overrides: Partial<Ticket>): Ticket {
+    const ticket: Ticket = {
+      id: `ticket-${this.tickets.length + 1}`,
+      reportedById: 'resident-1B',
+      occupancyId: 'occupancy-1B',
+      category: 'Plumbing',
+      flatId: null,
+      placeId: 'place-pump',
+      title: 'Water pump trips the breaker',
+      description: 'The pump stops every few minutes.',
+      photoPath: null,
+      homeTimes: null,
+      status: 'Reported',
+      priority: 'Normal',
+      assigneeId: null,
+      dueDate: null,
+      instructions: null,
+      foundByStaff: false,
+      linkedTicketId: null,
+      duplicateOfId: null,
+      createdAt: new Date('2026-11-20T10:00:00+06:00'),
+      updatedAt: new Date('2026-11-20T10:00:00+06:00'),
+      ...overrides,
+    };
+    this.tickets.push(ticket);
+    if (ticket.occupancyId) {
+      this.followers.push({ ticketId: ticket.id, occupancyId: ticket.occupancyId });
+    }
+    return ticket;
   }
 }
 
@@ -124,6 +193,13 @@ function setup(): {
   return { deps, tickets, photos, entries };
 }
 
+/** Reports a fault that must create a new ticket, and returns that ticket. */
+async function reportNew(...args: Parameters<typeof reportFault>): Promise<Ticket> {
+  const result = await reportFault(...args);
+  if (result.kind !== 'created') throw new Error('Expected a new ticket, got a match');
+  return result.ticket;
+}
+
 /** Runs a report and returns the AppError it throws, or fails the test if it doesn't throw one. */
 async function errorFrom(run: () => Promise<unknown>): Promise<AppError> {
   try {
@@ -138,7 +214,7 @@ async function errorFrom(run: () => Promise<unknown>): Promise<AppError> {
 describe('reportFault: inside my flat', () => {
   it('creates a Reported, Normal ticket for my own flat and household (TC-R02-01)', async () => {
     const { deps, tickets } = setup();
-    const ticket = await reportFault(deps, resident, flatReport(), NOW);
+    const ticket = await reportNew(deps, resident, flatReport(), NOW);
 
     expect(ticket).toMatchObject({
       id: 'id-1',
@@ -206,7 +282,7 @@ describe('reportFault: inside my flat', () => {
 
   it('trims the title, description and home times, and leaves empty home times out', async () => {
     const { deps } = setup();
-    const ticket = await reportFault(
+    const ticket = await reportNew(
       deps,
       resident,
       flatReport({ title: '  Sink  ', description: '  Leaks  ', homeTimes: '   ' }),
@@ -218,7 +294,7 @@ describe('reportFault: inside my flat', () => {
   it('makes real ids when none are given, and needs no home times', async () => {
     const { tickets, photos } = setup();
     const { audit } = memoryAudit();
-    const ticket = await reportFault(
+    const ticket = await reportNew(
       { tickets, photos, audit },
       resident,
       flatReport({ homeTimes: undefined }),
@@ -248,7 +324,7 @@ describe('reportFault: inside my flat', () => {
 describe('reportFault: in a common area', () => {
   it('creates a Reported ticket against the place, with no flat (TC-R02-02)', async () => {
     const { deps, tickets } = setup();
-    const ticket = await reportFault(deps, resident, commonReport(), NOW);
+    const ticket = await reportNew(deps, resident, commonReport(), NOW);
 
     expect(ticket).toMatchObject({
       placeId: 'place-lift-1',
@@ -286,7 +362,7 @@ describe('reportFault: in a common area', () => {
 describe('reportFault: the emergency path', () => {
   it('makes "Log it for repair" for a fire or gas smell an Urgent ticket (TC-R02-11)', async () => {
     const { deps } = setup();
-    const ticket = await reportFault(
+    const ticket = await reportNew(
       deps,
       resident,
       commonReport({ category: 'Fire or gas smell', emergency: true }),
@@ -297,13 +373,13 @@ describe('reportFault: the emergency path', () => {
 
   it('makes "Log it for repair" for someone stuck in a lift an Urgent Lift ticket (TC-R02-11)', async () => {
     const { deps } = setup();
-    const ticket = await reportFault(deps, resident, commonReport({ emergency: true }), NOW);
+    const ticket = await reportNew(deps, resident, commonReport({ emergency: true }), NOW);
     expect(ticket).toMatchObject({ category: 'Lift', priority: 'Urgent' });
   });
 
   it('makes a fire or gas smell Urgent even when it is not sent from the emergency screen', async () => {
     const { deps } = setup();
-    const ticket = await reportFault(
+    const ticket = await reportNew(
       deps,
       resident,
       commonReport({ category: 'Fire or gas smell' }),
@@ -379,7 +455,7 @@ describe('reportFault: who can report', () => {
 describe('reportFault: the photo (NFR-09)', () => {
   it('stores a JPG and saves its path on the ticket', async () => {
     const { deps, photos } = setup();
-    const ticket = await reportFault(deps, resident, flatReport({ photo: jpg() }), NOW);
+    const ticket = await reportNew(deps, resident, flatReport({ photo: jpg() }), NOW);
     expect(ticket.photoPath).toBe('tickets/id-1.jpg');
     expect(photos.stored.has('tickets/id-1.jpg')).toBe(true);
   });
@@ -387,10 +463,10 @@ describe('reportFault: the photo (NFR-09)', () => {
   it('accepts a JPG or PNG of exactly 5 MB (TC-R02-15)', async () => {
     const { deps } = setup();
     await expect(
-      reportFault(deps, resident, flatReport({ photo: jpg(MAX_PHOTO_BYTES) }), NOW),
+      reportNew(deps, resident, flatReport({ photo: jpg(MAX_PHOTO_BYTES) }), NOW),
     ).resolves.toMatchObject({ status: 'Reported' });
     await expect(
-      reportFault(deps, resident, flatReport({ photo: png(MAX_PHOTO_BYTES) }), NOW),
+      reportNew(deps, resident, flatReport({ photo: png(MAX_PHOTO_BYTES) }), NOW),
     ).resolves.toMatchObject({ status: 'Reported' });
   });
 
@@ -459,5 +535,228 @@ describe('isAcceptedPhoto', () => {
 
   it('refuses a PNG sent as a JPG', () => {
     expect(isAcceptedPhoto({ ...png(), contentType: 'image/jpeg' })).toBe(false);
+  });
+});
+
+/** A Water pump + Plumbing report from the Rahman household (1A). */
+function pumpReport(overrides: Partial<ReportFaultInput> = {}): ReportFaultInput {
+  return commonReport({
+    placeId: 'place-pump',
+    category: 'Plumbing',
+    title: 'No water from the pump',
+    description: 'The roof tank is empty.',
+    ...overrides,
+  });
+}
+
+describe('reportFault: a common-area fault that is already reported (BR-13)', () => {
+  it.each(['Reported', 'Assigned', 'In progress', 'On hold'] as const)(
+    'returns the open %s ticket for the same place and category instead of a new one (TC-R02-03)',
+    async (status) => {
+      const { deps, tickets, entries } = setup();
+      const open = tickets.add({ status });
+      const result = await reportFault(deps, resident, pumpReport(), NOW);
+
+      expect(result).toEqual({ kind: 'match', ticket: open });
+      expect(tickets.saved).toHaveLength(0);
+      expect(entries).toHaveLength(0);
+    },
+  );
+
+  it('still counts a Fixed ticket as open until the manager closes it (TC-R02-05)', async () => {
+    const { deps, tickets } = setup();
+    const fixed = tickets.add({ status: 'Fixed' });
+    await expect(reportFault(deps, resident, pumpReport(), NOW)).resolves.toEqual({
+      kind: 'match',
+      ticket: fixed,
+    });
+  });
+
+  it.each(['Closed', 'Cancelled', 'Duplicate', "Won't fix"] as const)(
+    'creates a new ticket when the only one for that place and category is %s (TC-R02-06)',
+    async (status) => {
+      const { deps, tickets } = setup();
+      tickets.add({ status });
+      const ticket = await reportNew(deps, resident, pumpReport(), NOW);
+      expect(ticket).toMatchObject({ placeId: 'place-pump', status: 'Reported' });
+    },
+  );
+
+  it('creates a new ticket for the same place with a different category (TC-R02-07)', async () => {
+    const { deps, tickets } = setup();
+    tickets.add({ placeId: 'place-lift-1', category: 'Lift', title: 'Lift 1 grinds' });
+    const ticket = await reportNew(
+      deps,
+      resident,
+      commonReport({ category: 'Electrical', title: 'Lift 1 light is off' }),
+      NOW,
+    );
+    expect(ticket).toMatchObject({ placeId: 'place-lift-1', category: 'Electrical' });
+  });
+
+  it('creates a new ticket for the same category at another place (TC-R02-02)', async () => {
+    const { deps, tickets } = setup();
+    tickets.add({});
+    const ticket = await reportNew(
+      deps,
+      resident,
+      commonReport({ category: 'Plumbing', title: 'Lift 1 floor is wet' }),
+      NOW,
+    );
+    expect(ticket.placeId).toBe('place-lift-1');
+  });
+
+  it('returns the match before uploading a photo', async () => {
+    const { deps, tickets, photos } = setup();
+    tickets.add({});
+    const result = await reportFault(deps, resident, pumpReport({ photo: jpg() }), NOW);
+    expect(result.kind).toBe('match');
+    expect(photos.stored.size).toBe(0);
+  });
+
+  it('never matches a fault inside a flat, even with the same category', async () => {
+    const { deps, tickets } = setup();
+    tickets.add({});
+    await expect(reportNew(deps, resident, flatReport(), NOW)).resolves.toMatchObject({
+      flatId: 'flat-1A',
+    });
+  });
+});
+
+describe('findOpenMatch', () => {
+  it('picks the oldest open ticket when there are several', async () => {
+    const { tickets } = setup();
+    tickets.add({ id: 'newer', createdAt: new Date('2026-11-22T10:00:00+06:00') });
+    tickets.add({ id: 'older', createdAt: new Date('2026-11-19T10:00:00+06:00') });
+    tickets.add({
+      id: 'closed',
+      status: 'Closed',
+      createdAt: new Date('2026-11-01T10:00:00+06:00'),
+    });
+    await expect(findOpenMatch(tickets, 'place-pump', 'Plumbing')).resolves.toMatchObject({
+      id: 'older',
+    });
+  });
+
+  it('returns null when nothing is reported there', async () => {
+    const { tickets } = setup();
+    await expect(findOpenMatch(tickets, 'place-pump', 'Plumbing')).resolves.toBeNull();
+  });
+});
+
+describe('meToo', () => {
+  it('makes my household follow the ticket; the follower count goes up (TC-R02-04)', async () => {
+    const { deps, tickets, entries } = setup();
+    const open = tickets.add({});
+    const result = await meToo(deps, resident, open.id, NOW);
+
+    expect(result).toEqual({ ticket: open, followerCount: 2, alreadyFollowing: false });
+    expect(tickets.followers).toContainEqual({
+      id: 'id-1',
+      ticketId: open.id,
+      occupancyId: 'occupancy-1A',
+      createdAt: NOW,
+    });
+    expect(tickets.saved).toHaveLength(0);
+    expect(entries).toEqual([
+      {
+        actorId: 'resident-1A',
+        action: 'ticket.follow',
+        entityType: 'tickets',
+        entityId: open.id,
+        oldValues: null,
+        newValues: { occupancyId: 'occupancy-1A' },
+      },
+    ]);
+  });
+
+  it('counts a third household too', async () => {
+    const { deps, tickets } = setup();
+    const open = tickets.add({});
+    await meToo(deps, resident, open.id, NOW);
+    const third = makeProfile({ id: 'resident-2B', role: 'resident', occupancyId: 'occupancy-2B' });
+    await expect(meToo(deps, third, open.id, NOW)).resolves.toMatchObject({ followerCount: 3 });
+  });
+
+  it('works on a Fixed ticket, which is still open (TC-R02-05)', async () => {
+    const { deps, tickets } = setup();
+    const fixed = tickets.add({ status: 'Fixed' });
+    await expect(meToo(deps, resident, fixed.id, NOW)).resolves.toMatchObject({
+      alreadyFollowing: false,
+    });
+  });
+
+  it('changes nothing and shows no error when tapped twice (TC-R02-08)', async () => {
+    const { deps, tickets, entries } = setup();
+    const open = tickets.add({});
+    await meToo(deps, resident, open.id, NOW);
+    const again = await meToo(deps, resident, open.id, NOW);
+
+    expect(again).toMatchObject({ followerCount: 2, alreadyFollowing: true });
+    expect(tickets.followers.filter((f) => f.occupancyId === 'occupancy-1A')).toHaveLength(1);
+    expect(entries).toHaveLength(1);
+  });
+
+  it('changes nothing on a ticket my own household reported (TC-R02-08)', async () => {
+    const { deps, tickets } = setup();
+    const mine = tickets.add({ occupancyId: 'occupancy-1A', reportedById: 'resident-1A' });
+    await expect(meToo(deps, resident, mine.id, NOW)).resolves.toMatchObject({
+      followerCount: 1,
+      alreadyFollowing: true,
+    });
+  });
+
+  it('refuses a ticket inside a flat (409, TC-R02-09)', async () => {
+    const { deps, tickets } = setup();
+    const inFlat = tickets.add({ placeId: null, flatId: 'flat-1B' });
+    const error = await errorFrom(() => meToo(deps, resident, inFlat.id, NOW));
+    expect(error).toMatchObject({ status: 409, message: ME_TOO_ERRORS.notCommonArea });
+    expect(await tickets.followerCount(inFlat.id)).toBe(1);
+  });
+
+  it.each(['Closed', 'Cancelled', 'Duplicate', "Won't fix"] as const)(
+    'refuses a %s ticket (409, TC-R02-09)',
+    async (status) => {
+      const { deps, tickets, entries } = setup();
+      const done = tickets.add({ status });
+      const error = await errorFrom(() => meToo(deps, resident, done.id, NOW));
+      expect(error).toMatchObject({ status: 409, message: ME_TOO_ERRORS.finished });
+      expect(await tickets.followerCount(done.id)).toBe(1);
+      expect(entries).toHaveLength(0);
+    },
+  );
+
+  it('refuses a ticket that does not exist (404)', async () => {
+    const { deps } = setup();
+    const error = await errorFrom(() => meToo(deps, resident, 'no-such-ticket', NOW));
+    expect(error).toMatchObject({ status: 404, message: ME_TOO_ERRORS.notFound });
+  });
+
+  it.each(['guard', 'manager', 'committee', 'maintenance', 'admin'] as const)(
+    'refuses a %s account (403)',
+    async (role) => {
+      const { deps, tickets } = setup();
+      const open = tickets.add({});
+      const error = await errorFrom(() =>
+        meToo(deps, makeProfile({ role, occupancyId: null }), open.id, NOW),
+      );
+      expect(error.status).toBe(403);
+    },
+  );
+
+  it('refuses a household that has moved out (403)', async () => {
+    const { deps, tickets } = setup();
+    const open = tickets.add({});
+    tickets.flats.delete('occupancy-1A');
+    const error = await errorFrom(() => meToo(deps, resident, open.id, NOW));
+    expect(error).toMatchObject({ status: 403, message: REPORT_ERRORS.household });
+  });
+
+  it('makes a real id when none is given', async () => {
+    const { tickets } = setup();
+    const { audit } = memoryAudit();
+    const open = tickets.add({});
+    await meToo({ tickets, audit }, resident, open.id);
+    expect(tickets.followers.at(-1)?.id).toMatch(/^[0-9a-f-]{36}$/);
   });
 });

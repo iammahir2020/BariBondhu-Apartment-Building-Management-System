@@ -1,7 +1,11 @@
 /**
- * Business rules for a resident's fault tickets (RES-02): report a fault inside my flat or in a common area. The
- * ticket starts as Reported, my household follows it, and its first status change is saved with it, so the history
- * starts at the report.
+ * Business rules for a resident's fault tickets (RES-02): report a fault inside my flat or in a common area, and
+ * "Me too" on a common-area fault someone already reported. A new ticket starts as Reported, my household follows
+ * it, and its first status change is saved with it, so the history starts at the report.
+ *
+ * A common-area fault whose place and category match an open ticket isn't created again: the resident gets that
+ * ticket back and can follow it with "Me too" (BR-13). Open means any status but the final ones, so a Fixed ticket
+ * still counts until the manager closes it.
  *
  * The service checks everything before it touches anything: wording from `docs/test-cases.md` (Decisions), photo
  * rules from NFR-09. A photo is uploaded only after the checks pass, and removed again if the ticket can't be saved,
@@ -20,6 +24,7 @@ import type {
   TicketPriority,
 } from '@/models';
 import type { AuditWriter } from '@/services/auditService';
+import { isFinalTicketStatus } from '@/services/ticketStateMachine';
 
 /** Largest photo accepted: 5 MB (NFR-09). The phone compresses to about 1 MB first. */
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -38,6 +43,13 @@ export const REPORT_ERRORS = {
   place: 'Choose a place from the list',
   household: 'Only a household account can report a fault.',
   emergency: 'Only a fire, gas smell or lift emergency can be logged from the emergency screen.',
+} as const;
+
+/** Error text for "Me too". */
+export const ME_TOO_ERRORS = {
+  notFound: 'This ticket no longer exists.',
+  notCommonArea: 'Only a common-area fault can be followed with Me too.',
+  finished: 'This ticket is finished. Report the fault again if it is back.',
 } as const;
 
 /** A photo as the resident sent it, before it is stored. */
@@ -70,7 +82,19 @@ export interface NewReportedTicket {
   statusChange: NewTicketStatusChange;
 }
 
-/** The ticket reads and writes reporting needs. */
+/** What happened to a report: a new ticket, or an open common-area ticket to follow instead (BR-13). */
+export type ReportResult = { kind: 'created'; ticket: Ticket } | { kind: 'match'; ticket: Ticket };
+
+/** What "Me too" leaves behind. */
+export interface MeTooResult {
+  ticket: Ticket;
+  /** How many households follow the ticket now, the reporter's included. */
+  followerCount: number;
+  /** True if my household already followed it, so nothing changed. */
+  alreadyFollowing: boolean;
+}
+
+/** The ticket reads and writes the resident's ticket services need. */
 export interface TicketStore {
   /** The flat of an occupancy that hasn't ended, or null if it has ended or doesn't exist. */
   activeFlatOf(occupancyId: string): Promise<string | null>;
@@ -78,6 +102,16 @@ export interface TicketStore {
   isActivePlace(placeId: string): Promise<boolean>;
   /** Saves the ticket, its first follower and its first status change together. */
   saveReported(rows: NewReportedTicket): Promise<void>;
+  /** Every ticket at a place with a category, in any status, oldest first. */
+  ticketsAt(placeId: string, category: TicketCategory): Promise<Ticket[]>;
+  /** One ticket, or null if there is none with this id. */
+  findById(ticketId: string): Promise<Ticket | null>;
+  /** Whether a household follows a ticket. */
+  isFollowing(ticketId: string, occupancyId: string): Promise<boolean>;
+  /** Adds a follower. Saving the same household twice must not add a second row. */
+  addFollower(row: NewTicketFollower): Promise<void>;
+  /** How many households follow a ticket. */
+  followerCount(ticketId: string): Promise<number>;
 }
 
 /** Where ticket photos are kept (Supabase Storage in the app). */
@@ -116,15 +150,42 @@ export function isAcceptedPhoto(photo: TicketPhoto): boolean {
   return SIGNATURES[type].every((byte, i) => photo.bytes[i] === byte);
 }
 
+/** The resident's household, or 403 if the account has none. */
+function householdOf(resident: Profile): string {
+  if (resident.role !== 'resident' || resident.occupancyId === null) {
+    throw new AppError('FORBIDDEN', REPORT_ERRORS.household);
+  }
+  return resident.occupancyId;
+}
+
+/**
+ * The open ticket a new common-area report would duplicate: same place and category, in any status but Closed,
+ * Cancelled, Duplicate and Won't fix (BR-13). The Report a fault page asks for it as soon as a place and category
+ * are picked, so it can show the ticket with "Me too" before anything is typed.
+ * @param tickets - The ticket store.
+ * @param placeId - The common-area place.
+ * @param category - The fault category.
+ * @returns The oldest open matching ticket, or null if there is none.
+ */
+export async function findOpenMatch(
+  tickets: TicketStore,
+  placeId: string,
+  category: TicketCategory,
+): Promise<Ticket | null> {
+  const atPlace = await tickets.ticketsAt(placeId, category);
+  return atPlace.find((t) => !isFinalTicketStatus(t.status)) ?? null;
+}
+
 /**
  * Reports a fault for my household (RES-02). The ticket starts as Reported, with Normal priority, or Urgent from the
  * emergency screen or for a fire or gas smell. A flat ticket is for the household's own flat, taken from its
- * occupancy, never from the request.
+ * occupancy, never from the request. A common-area fault that matches an open ticket is not created; the match comes
+ * back instead, for "Me too" (BR-13).
  * @param deps - Ticket store, photo store and audit writer.
  * @param reporter - The signed-in resident.
  * @param input - What the resident filled in.
  * @param now - The current time.
- * @returns The new ticket.
+ * @returns The new ticket, or the open ticket that matches.
  * @throws AppError 403 if the account has no household, or the household has moved out.
  * @throws AppError 400 "Describe the problem", "Give it a short title", "Use a JPG or PNG photo of 5 MB or less",
  *   "Choose a place from the list", or an emergency with another category.
@@ -134,11 +195,8 @@ export async function reportFault(
   reporter: Profile,
   input: ReportFaultInput,
   now: Date = new Date(),
-): Promise<Ticket> {
-  const occupancyId = reporter.occupancyId;
-  if (reporter.role !== 'resident' || occupancyId === null) {
-    throw new AppError('FORBIDDEN', REPORT_ERRORS.household);
-  }
+): Promise<ReportResult> {
+  const occupancyId = householdOf(reporter);
 
   const description = input.description.trim();
   if (description === '') throw new AppError('BAD_REQUEST', REPORT_ERRORS.description);
@@ -162,6 +220,8 @@ export async function reportFault(
       throw new AppError('BAD_REQUEST', REPORT_ERRORS.place);
     }
     placeId = input.placeId;
+    const match = await findOpenMatch(deps.tickets, placeId, input.category);
+    if (match) return { kind: 'match', ticket: match };
   }
 
   const priority: TicketPriority =
@@ -219,5 +279,52 @@ export async function reportFault(
     oldValues: null,
     newValues: { category: ticket.category, flatId, placeId, priority, status: ticket.status },
   });
-  return ticket;
+  return { kind: 'created', ticket };
+}
+
+/**
+ * "Me too": my household follows an open common-area ticket instead of reporting it again (RES-02, BR-13), so we're
+ * told when its status changes. Tapping it again changes nothing and isn't an error.
+ * @param deps - Ticket store and audit writer.
+ * @param resident - The signed-in resident.
+ * @param ticketId - The ticket to follow.
+ * @param now - The current time.
+ * @returns The ticket, how many households follow it now, and whether mine already did.
+ * @throws AppError 403 if the account has no household, or the household has moved out.
+ * @throws AppError 404 if there is no such ticket.
+ * @throws AppError 409 if the ticket is inside a flat, or is Closed, Cancelled, Duplicate or Won't fix.
+ */
+export async function meToo(
+  deps: Pick<TicketDeps, 'tickets' | 'audit' | 'newId'>,
+  resident: Profile,
+  ticketId: string,
+  now: Date = new Date(),
+): Promise<MeTooResult> {
+  const occupancyId = householdOf(resident);
+  if ((await deps.tickets.activeFlatOf(occupancyId)) === null) {
+    throw new AppError('FORBIDDEN', REPORT_ERRORS.household);
+  }
+  const ticket = await deps.tickets.findById(ticketId);
+  if (!ticket) throw new AppError('NOT_FOUND', ME_TOO_ERRORS.notFound);
+  if (ticket.placeId === null) throw new AppError('CONFLICT', ME_TOO_ERRORS.notCommonArea);
+  if (isFinalTicketStatus(ticket.status)) throw new AppError('CONFLICT', ME_TOO_ERRORS.finished);
+
+  const alreadyFollowing = await deps.tickets.isFollowing(ticketId, occupancyId);
+  if (!alreadyFollowing) {
+    const newId = deps.newId ?? randomUUID;
+    await deps.tickets.addFollower({ id: newId(), ticketId, occupancyId, createdAt: now });
+    await deps.audit({
+      actorId: resident.id,
+      action: 'ticket.follow',
+      entityType: 'tickets',
+      entityId: ticketId,
+      oldValues: null,
+      newValues: { occupancyId },
+    });
+  }
+  return {
+    ticket,
+    followerCount: await deps.tickets.followerCount(ticketId),
+    alreadyFollowing,
+  };
 }
