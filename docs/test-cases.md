@@ -180,3 +180,41 @@ in the test):
 | TC-SG03-04 | Exception | Try to check a pass or confirm an entry while the device cannot reach the server | Within 5 seconds, "No connection: use the intercom and paper register" is displayed; nothing is shown as saved | SG-03 | BB-1701 |
 | TC-SG03-05 | Normal | Restore connection and enter a visit from the paper register using its actual entry time | Visit is saved with the actual entry time and marked "Entered later" | SG-03 | BB-1701 |
 | TC-SG03-06 | Normal | A guest entry is successfully saved | The resident receives a notification containing the number of guests who arrived | SG-03, RES-03 c5, NFR-29 | BB-1701, Feature 23 |
+
+## MNT-01 · View assigned tickets
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-MNT01-01 | Normal | Open the assigned tickets list using an active Maintenance Staff account | Only tickets assigned to the logged-in staff member are displayed | MNT-01 | BB-1401 |
+| TC-MNT01-02 | Normal | View an assigned ticket in the list | Ticket title, short description, location, priority and current status are displayed | MNT-01 | BB-1401 |
+| TC-MNT01-03 | Boundary | Open the assigned tickets list when no tickets are assigned | "No tickets assigned to you" is displayed | MNT-01 | BB-1401 |
+| TC-MNT01-04 | Exception | Try to open a ticket assigned to another staff member | Access is refused; the other staff member's ticket details are not displayed | MNT-01, NFR-MNT-02 | BB-1401 |
+## MNT-02 · View ticket details
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-MNT02-01 | Normal | Open the details of an assigned ticket | Ticket description, location, category, priority and current status are displayed | MNT-02 | BB-1401 |
+| TC-MNT02-02 | Normal | Open an assigned ticket that contains repair instructions or additional information | Available repair instructions and additional information are displayed | MNT-02 | BB-1401 |
+| TC-MNT02-03 | Exception | Open a ticket that does not exist | A clear error message is displayed; no ticket details are shown | MNT-02 | BB-1401 |
+| TC-MNT02-04 | Exception | Try to view a ticket that is not assigned to the logged-in staff member | Access is refused; the ticket details are not displayed | MNT-02, NFR-MNT-02 | BB-1401 |
+
+## MNT-03 · Update ticket status
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-MNT03-01 | Normal | Start working on an assigned ticket | Ticket status changes to "In progress" after successful save | MNT-03 | BB-1401 |
+| TC-MNT03-02 | Normal | Mark an assigned In progress ticket as Fixed after completing the repair | Ticket status changes to "Fixed" after successful save | MNT-03 | BB-1401 |
+| TC-MNT03-03 | Normal | Reopen an assigned ticket after updating its status | The latest successfully saved status is displayed | MNT-03, NFR-MNT-03 | BB-1401 |
+| TC-MNT03-04 | Exception | Try to update the status of a ticket assigned to another staff member | Access is refused; the ticket status remains unchanged | MNT-03, NFR-MNT-02 | BB-1401 |
+| TC-MNT03-05 | Invalid | Try to change a Fixed ticket to Closed as Maintenance Staff | The status update is refused; only the Building Manager can close the ticket | MNT-03 | BB-1401 |
+| TC-MNT03-06 | Exception | Update a ticket status when saving fails | An error message is displayed; the unsaved status is not shown as successfully updated | MNT-03, NFR-MNT-03 | BB-1401 |
+
+## MNT-04 · Record work notes
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-MNT04-01 | Normal | Enter a non-empty work note for an assigned ticket and save it | The work note is saved and associated with the ticket | MNT-04 | BB-1401 |
+| TC-MNT04-02 | Normal | Save a work note successfully | "Note saved" confirmation is displayed | MNT-04 | BB-1401 |
+| TC-MNT04-03 | Invalid | Try to save an empty work note | "Write a note" is displayed; no empty note is saved | MNT-04 | BB-1401 |
+| TC-MNT04-04 | Normal | Reopen a ticket after saving a work note | The previously saved work note is displayed | MNT-04 | BB-1401 |
+| TC-MNT04-05 | Normal | Building Manager views a ticket with a saved work note | The saved work note is visible to the Building Manager | MNT-04 | BB-1401 |
+| TC-MNT04-06 | Exception | Save a work note when the save operation fails | An error message is displayed; the note is not shown as successfully saved | MNT-04 | BB-1401 |
