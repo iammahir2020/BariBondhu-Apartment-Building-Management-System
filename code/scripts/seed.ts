@@ -23,7 +23,8 @@ import { passwordProblem } from '../src/services/passwordRules';
 
 loadEnvConfig(process.cwd());
 
-const { auditLogs, blocks, buildings, chargeRates, flats, occupancies, profiles } = schema;
+const { auditLogs, blocks, buildings, chargeRates, expenses, flats, occupancies, profiles } =
+  schema;
 
 /** The Drizzle client this script uses. */
 type SeedDatabase = ReturnType<typeof drizzle<typeof schema>>;
@@ -305,6 +306,68 @@ async function seedChargeRates(db: SeedDatabase): Promise<number> {
   return added;
 }
 
+/** Demo expenses, one in each state, so every screen has something to show (BM-08, CM-02). Amounts are whole poisha. */
+const EXPENSES = [
+  {
+    description: 'Lift 1 motor repair',
+    amountPoisha: 1200000,
+    expenseDate: '2026-11-05',
+    category: 'repair',
+    status: 'Approved',
+    decisionReason: null,
+  },
+  {
+    description: 'Guard salary, November',
+    amountPoisha: 1800000,
+    expenseDate: '2026-11-10',
+    category: 'salary',
+    status: 'Waiting for approval',
+    decisionReason: null,
+  },
+  {
+    description: 'Lobby decoration',
+    amountPoisha: 500000,
+    expenseDate: '2026-11-12',
+    category: 'other',
+    status: 'Rejected',
+    decisionReason: 'Not agreed at the committee meeting',
+  },
+] as const;
+
+/**
+ * Adds one demo expense in each state, recorded by the demo manager and decided by the demo committee account.
+ * @param db - The seed script's database client.
+ * @returns How many expenses were added.
+ */
+async function seedExpenses(db: SeedDatabase): Promise<number> {
+  const [manager] = await db.select().from(profiles).where(eq(profiles.username, 'bb-manager'));
+  const [committee] = await db.select().from(profiles).where(eq(profiles.username, 'bb-committee'));
+  if (!manager || !committee) throw new Error('The bb-manager or bb-committee account is missing.');
+
+  let added = 0;
+  for (const expense of EXPENSES) {
+    const [existing] = await db
+      .select()
+      .from(expenses)
+      .where(eq(expenses.description, expense.description));
+    if (existing) continue;
+    const decided = expense.status !== 'Waiting for approval';
+    await db.insert(expenses).values({
+      amountPoisha: expense.amountPoisha,
+      expenseDate: expense.expenseDate,
+      category: expense.category,
+      description: expense.description,
+      status: expense.status,
+      recordedBy: manager.id,
+      decidedBy: decided ? committee.id : null,
+      decidedAt: decided ? new Date() : null,
+      decisionReason: expense.decisionReason,
+    });
+    added += 1;
+  }
+  return added;
+}
+
 async function main(): Promise<void> {
   const password = env('SEED_DEMO_PASSWORD');
   const problem = passwordProblem(password);
@@ -334,6 +397,8 @@ async function main(): Promise<void> {
 
     const addedRates = await seedChargeRates(db);
     console.log(`\nCharge rates: ${addedRates} added.`);
+    const addedExpenses = await seedExpenses(db);
+    console.log(`Expenses: ${addedExpenses} added.`);
   } finally {
     await client.end();
   }
