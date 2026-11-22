@@ -109,16 +109,21 @@ All times are Asia/Dhaka and all amounts are ৳ with two decimals (BR-01).
 | TC-R01-23 | Normal | From Home, pay the current bill | At most 4 taps to reach the gateway | NFR-24 | BB-0609 |
 | TC-R01-24 | Normal | The manager sends a reminder for my overdue bill | A notification that opens the bill | RES-01 c6 | Not built: reminders are feature 8, which we cut |
 
-## Open questions
+## Decisions
 
-The SRS gives no exact wording for these, so they need a decision before the service tickets (put the answer here and
-in the test):
+The SRS leaves these open, so I settled them before the service tickets. The tests use this wording.
 
-1. RES-02: is the short title required for a resident's report, and what does the error say?
-2. RES-02: the message for a photo that is too big or the wrong type (NFR-09).
-3. RES-03: the message for a guest count outside 1 to 20, and for an empty guest name.
-4. RES-03: a pass whose start time has already passed but whose end time hasn't. The tables above allow it (it
-   starts as Active), since c2 only refuses an end time that is past.
+1. RES-02: a resident's report needs a short title. Without one: "Give it a short title".
+2. RES-02: a photo that is too big or the wrong type (NFR-09): "Use a JPG or PNG photo of 5 MB or less".
+3. RES-03: a guest count outside 1 to 20: "Enter 1 to 20 guests". An empty guest name: "Enter the guest's name".
+4. RES-03: a pass whose start time has already passed but whose end time hasn't is allowed. It is Active at once,
+   since c2 only refuses an end time that is past.
+5. RES-03: a Fully used pass stays Fully used after its end time. The state diagram has no way out of Fully used, so
+   TC-R03-18 (Expired at the end time) applies to passes that still had guests to come.
+6. RES-02: once a ticket is Assigned, nobody can stop following it. While it is Reported, a reporter whose ticket
+   other households follow only stops following (TC-R02-18).
+7. The status of a guest pass is worked out from its times, guests used and cancellation time when it is read, not
+   stored, so it never goes stale when the end time passes (BB-1604).
 
 
 # Test cases: BM-09 and SG-05
