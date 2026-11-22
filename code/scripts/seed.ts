@@ -23,7 +23,7 @@ import { passwordProblem } from '../src/services/passwordRules';
 
 loadEnvConfig(process.cwd());
 
-const { auditLogs, blocks, buildings, flats, occupancies, profiles } = schema;
+const { auditLogs, blocks, buildings, chargeRates, flats, occupancies, profiles } = schema;
 
 /** The Drizzle client this script uses. */
 type SeedDatabase = ReturnType<typeof drizzle<typeof schema>>;
@@ -270,6 +270,41 @@ async function seedAccount(
   return 'created';
 }
 
+/** Demo rates the committee set at a meeting: one Current rate for each charge (CM-01). Amounts are whole poisha. */
+const RATES = [
+  { chargeType: 'service', amountPoisha: 150000 },
+  { chargeType: 'generator', amountPoisha: 50000 },
+  { chargeType: 'water', amountPoisha: 30000 },
+] as const;
+
+/**
+ * Adds a Current rate for each charge that has none yet, set by the demo committee account.
+ * @param db - The seed script's database client.
+ * @returns How many rates were added.
+ */
+async function seedChargeRates(db: SeedDatabase): Promise<number> {
+  const [committee] = await db.select().from(profiles).where(eq(profiles.username, 'bb-committee'));
+  if (!committee) throw new Error('The bb-committee account is missing.');
+
+  let added = 0;
+  for (const rate of RATES) {
+    const [current] = await db
+      .select()
+      .from(chargeRates)
+      .where(and(eq(chargeRates.chargeType, rate.chargeType), eq(chargeRates.status, 'Current')));
+    if (current) continue;
+    await db.insert(chargeRates).values({
+      chargeType: rate.chargeType,
+      amountPoisha: rate.amountPoisha,
+      meetingDate: '2026-11-01',
+      setBy: committee.id,
+      status: 'Current',
+    });
+    added += 1;
+  }
+  return added;
+}
+
 async function main(): Promise<void> {
   const password = env('SEED_DEMO_PASSWORD');
   const problem = passwordProblem(password);
@@ -296,6 +331,9 @@ async function main(): Promise<void> {
         `  ${account.username.padEnd(15)} ${account.role.padEnd(12)} ${result}${where}${first}`,
       );
     }
+
+    const addedRates = await seedChargeRates(db);
+    console.log(`\nCharge rates: ${addedRates} added.`);
   } finally {
     await client.end();
   }
