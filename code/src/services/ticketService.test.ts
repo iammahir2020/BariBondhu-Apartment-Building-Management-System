@@ -21,8 +21,12 @@ import {
   cancelTicket,
   findOpenMatch,
   isAcceptedPhoto,
+  listMyTickets,
   meToo,
   reportFault,
+  reportFormOptions,
+  type HouseholdTicket,
+  type PlaceOption,
   type NewReportedTicket,
   type PhotoStore,
   type ReportFaultInput,
@@ -106,6 +110,34 @@ class MemoryTicketStore implements TicketStore {
     ticket.status = 'Cancelled';
     this.changes.push(change);
     return true;
+  }
+
+  placeNames = new Map([
+    ['place-lift-1', 'Lift 1'],
+    ['place-pump', 'Water pump'],
+    ['place-roof', 'Roof'],
+  ]);
+
+  async listForHousehold(occupancyId: string): Promise<HouseholdTicket[]> {
+    const mine = this.tickets.filter(
+      (t) =>
+        t.occupancyId === occupancyId ||
+        this.followers.some((f) => f.ticketId === t.id && f.occupancyId === occupancyId),
+    );
+    return Promise.all(
+      mine.map(async (ticket) => ({
+        ticket,
+        placeName: ticket.placeId ? (this.placeNames.get(ticket.placeId) ?? null) : null,
+        followerCount: await this.followerCount(ticket.id),
+      })),
+    );
+  }
+
+  async activePlaces(): Promise<PlaceOption[]> {
+    return [...this.places]
+      .filter(([, active]) => active)
+      .map(([id]) => ({ id, name: this.placeNames.get(id) ?? id }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   /** Adds an existing ticket, reported by another household, that its reporter follows. */
@@ -994,5 +1026,56 @@ describe('cancelTicket', () => {
     const mine = myTicket(tickets);
     await cancelTicket({ tickets, audit }, resident, mine.id);
     expect(tickets.changes[0]?.id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+});
+
+describe('listMyTickets', () => {
+  it('lists the tickets my household reported and follows, newest first (TC-R02-22)', async () => {
+    const { tickets } = setup();
+    const reported = myTicket(tickets, { createdAt: new Date('2026-11-21T09:00:00+06:00') });
+    const followed = tickets.add({ createdAt: new Date('2026-11-22T09:00:00+06:00') });
+    follow(tickets, followed.id, 'occupancy-1A');
+    tickets.add({ title: 'Not mine' });
+
+    const list = await listMyTickets(tickets, resident);
+    expect(list).toEqual([
+      { ticket: followed, placeName: 'Water pump', followerCount: 2, reportedByMe: false },
+      { ticket: reported, placeName: null, followerCount: 1, reportedByMe: true },
+    ]);
+  });
+
+  it('shows each ticket with its current status, final ones too', async () => {
+    const { tickets } = setup();
+    myTicket(tickets, { status: 'Closed' });
+    myTicket(tickets, { status: 'In progress' });
+    const list = await listMyTickets(tickets, resident);
+    expect(list.map((row) => row.ticket.status).sort()).toEqual(['Closed', 'In progress']);
+  });
+
+  it("never shows an earlier household's tickets to a new household in the same flat (TC-R02-23)", async () => {
+    const { tickets } = setup();
+    myTicket(tickets, { occupancyId: 'occupancy-1A-old', reportedById: 'old-resident' });
+    await expect(listMyTickets(tickets, resident)).resolves.toEqual([]);
+  });
+
+  it('refuses a non-resident account and a household that has moved out (403)', async () => {
+    const { tickets } = setup();
+    const staff = makeProfile({ role: 'maintenance', occupancyId: null });
+    expect((await errorFrom(() => listMyTickets(tickets, staff))).status).toBe(403);
+    tickets.flats.delete('occupancy-1A');
+    expect((await errorFrom(() => listMyTickets(tickets, resident))).status).toBe(403);
+  });
+});
+
+describe('reportFormOptions', () => {
+  it('offers only the places that are switched on, and every category (TC-R02-14)', async () => {
+    const { tickets } = setup();
+    await expect(reportFormOptions(tickets)).resolves.toEqual({
+      places: [
+        { id: 'place-lift-1', name: 'Lift 1' },
+        { id: 'place-pump', name: 'Water pump' },
+      ],
+      categories: ['Plumbing', 'Electrical', 'Lift', 'Water supply', 'Fire or gas smell', 'Other'],
+    });
   });
 });

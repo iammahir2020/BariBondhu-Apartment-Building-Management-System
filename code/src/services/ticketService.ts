@@ -19,13 +19,14 @@
  */
 import { randomUUID } from 'node:crypto';
 import { AppError } from '@/lib/errors';
-import type {
-  NewTicketFollower,
-  NewTicketStatusChange,
-  Profile,
-  Ticket,
-  TicketCategory,
-  TicketPriority,
+import {
+  ticketCategoryEnum,
+  type NewTicketFollower,
+  type NewTicketStatusChange,
+  type Profile,
+  type Ticket,
+  type TicketCategory,
+  type TicketPriority,
 } from '@/models';
 import type { AuditWriter } from '@/services/auditService';
 import { checkTicketTransition, isFinalTicketStatus } from '@/services/ticketStateMachine';
@@ -112,6 +113,27 @@ export interface CancelResult {
   ticket: Ticket;
 }
 
+/** A ticket on my household's My tickets list, with what the list shows next to it. */
+export interface HouseholdTicket {
+  ticket: Ticket;
+  /** The common-area place's name, or null for a fault inside the flat. */
+  placeName: string | null;
+  /** How many households follow it. */
+  followerCount: number;
+}
+
+/** One row of My tickets. */
+export interface MyTicket extends HouseholdTicket {
+  /** True if my household reported it, false if it only follows it ("Me too"). */
+  reportedByMe: boolean;
+}
+
+/** A common-area place a resident can pick. */
+export interface PlaceOption {
+  id: string;
+  name: string;
+}
+
 /** The ticket reads and writes the resident's ticket services need. */
 export interface TicketStore {
   /** The flat of an occupancy that hasn't ended, or null if it has ended or doesn't exist. */
@@ -137,6 +159,10 @@ export interface TicketStore {
    * @returns False if the ticket was no longer Reported, so nothing changed.
    */
   cancelReported(statusChange: NewTicketStatusChange & { ticketId: string }): Promise<boolean>;
+  /** The tickets a household reported or follows, in any status. */
+  listForHousehold(occupancyId: string): Promise<HouseholdTicket[]>;
+  /** The common-area places that are switched on, by name. */
+  activePlaces(): Promise<PlaceOption[]>;
 }
 
 /** Where ticket photos are kept (Supabase Storage in the app). */
@@ -173,6 +199,38 @@ export function isAcceptedPhoto(photo: TicketPhoto): boolean {
   const type = PHOTO_TYPES.find((t) => t === photo.contentType.toLowerCase());
   if (!type) return false;
   return SIGNATURES[type].every((byte, i) => photo.bytes[i] === byte);
+}
+
+/**
+ * What the Report a fault form offers: the common-area places that are switched on (BR-13) and the categories.
+ * Switched-off places are left out, so old tickets keep their place but nobody can pick it (TC-R02-14).
+ * @param tickets - The ticket store.
+ * @returns The places by name, and the categories in screen order.
+ */
+export async function reportFormOptions(
+  tickets: TicketStore,
+): Promise<{ places: PlaceOption[]; categories: readonly TicketCategory[] }> {
+  return { places: await tickets.activePlaces(), categories: ticketCategoryEnum.enumValues };
+}
+
+/**
+ * My household's tickets: the ones it reported and the ones it follows with "Me too", newest first, each with its
+ * current status (TC-R02-22). Only the current household's: a new household in the same flat never sees an
+ * earlier one's tickets, because they belong to the earlier occupancy (BR-09, TC-R02-23).
+ * @param tickets - The ticket store.
+ * @param resident - The signed-in resident.
+ * @returns The tickets, newest first.
+ * @throws AppError 403 if the account has no household, or the household has moved out.
+ */
+export async function listMyTickets(tickets: TicketStore, resident: Profile): Promise<MyTicket[]> {
+  const occupancyId = householdOf(resident);
+  if ((await tickets.activeFlatOf(occupancyId)) === null) {
+    throw new AppError('FORBIDDEN', REPORT_ERRORS.household);
+  }
+  const rows = await tickets.listForHousehold(occupancyId);
+  return rows
+    .map((row) => ({ ...row, reportedByMe: row.ticket.occupancyId === occupancyId }))
+    .sort((a, b) => b.ticket.createdAt.getTime() - a.ticket.createdAt.getTime());
 }
 
 /** The resident's household, or 403 if the account has none. */
