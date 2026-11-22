@@ -7,6 +7,10 @@
  * ticket back and can follow it with "Me too" (BR-13). Open means any status but the final ones, so a Fixed ticket
  * still counts until the manager closes it.
  *
+ * Cancelling is only for a Reported ticket. If other households follow it, my household just stops following and
+ * the ticket stays Reported for them; once a ticket is Assigned, only the manager can close it, and nobody can stop
+ * following it (Decision 6 in `docs/test-cases.md`).
+ *
  * The service checks everything before it touches anything: wording from `docs/test-cases.md` (Decisions), photo
  * rules from NFR-09. A photo is uploaded only after the checks pass, and removed again if the ticket can't be saved,
  * so a failed report leaves nothing behind (TC-R02-25).
@@ -24,7 +28,7 @@ import type {
   TicketPriority,
 } from '@/models';
 import type { AuditWriter } from '@/services/auditService';
-import { isFinalTicketStatus } from '@/services/ticketStateMachine';
+import { checkTicketTransition, isFinalTicketStatus } from '@/services/ticketStateMachine';
 
 /** Largest photo accepted: 5 MB (NFR-09). The phone compresses to about 1 MB first. */
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -50,6 +54,13 @@ export const ME_TOO_ERRORS = {
   notFound: 'This ticket no longer exists.',
   notCommonArea: 'Only a common-area fault can be followed with Me too.',
   finished: 'This ticket is finished. Report the fault again if it is back.',
+} as const;
+
+/** Error text for cancelling a ticket. */
+export const CANCEL_ERRORS = {
+  notYours: "This isn't your household's ticket.",
+  assigned: 'Once a ticket is assigned, only the manager can close it.',
+  finished: 'This ticket is already finished.',
 } as const;
 
 /** A photo as the resident sent it, before it is stored. */
@@ -94,6 +105,13 @@ export interface MeTooResult {
   alreadyFollowing: boolean;
 }
 
+/** What cancelling did: the ticket is Cancelled, or my household only stopped following it. */
+export interface CancelResult {
+  outcome: 'cancelled' | 'unfollowed';
+  /** The ticket as it is now. */
+  ticket: Ticket;
+}
+
 /** The ticket reads and writes the resident's ticket services need. */
 export interface TicketStore {
   /** The flat of an occupancy that hasn't ended, or null if it has ended or doesn't exist. */
@@ -112,6 +130,13 @@ export interface TicketStore {
   addFollower(row: NewTicketFollower): Promise<void>;
   /** How many households follow a ticket. */
   followerCount(ticketId: string): Promise<number>;
+  /** Removes a household from a ticket's followers. */
+  removeFollower(ticketId: string, occupancyId: string): Promise<void>;
+  /**
+   * Sets a ticket to Cancelled and saves the status change, in one transaction, but only if it is still Reported.
+   * @returns False if the ticket was no longer Reported, so nothing changed.
+   */
+  cancelReported(statusChange: NewTicketStatusChange & { ticketId: string }): Promise<boolean>;
 }
 
 /** Where ticket photos are kept (Supabase Storage in the app). */
@@ -327,4 +352,80 @@ export async function meToo(
     followerCount: await deps.tickets.followerCount(ticketId),
     alreadyFollowing,
   };
+}
+
+/**
+ * Cancels my household's ticket, or stops following it (RES-02). Only a Reported ticket can be cancelled, and only
+ * by the household that reported it when no other household follows it; then it becomes Cancelled, through the
+ * ticket state machine. If others follow it, or my household only tapped "Me too", my household stops following and
+ * the ticket stays Reported. From Assigned on, only the manager can close it and nobody can stop following it.
+ * @param deps - Ticket store and audit writer.
+ * @param resident - The signed-in resident.
+ * @param ticketId - The ticket to cancel.
+ * @param now - The current time.
+ * @returns Whether the ticket was cancelled or my household stopped following it, and the ticket as it is now.
+ * @throws AppError 403 if the account has no household, the household has moved out, or the ticket is another
+ *   household's that mine doesn't follow.
+ * @throws AppError 404 if there is no such ticket.
+ * @throws AppError 409 if the ticket is no longer Reported.
+ */
+export async function cancelTicket(
+  deps: Pick<TicketDeps, 'tickets' | 'audit' | 'newId'>,
+  resident: Profile,
+  ticketId: string,
+  now: Date = new Date(),
+): Promise<CancelResult> {
+  const occupancyId = householdOf(resident);
+  if ((await deps.tickets.activeFlatOf(occupancyId)) === null) {
+    throw new AppError('FORBIDDEN', REPORT_ERRORS.household);
+  }
+  const ticket = await deps.tickets.findById(ticketId);
+  if (!ticket) throw new AppError('NOT_FOUND', ME_TOO_ERRORS.notFound);
+
+  const reportedByMe = ticket.occupancyId === occupancyId;
+  const following = await deps.tickets.isFollowing(ticketId, occupancyId);
+  if (!reportedByMe && !following) throw new AppError('FORBIDDEN', CANCEL_ERRORS.notYours);
+  if (ticket.status !== 'Reported') {
+    const message = isFinalTicketStatus(ticket.status)
+      ? CANCEL_ERRORS.finished
+      : CANCEL_ERRORS.assigned;
+    throw new AppError('CONFLICT', message, { status: ticket.status });
+  }
+
+  const others = (await deps.tickets.followerCount(ticketId)) - (following ? 1 : 0);
+  if (!reportedByMe || others > 0) {
+    if (following) await deps.tickets.removeFollower(ticketId, occupancyId);
+    await deps.audit({
+      actorId: resident.id,
+      action: 'ticket.unfollow',
+      entityType: 'tickets',
+      entityId: ticketId,
+      oldValues: { occupancyId },
+      newValues: null,
+    });
+    return { outcome: 'unfollowed', ticket };
+  }
+
+  checkTicketTransition('Reported', 'Cancelled', resident.role);
+  const newId = deps.newId ?? randomUUID;
+  const saved = await deps.tickets.cancelReported({
+    id: newId(),
+    ticketId,
+    fromStatus: 'Reported',
+    toStatus: 'Cancelled',
+    changedById: resident.id,
+    reason: null,
+    createdAt: now,
+  });
+  if (!saved) throw new AppError('CONFLICT', CANCEL_ERRORS.assigned);
+
+  await deps.audit({
+    actorId: resident.id,
+    action: 'ticket.cancel',
+    entityType: 'tickets',
+    entityId: ticketId,
+    oldValues: { status: 'Reported' },
+    newValues: { status: 'Cancelled' },
+  });
+  return { outcome: 'cancelled', ticket: { ...ticket, status: 'Cancelled', updatedAt: now } };
 }

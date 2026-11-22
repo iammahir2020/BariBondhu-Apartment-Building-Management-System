@@ -6,11 +6,19 @@
  * @author Mahir Al Kamal
  */
 import { AppError } from '@/lib/errors';
-import type { NewTicketFollower, Profile, Ticket, TicketCategory } from '@/models';
+import type {
+  NewTicketFollower,
+  NewTicketStatusChange,
+  Profile,
+  Ticket,
+  TicketCategory,
+} from '@/models';
 import {
+  CANCEL_ERRORS,
   MAX_PHOTO_BYTES,
   ME_TOO_ERRORS,
   REPORT_ERRORS,
+  cancelTicket,
   findOpenMatch,
   isAcceptedPhoto,
   meToo,
@@ -81,6 +89,23 @@ class MemoryTicketStore implements TicketStore {
 
   async followerCount(ticketId: string): Promise<number> {
     return this.followers.filter((f) => f.ticketId === ticketId).length;
+  }
+
+  readonly changes: NewTicketStatusChange[] = [];
+
+  async removeFollower(ticketId: string, occupancyId: string): Promise<void> {
+    const i = this.followers.findIndex(
+      (f) => f.ticketId === ticketId && f.occupancyId === occupancyId,
+    );
+    if (i >= 0) this.followers.splice(i, 1);
+  }
+
+  async cancelReported(change: NewTicketStatusChange): Promise<boolean> {
+    const ticket = this.tickets.find((t) => t.id === change.ticketId);
+    if (ticket?.status !== 'Reported') return false;
+    ticket.status = 'Cancelled';
+    this.changes.push(change);
+    return true;
   }
 
   /** Adds an existing ticket, reported by another household, that its reporter follows. */
@@ -758,5 +783,216 @@ describe('meToo', () => {
     const open = tickets.add({});
     await meToo({ tickets, audit }, resident, open.id);
     expect(tickets.followers.at(-1)?.id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+});
+
+/** A ticket the Rahman household (1A) reported, which it follows. */
+function myTicket(tickets: MemoryTicketStore, overrides: Partial<Ticket> = {}): Ticket {
+  return tickets.add({
+    occupancyId: 'occupancy-1A',
+    reportedById: 'resident-1A',
+    placeId: null,
+    flatId: 'flat-1A',
+    title: 'Kitchen sink is leaking',
+    ...overrides,
+  });
+}
+
+/** Another household follows a ticket, as if it tapped "Me too". */
+function follow(tickets: MemoryTicketStore, ticketId: string, occupancyId: string): void {
+  tickets.followers.push({ ticketId, occupancyId });
+}
+
+describe('cancelTicket', () => {
+  it('cancels my Reported ticket that nobody else follows (TC-R02-17)', async () => {
+    const { deps, tickets, entries } = setup();
+    const mine = myTicket(tickets);
+    const result = await cancelTicket(deps, resident, mine.id, NOW);
+
+    expect(result).toEqual({
+      outcome: 'cancelled',
+      ticket: { ...mine, status: 'Cancelled', updatedAt: NOW },
+    });
+    expect(tickets.tickets[0]?.status).toBe('Cancelled');
+    expect(tickets.changes).toEqual([
+      {
+        id: 'id-1',
+        ticketId: mine.id,
+        fromStatus: 'Reported',
+        toStatus: 'Cancelled',
+        changedById: 'resident-1A',
+        reason: null,
+        createdAt: NOW,
+      },
+    ]);
+    expect(entries).toEqual([
+      {
+        actorId: 'resident-1A',
+        action: 'ticket.cancel',
+        entityType: 'tickets',
+        entityId: mine.id,
+        oldValues: { status: 'Reported' },
+        newValues: { status: 'Cancelled' },
+      },
+    ]);
+  });
+
+  it('cancels my common-area ticket that nobody else follows', async () => {
+    const { deps, tickets } = setup();
+    const mine = myTicket(tickets, { placeId: 'place-pump', flatId: null });
+    await expect(cancelTicket(deps, resident, mine.id, NOW)).resolves.toMatchObject({
+      outcome: 'cancelled',
+    });
+  });
+
+  it('only stops my household following when two other households follow it (TC-R02-18)', async () => {
+    const { deps, tickets, entries } = setup();
+    const mine = myTicket(tickets, { placeId: 'place-pump', flatId: null });
+    follow(tickets, mine.id, 'occupancy-1B');
+    follow(tickets, mine.id, 'occupancy-2B');
+    const result = await cancelTicket(deps, resident, mine.id, NOW);
+
+    expect(result).toEqual({ outcome: 'unfollowed', ticket: mine });
+    expect(tickets.tickets[0]?.status).toBe('Reported');
+    expect(await tickets.isFollowing(mine.id, 'occupancy-1A')).toBe(false);
+    expect(await tickets.followerCount(mine.id)).toBe(2);
+    expect(tickets.changes).toHaveLength(0);
+    expect(entries).toEqual([
+      {
+        actorId: 'resident-1A',
+        action: 'ticket.unfollow',
+        entityType: 'tickets',
+        entityId: mine.id,
+        oldValues: { occupancyId: 'occupancy-1A' },
+        newValues: null,
+      },
+    ]);
+  });
+
+  it('changes nothing when I already stopped following and others still follow', async () => {
+    const { deps, tickets } = setup();
+    const mine = myTicket(tickets, { placeId: 'place-pump', flatId: null });
+    follow(tickets, mine.id, 'occupancy-1B');
+    await cancelTicket(deps, resident, mine.id, NOW);
+    const again = await cancelTicket(deps, resident, mine.id, NOW);
+
+    expect(again.outcome).toBe('unfollowed');
+    expect(tickets.tickets[0]?.status).toBe('Reported');
+    expect(await tickets.followerCount(mine.id)).toBe(1);
+  });
+
+  it('cancels it after the other follower has stopped following', async () => {
+    const { deps, tickets } = setup();
+    const mine = myTicket(tickets, { placeId: 'place-pump', flatId: null });
+    follow(tickets, mine.id, 'occupancy-1B');
+    await tickets.removeFollower(mine.id, 'occupancy-1B');
+    await expect(cancelTicket(deps, resident, mine.id, NOW)).resolves.toMatchObject({
+      outcome: 'cancelled',
+    });
+  });
+
+  it('lets a household that tapped "Me too" stop following a Reported ticket', async () => {
+    const { deps, tickets } = setup();
+    const theirs = tickets.add({});
+    follow(tickets, theirs.id, 'occupancy-1A');
+    const result = await cancelTicket(deps, resident, theirs.id, NOW);
+
+    expect(result.outcome).toBe('unfollowed');
+    expect(await tickets.followerCount(theirs.id)).toBe(1);
+    expect(tickets.tickets[0]?.status).toBe('Reported');
+  });
+
+  it.each(['Assigned', 'In progress', 'On hold', 'Fixed'] as const)(
+    'refuses to cancel my %s ticket: only the manager can close it (409, TC-R02-19)',
+    async (status) => {
+      const { deps, tickets, entries } = setup();
+      const mine = myTicket(tickets, { status });
+      const error = await errorFrom(() => cancelTicket(deps, resident, mine.id, NOW));
+
+      expect(error).toMatchObject({ status: 409, message: CANCEL_ERRORS.assigned });
+      expect(tickets.tickets[0]?.status).toBe(status);
+      expect(await tickets.isFollowing(mine.id, 'occupancy-1A')).toBe(true);
+      expect(entries).toHaveLength(0);
+    },
+  );
+
+  it('refuses to stop following an Assigned ticket I tapped "Me too" on (Decision 6)', async () => {
+    const { deps, tickets } = setup();
+    const theirs = tickets.add({ status: 'Assigned' });
+    follow(tickets, theirs.id, 'occupancy-1A');
+    const error = await errorFrom(() => cancelTicket(deps, resident, theirs.id, NOW));
+
+    expect(error).toMatchObject({ status: 409, message: CANCEL_ERRORS.assigned });
+    expect(await tickets.isFollowing(theirs.id, 'occupancy-1A')).toBe(true);
+  });
+
+  it.each(['Closed', 'Cancelled', 'Duplicate', "Won't fix"] as const)(
+    'refuses a ticket that is already %s (409)',
+    async (status) => {
+      const { deps, tickets } = setup();
+      const mine = myTicket(tickets, { status });
+      const error = await errorFrom(() => cancelTicket(deps, resident, mine.id, NOW));
+      expect(error).toMatchObject({ status: 409, message: CANCEL_ERRORS.finished });
+    },
+  );
+
+  it('refuses when the manager assigns it between my reading and my cancelling (409)', async () => {
+    const { deps, tickets, entries } = setup();
+    const mine = myTicket(tickets);
+    const findById = tickets.findById.bind(tickets);
+    tickets.findById = async (id) => {
+      const found = await findById(id);
+      if (found) tickets.tickets[0] = { ...found, status: 'Assigned' };
+      return found;
+    };
+    const error = await errorFrom(() => cancelTicket(deps, resident, mine.id, NOW));
+
+    expect(error).toMatchObject({ status: 409, message: CANCEL_ERRORS.assigned });
+    expect(tickets.changes).toHaveLength(0);
+    expect(entries).toHaveLength(0);
+  });
+
+  it("refuses another household's ticket that mine doesn't follow (403, TC-R02-20)", async () => {
+    const { deps, tickets } = setup();
+    const theirs = tickets.add({});
+    const error = await errorFrom(() => cancelTicket(deps, resident, theirs.id, NOW));
+
+    expect(error).toMatchObject({ status: 403, message: CANCEL_ERRORS.notYours });
+    expect(tickets.tickets[0]?.status).toBe('Reported');
+  });
+
+  it('refuses a ticket that does not exist (404)', async () => {
+    const { deps } = setup();
+    const error = await errorFrom(() => cancelTicket(deps, resident, 'no-such-ticket', NOW));
+    expect(error).toMatchObject({ status: 404, message: ME_TOO_ERRORS.notFound });
+  });
+
+  it.each(['guard', 'manager', 'committee', 'maintenance', 'admin'] as const)(
+    'refuses a %s account (403)',
+    async (role) => {
+      const { deps, tickets } = setup();
+      const mine = myTicket(tickets);
+      const error = await errorFrom(() =>
+        cancelTicket(deps, makeProfile({ role, occupancyId: null }), mine.id, NOW),
+      );
+      expect(error.status).toBe(403);
+      expect(tickets.tickets[0]?.status).toBe('Reported');
+    },
+  );
+
+  it('refuses a household that has moved out (403)', async () => {
+    const { deps, tickets } = setup();
+    const mine = myTicket(tickets);
+    tickets.flats.delete('occupancy-1A');
+    const error = await errorFrom(() => cancelTicket(deps, resident, mine.id, NOW));
+    expect(error).toMatchObject({ status: 403, message: REPORT_ERRORS.household });
+  });
+
+  it('makes a real id when none is given', async () => {
+    const { tickets } = setup();
+    const { audit } = memoryAudit();
+    const mine = myTicket(tickets);
+    await cancelTicket({ tickets, audit }, resident, mine.id);
+    expect(tickets.changes[0]?.id).toMatch(/^[0-9a-f-]{36}$/);
   });
 });
