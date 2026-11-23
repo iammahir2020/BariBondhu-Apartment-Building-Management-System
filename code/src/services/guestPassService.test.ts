@@ -1,21 +1,29 @@
 /**
- * Tests for creating a guest pass (RES-03, BR-11): the guest count and visit window limits, a window that crosses
- * midnight or started already, the 6-digit code and its uniqueness among live passes, and who may create one. Case
- * IDs are from `docs/test-cases.md`.
+ * Tests for a resident's guest passes (RES-03, BR-11). Creating: the guest count and visit window limits, a window
+ * that crosses midnight or started already, the 6-digit code and its uniqueness among live passes, and who may
+ * create one. Cancelling: only a live pass, only my household's. Listing: only my household's, with the status now.
+ * Case IDs are from `docs/test-cases.md`.
  *
  * @author Mahir Al Kamal
  */
 import { AppError } from '@/lib/errors';
 import type { GuestPass, Profile } from '@/models';
 import {
+  CANCEL_PASS_ERRORS,
   PASS_ERRORS,
+  cancelGuestPass,
   createGuestPass,
   drawPassCode,
+  listMyGuestPasses,
   type GuestPassDeps,
   type GuestPassStore,
   type NewPassInput,
 } from '@/services/guestPassService';
-import type { GuestPassTiming } from '@/services/guestPassStatus';
+import {
+  guestPassStatusAt,
+  isLiveGuestPassStatus,
+  type GuestPassTiming,
+} from '@/services/guestPassStatus';
 import { makeProfile, memoryAudit } from '@/services/testFakes';
 
 /** Now: Monday 23 Nov 2026, 12:00 in Dhaka. */
@@ -42,6 +50,30 @@ class MemoryPassStore implements GuestPassStore {
 
   async insert(pass: GuestPass): Promise<void> {
     this.saved.push(pass);
+  }
+
+  async findById(id: string): Promise<GuestPass | null> {
+    return this.saved.find((p) => p.id === id) ?? null;
+  }
+
+  async listForOccupancy(occupancyId: string): Promise<GuestPass[]> {
+    return this.saved.filter((p) => p.occupancyId === occupancyId);
+  }
+
+  /**
+   * Makes `cancelIfLive` lose a race: 'lastGuest' as if a guard checked the last guest in first, 'unknown' as if the
+   * save failed while the pass still reads as live.
+   */
+  raceLost: 'lastGuest' | 'unknown' | null = null;
+
+  async cancelIfLive(id: string, at: Date): Promise<boolean> {
+    const pass = this.saved.find((p) => p.id === id);
+    if (!pass) return false;
+    if (this.raceLost === 'lastGuest') pass.guestsUsed = pass.guestCount;
+    if (this.raceLost !== null) return false;
+    if (!isLiveGuestPassStatus(guestPassStatusAt(pass, at))) return false;
+    pass.cancelledAt = at;
+    return true;
   }
 }
 
@@ -354,6 +386,235 @@ describe('createGuestPass: who can create one', () => {
     const { deps, passes } = setup();
     passes.flats.clear();
     const error = await errorFrom(() => createGuestPass(deps, resident, input(), NOW));
+    expect(error).toMatchObject({ status: 403, message: PASS_ERRORS.household });
+  });
+});
+
+/** A saved pass of the Rahman household: 4 guests, today 18:00 to 22:00, nobody in yet. */
+function makePass(overrides: Partial<GuestPass> = {}): GuestPass {
+  return {
+    id: 'pass-1',
+    occupancyId: 'occupancy-1A',
+    createdById: 'resident-1A',
+    guestName: 'Tanvir Ahmed',
+    guestCount: 4,
+    startsAt: dhaka('18:00'),
+    endsAt: dhaka('22:00'),
+    code: '204816',
+    guestsUsed: 0,
+    cancelledAt: null,
+    createdAt: dhaka('09:00'),
+    ...overrides,
+  };
+}
+
+/** A store holding these passes, with its audit entries. */
+function setupWith(...saved: GuestPass[]): ReturnType<typeof setup> {
+  const result = setup();
+  result.passes.saved.push(...saved);
+  return result;
+}
+
+describe('cancelGuestPass: a live pass (TC-R03-19)', () => {
+  it.each([
+    ['Scheduled', {}],
+    ['Active', { startsAt: dhaka('10:00'), endsAt: dhaka('14:00') }],
+    ['Partly used', { startsAt: dhaka('10:00'), endsAt: dhaka('14:00'), guestsUsed: 2 }],
+  ] as const)('cancels a %s pass at once', async (status, overrides) => {
+    const { deps, passes } = setupWith(makePass(overrides));
+    expect(guestPassStatusAt(makePass(overrides), NOW)).toBe(status);
+
+    const result = await cancelGuestPass(deps, resident, 'pass-1', NOW);
+
+    expect(result.status).toBe('Cancelled');
+    expect(result.pass.cancelledAt).toEqual(NOW);
+    expect(passes.saved[0]?.cancelledAt).toEqual(NOW);
+  });
+
+  it('leaves the guests already inside alone, so they can still be checked out (BR-11)', async () => {
+    const live = { startsAt: dhaka('10:00'), endsAt: dhaka('14:00'), guestsUsed: 2 };
+    const { deps, passes } = setupWith(makePass(live));
+    await cancelGuestPass(deps, resident, 'pass-1', NOW);
+    expect(passes.saved[0]?.guestsUsed).toBe(2);
+  });
+
+  it('writes an audit entry with the status before and after (NFR-27)', async () => {
+    const { deps, entries } = setupWith(makePass());
+    await cancelGuestPass(deps, resident, 'pass-1', NOW);
+    expect(entries).toEqual([
+      {
+        actorId: 'resident-1A',
+        action: 'guest_pass.cancel',
+        entityType: 'guest_passes',
+        entityId: 'pass-1',
+        oldValues: { status: 'Scheduled' },
+        newValues: { status: 'Cancelled' },
+      },
+    ]);
+  });
+
+  it('cancels one millisecond before the end time', async () => {
+    const { deps } = setupWith(makePass({ startsAt: dhaka('10:00'), endsAt: dhaka('12:00') }));
+    const result = await cancelGuestPass(deps, resident, 'pass-1', new Date(NOW.getTime() - 1));
+    expect(result.status).toBe('Cancelled');
+  });
+});
+
+describe('cancelGuestPass: a pass that is no longer live (TC-R03-20)', () => {
+  it.each([
+    ['Cancelled', { cancelledAt: dhaka('11:00') }],
+    ['Expired', { startsAt: dhaka('08:00'), endsAt: dhaka('11:00') }],
+    ['Fully used', { startsAt: dhaka('10:00'), endsAt: dhaka('14:00'), guestsUsed: 4 }],
+  ] as const)('refuses a %s pass (409) and changes nothing', async (status, overrides) => {
+    const { deps, passes, entries } = setupWith(makePass(overrides));
+    const error = await errorFrom(() => cancelGuestPass(deps, resident, 'pass-1', NOW));
+
+    expect(error).toMatchObject({
+      status: 409,
+      message: CANCEL_PASS_ERRORS[status],
+      details: { status },
+    });
+    expect(passes.saved[0]).toEqual(makePass(overrides));
+    expect(entries).toHaveLength(0);
+  });
+
+  it('refuses exactly at the end time, when the pass is Expired', async () => {
+    const { deps } = setupWith(makePass({ startsAt: dhaka('10:00'), endsAt: dhaka('12:00') }));
+    const error = await errorFrom(() => cancelGuestPass(deps, resident, 'pass-1', NOW));
+    expect(error).toMatchObject({ status: 409, message: CANCEL_PASS_ERRORS.Expired });
+  });
+
+  it('refuses if the last guest comes in between the check and the save (409)', async () => {
+    const live = { startsAt: dhaka('10:00'), endsAt: dhaka('14:00'), guestsUsed: 3 };
+    const { deps, passes, entries } = setupWith(makePass(live));
+    passes.raceLost = 'lastGuest';
+
+    const error = await errorFrom(() => cancelGuestPass(deps, resident, 'pass-1', NOW));
+
+    expect(error).toMatchObject({
+      status: 409,
+      message: CANCEL_PASS_ERRORS['Fully used'],
+      details: { status: 'Fully used' },
+    });
+    expect(passes.saved[0]?.cancelledAt).toBeNull();
+    expect(entries).toHaveLength(0);
+  });
+
+  it('asks to try again if the save fails while the pass still reads as live (409)', async () => {
+    const { deps, passes, entries } = setupWith(makePass());
+    passes.raceLost = 'unknown';
+    const error = await errorFrom(() => cancelGuestPass(deps, resident, 'pass-1', NOW));
+    expect(error).toMatchObject({ status: 409, message: CANCEL_PASS_ERRORS.changed });
+    expect(entries).toHaveLength(0);
+  });
+});
+
+describe('cancelGuestPass: whose pass it is', () => {
+  it("refuses another household's pass (403) and changes nothing (TC-R03-23)", async () => {
+    const theirs = makePass({ occupancyId: 'occupancy-2B', createdById: 'resident-2B' });
+    const { deps, passes, entries } = setupWith(theirs);
+    passes.flats.set('occupancy-2B', 'flat-2B');
+
+    const error = await errorFrom(() => cancelGuestPass(deps, resident, 'pass-1', NOW));
+
+    expect(error).toMatchObject({ status: 403, message: CANCEL_PASS_ERRORS.notYours });
+    expect(passes.saved[0]?.cancelledAt).toBeNull();
+    expect(entries).toHaveLength(0);
+  });
+
+  it("refuses the earlier household's pass in the same flat (403, BR-09)", async () => {
+    const { deps, passes } = setupWith(makePass({ occupancyId: 'occupancy-1A-old' }));
+    const error = await errorFrom(() => cancelGuestPass(deps, resident, 'pass-1', NOW));
+    expect(error).toMatchObject({ status: 403, message: CANCEL_PASS_ERRORS.notYours });
+    expect(passes.saved[0]?.cancelledAt).toBeNull();
+  });
+
+  it('says so when there is no such pass (404)', async () => {
+    const { deps } = setupWith(makePass());
+    const error = await errorFrom(() => cancelGuestPass(deps, resident, 'pass-404', NOW));
+    expect(error).toMatchObject({ status: 404, message: CANCEL_PASS_ERRORS.notFound });
+  });
+
+  it.each(['guard', 'manager', 'committee', 'maintenance', 'admin'] as const)(
+    'refuses a %s account (403)',
+    async (role) => {
+      const { deps, passes } = setupWith(makePass());
+      const error = await errorFrom(() =>
+        cancelGuestPass(deps, makeProfile({ role, occupancyId: null }), 'pass-1', NOW),
+      );
+      expect(error).toMatchObject({ status: 403, message: PASS_ERRORS.household });
+      expect(passes.saved[0]?.cancelledAt).toBeNull();
+    },
+  );
+
+  it('refuses a household that has moved out (403)', async () => {
+    const { deps, passes } = setupWith(makePass());
+    passes.flats.clear();
+    const error = await errorFrom(() => cancelGuestPass(deps, resident, 'pass-1', NOW));
+    expect(error).toMatchObject({ status: 403, message: PASS_ERRORS.household });
+    expect(passes.saved[0]?.cancelledAt).toBeNull();
+  });
+});
+
+describe('listMyGuestPasses', () => {
+  it("lists only my household's passes, latest start first, each with its status now (TC-R03-21)", async () => {
+    const scheduled = makePass({ id: 'tonight' });
+    const partly = makePass({
+      id: 'lunch',
+      startsAt: dhaka('11:00'),
+      endsAt: dhaka('15:00'),
+      guestsUsed: 1,
+    });
+    const expired = makePass({
+      id: 'yesterday',
+      startsAt: dhaka('18:00', 22),
+      endsAt: dhaka('22:00', 22),
+    });
+    const cancelled = makePass({
+      id: 'tomorrow',
+      startsAt: dhaka('10:00', 24),
+      endsAt: dhaka('12:00', 24),
+      cancelledAt: dhaka('08:00'),
+    });
+    const theirs = makePass({ id: 'theirs', occupancyId: 'occupancy-2B' });
+    const { passes } = setupWith(scheduled, partly, expired, theirs, cancelled);
+
+    const list = await listMyGuestPasses(passes, resident, NOW);
+
+    expect(list.map(({ pass, status }) => [pass.id, status])).toEqual([
+      ['tomorrow', 'Cancelled'],
+      ['tonight', 'Scheduled'],
+      ['lunch', 'Partly used'],
+      ['yesterday', 'Expired'],
+    ]);
+  });
+
+  it("doesn't show an earlier household's passes to the new household in the same flat (TC-R03-22)", async () => {
+    const { passes } = setupWith(makePass({ id: 'old', occupancyId: 'occupancy-1A-old' }));
+    expect(await listMyGuestPasses(passes, resident, NOW)).toEqual([]);
+  });
+
+  it('shows the status at the time asked, so a pass turns Expired at its end time', async () => {
+    const { passes } = setupWith(makePass());
+    const [atEnd] = await listMyGuestPasses(passes, resident, dhaka('22:00'));
+    expect(atEnd?.status).toBe('Expired');
+  });
+
+  it.each(['guard', 'manager', 'committee', 'maintenance', 'admin'] as const)(
+    'refuses a %s account (403)',
+    async (role) => {
+      const { passes } = setupWith(makePass());
+      const error = await errorFrom(() =>
+        listMyGuestPasses(passes, makeProfile({ role, occupancyId: null }), NOW),
+      );
+      expect(error).toMatchObject({ status: 403, message: PASS_ERRORS.household });
+    },
+  );
+
+  it('refuses a household that has moved out (403)', async () => {
+    const { passes } = setupWith(makePass());
+    passes.flats.clear();
+    const error = await errorFrom(() => listMyGuestPasses(passes, resident, NOW));
     expect(error).toMatchObject({ status: 403, message: PASS_ERRORS.household });
   });
 });

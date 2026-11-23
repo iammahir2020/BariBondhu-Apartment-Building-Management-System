@@ -1,6 +1,7 @@
 /**
  * Business rules for a resident's guest passes (RES-03, BR-11): create a pass for 1 to 20 guests over at most 24
- * hours, with a 6-digit code that no live pass has. Wording from RES-03 and the Decisions in `docs/test-cases.md`.
+ * hours, with a 6-digit code that no live pass has; cancel one while it is still live; and list my household's
+ * passes with their status now. Wording from RES-03 and the Decisions in `docs/test-cases.md`.
  *
  * A pass may start in the past as long as it hasn't ended, so guests already at the gate can be let in; it is Active
  * at once (Decision 4). Codes are drawn from a secure random source, never `Math.random`, so they can't be guessed
@@ -41,6 +42,16 @@ export const PASS_ERRORS = {
   noCode: 'Could not make a pass code. Please try again.',
 } as const;
 
+/** Error text for cancelling a pass. */
+export const CANCEL_PASS_ERRORS = {
+  notFound: 'This guest pass does not exist.',
+  notYours: "This isn't your household's pass.",
+  Cancelled: 'This pass is already cancelled.',
+  Expired: 'This pass has already expired.',
+  'Fully used': 'Every guest on this pass has already come in.',
+  changed: 'This pass just changed. Please reload and try again.',
+} as const;
+
 /** What a resident fills in on the New guest pass screen. */
 export interface NewPassInput {
   guestName: string;
@@ -51,13 +62,13 @@ export interface NewPassInput {
   endsAt: Date | null;
 }
 
-/** A new pass, with its status when it was made (Scheduled, or Active if it has already started). */
-export interface CreatedPass {
+/** A pass with its status at a given time. A new one is Scheduled, or Active if it has already started. */
+export interface PassWithStatus {
   pass: GuestPass;
   status: GuestPassStatus;
 }
 
-/** The guest pass reads and writes creating a pass needs. */
+/** The guest pass reads and writes the service needs. */
 export interface GuestPassStore {
   /** The flat of an occupancy that hasn't ended, or null if it has ended or doesn't exist. */
   activeFlatOf(occupancyId: string): Promise<string | null>;
@@ -65,9 +76,19 @@ export interface GuestPassStore {
   passesWithCode(code: string): Promise<GuestPassTiming[]>;
   /** Saves a new pass. */
   insert(pass: GuestPass): Promise<void>;
+  /** One pass by id, or null if there is none. */
+  findById(id: string): Promise<GuestPass | null>;
+  /** Every pass of one household (occupancy), in any state. */
+  listForOccupancy(occupancyId: string): Promise<GuestPass[]>;
+  /**
+   * Sets the cancellation time, but only if the pass is still live at that time: not cancelled, not past its end and
+   * not fully used. Checking again in the same write means a guard's check-in or the end time can't slip in between.
+   * @returns Whether the pass was cancelled.
+   */
+  cancelIfLive(id: string, at: Date): Promise<boolean>;
 }
 
-/** What {@link createGuestPass} works with. */
+/** What the guest pass service works with. */
 export interface GuestPassDeps {
   passes: GuestPassStore;
   audit: AuditWriter;
@@ -109,14 +130,8 @@ export async function createGuestPass(
   resident: Profile,
   input: NewPassInput,
   now: Date = new Date(),
-): Promise<CreatedPass> {
-  const occupancyId = resident.occupancyId;
-  if (resident.role !== 'resident' || occupancyId === null) {
-    throw new AppError('FORBIDDEN', PASS_ERRORS.household);
-  }
-  if ((await deps.passes.activeFlatOf(occupancyId)) === null) {
-    throw new AppError('FORBIDDEN', PASS_ERRORS.household);
-  }
+): Promise<PassWithStatus> {
+  const occupancyId = await householdOf(deps.passes, resident);
 
   const guestName = input.guestName.trim();
   if (guestName === '') throw new AppError('BAD_REQUEST', PASS_ERRORS.guestName);
@@ -165,4 +180,99 @@ export async function createGuestPass(
     newValues: { guestCount, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() },
   });
   return { pass, status: guestPassStatusAt(pass, now) };
+}
+
+/**
+ * The resident's household, checked to be still living in the building.
+ * @throws AppError 403 if the account has no household, or the household has moved out.
+ */
+async function householdOf(passes: GuestPassStore, resident: Profile): Promise<string> {
+  const occupancyId = resident.occupancyId;
+  if (resident.role !== 'resident' || occupancyId === null) {
+    throw new AppError('FORBIDDEN', PASS_ERRORS.household);
+  }
+  if ((await passes.activeFlatOf(occupancyId)) === null) {
+    throw new AppError('FORBIDDEN', PASS_ERRORS.household);
+  }
+  return occupancyId;
+}
+
+/** The message for a pass that can't be cancelled because of its status. */
+function cannotCancelMessage(status: GuestPassStatus): string {
+  if (status === 'Cancelled' || status === 'Expired' || status === 'Fully used') {
+    return CANCEL_PASS_ERRORS[status];
+  }
+  return CANCEL_PASS_ERRORS.changed;
+}
+
+/**
+ * Cancels one of my household's passes (RES-03 c4). Only a Scheduled, Active or Partly used pass can be cancelled
+ * (TC-R03-19); it is Cancelled from `now`, so the code stops working for new entries at once. Guests already inside
+ * can still be checked out: that is the guard's check-out, which cancelling doesn't touch (BR-11).
+ * @param deps - Pass store and audit writer.
+ * @param resident - The signed-in resident.
+ * @param passId - The pass to cancel.
+ * @param now - The current time.
+ * @returns The pass, now Cancelled.
+ * @throws AppError 403 if the account has no household, the household has moved out, or the pass is another
+ *   household's (TC-R03-23).
+ * @throws AppError 404 if there is no such pass.
+ * @throws AppError 409 if the pass is already Cancelled, Expired or Fully used (TC-R03-20).
+ */
+export async function cancelGuestPass(
+  deps: Pick<GuestPassDeps, 'passes' | 'audit'>,
+  resident: Profile,
+  passId: string,
+  now: Date = new Date(),
+): Promise<PassWithStatus> {
+  const occupancyId = await householdOf(deps.passes, resident);
+  const pass = await deps.passes.findById(passId);
+  if (!pass) throw new AppError('NOT_FOUND', CANCEL_PASS_ERRORS.notFound);
+  if (pass.occupancyId !== occupancyId) {
+    throw new AppError('FORBIDDEN', CANCEL_PASS_ERRORS.notYours);
+  }
+
+  const before = guestPassStatusAt(pass, now);
+  if (!isLiveGuestPassStatus(before)) {
+    throw new AppError('CONFLICT', cannotCancelMessage(before), { status: before });
+  }
+  if (!(await deps.passes.cancelIfLive(passId, now))) {
+    // Something changed between the read and the write: the last guest came in, or the end time passed.
+    const latest = (await deps.passes.findById(passId)) ?? pass;
+    const status = guestPassStatusAt(latest, now);
+    throw new AppError('CONFLICT', cannotCancelMessage(status), { status });
+  }
+
+  await deps.audit({
+    actorId: resident.id,
+    action: 'guest_pass.cancel',
+    entityType: 'guest_passes',
+    entityId: passId,
+    oldValues: { status: before },
+    newValues: { status: 'Cancelled' },
+  });
+  const cancelled: GuestPass = { ...pass, cancelledAt: now };
+  return { pass: cancelled, status: guestPassStatusAt(cancelled, now) };
+}
+
+/**
+ * My household's passes, each with its status now, the latest start first (TC-R03-21). Only the current
+ * household's: a new household in the same flat never sees an earlier one's passes, because they belong to the
+ * earlier occupancy (BR-09, TC-R03-22).
+ * @param passes - The pass store.
+ * @param resident - The signed-in resident.
+ * @param now - The current time.
+ * @returns The passes with their status.
+ * @throws AppError 403 if the account has no household, or the household has moved out.
+ */
+export async function listMyGuestPasses(
+  passes: GuestPassStore,
+  resident: Profile,
+  now: Date = new Date(),
+): Promise<PassWithStatus[]> {
+  const occupancyId = await householdOf(passes, resident);
+  const rows = await passes.listForOccupancy(occupancyId);
+  return rows
+    .map((pass) => ({ pass, status: guestPassStatusAt(pass, now) }))
+    .sort((a, b) => b.pass.startsAt.getTime() - a.pass.startsAt.getTime());
 }
