@@ -13,6 +13,7 @@ import {
   House,
   LayoutDashboard,
   ListChecks,
+  Receipt,
   ScanLine,
   type LucideIcon,
 } from 'lucide-react';
@@ -48,7 +49,14 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
   manager: [
     { items: [{ label: 'Dashboard', href: '/manager', icon: LayoutDashboard, onPhone: true }] },
   ],
-  committee: [{ items: [{ label: 'Home', href: '/committee', icon: House, onPhone: true }] }],
+  committee: [
+    {
+      items: [
+        { label: 'Home', href: '/committee', icon: House, onPhone: true },
+        { label: 'Rates', href: '/committee/rates', icon: Receipt, onPhone: true },
+      ],
+    },
+  ],
   maintenance: [
     { items: [{ label: 'My tickets', href: '/maintenance', icon: ListChecks, onPhone: true }] },
   ],
