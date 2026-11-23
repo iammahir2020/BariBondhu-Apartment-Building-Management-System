@@ -41,6 +41,10 @@ export interface ExpenseStore {
   insert(expense: NewExpense): Promise<Expense>;
   /** Changes some fields of an expense and returns it as stored. */
   update(id: string, changes: Partial<NewExpense>): Promise<Expense>;
+  /** Every expense, newest first. */
+  list(): Promise<Expense[]>;
+  /** Every expense, newest first. */
+  list(): Promise<Expense[]>;
 }
 
 /** What the expense functions work with. */
@@ -411,4 +415,14 @@ export async function rejectExpense(
     newValues: { ...snapshot(after), decisionReason },
   });
   return after;
+}
+
+/**
+ * Every expense, newest first, for the manager's list and the committee's approval screen (BM-08, CM-02).
+ * @param deps - Expense store.
+ * @returns All expenses, including correcting ones.
+ */
+export async function listExpenses(deps: Pick<ExpenseDeps, 'expenses'>): Promise<Expense[]> {
+  const all = await deps.expenses.list();
+  return [...all].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }

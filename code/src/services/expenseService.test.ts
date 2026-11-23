@@ -13,6 +13,7 @@ import {
   addCorrectingExpense,
   approveExpense,
   editExpense,
+  listExpenses,
   recordExpense,
   rejectExpense,
   resubmitExpense,
@@ -54,6 +55,10 @@ class MemoryExpenseStore implements ExpenseStore {
     };
     this.rows.push(row);
     return row;
+  }
+
+  async list(): Promise<Expense[]> {
+    return [...this.rows];
   }
 
   async update(id: string, changes: Partial<NewExpense>): Promise<Expense> {
@@ -624,5 +629,25 @@ describe('rejectExpense', () => {
     await expect(
       editExpense(setup.deps, created.id, input({ amountPoisha: 1 }), 'Change', MANAGER_ID, NOW),
     ).rejects.toMatchObject({ code: 'CONFLICT', message: APPROVED_EXPENSE_MESSAGE });
+  });
+});
+
+describe('listExpenses', () => {
+  it('is empty when nothing is recorded (boundary)', async () => {
+    const { deps } = setUp();
+    expect(await listExpenses(deps)).toEqual([]);
+  });
+
+  it('returns every expense, newest first, whatever its status', async () => {
+    const setup = setUp();
+    const first = await recordExpense(setup.deps, input(), MANAGER_ID, NOW);
+    const second = await recordExpense(setup.deps, input(), MANAGER_ID, NOW);
+    const firstRow = setup.store.rows.find((row) => row.id === first.id);
+    if (!firstRow) throw new Error('missing row');
+    firstRow.createdAt = new Date('2026-11-20T00:00:00Z');
+    firstRow.status = 'Rejected';
+
+    const list = await listExpenses(setup.deps);
+    expect(list.map((expense) => expense.id)).toEqual([second.id, first.id]);
   });
 });
