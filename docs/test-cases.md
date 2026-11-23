@@ -286,3 +286,59 @@ Test cases for feature 9 (Record expenses, approve or reject them), written from
 
 1. The SRS gives wording only for "Check the expense date" and "Write a reason". Our messages for a missing amount, category or description, for an edit with no note, and for "This expense is already Approved." are our own and need the team's approval.
 2. Is the note on an edit required? BM-08 says the change is "saved with a note", so we require it.
+
+
+# Test cases: BM-12 and RES-05
+
+Test cases for feature 10 (Monthly fund summary, with the opening balance), written from the confirmation criteria of BM-12 and RES-05 and the business rules and NFRs they cite in [SRS.md](srs/SRS.md). Same columns and types as the RES tables above. Amounts are ৳ in the Case column; the service and the database keep them in whole poisha.
+
+## BM-12 · Publish the monthly fund summary
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-BM12-01 | Normal | Publish the summary of a month that has ended | Shows the opening balance, total collected, total spent by category (repair, salary, utility, other), the closing balance and the total outstanding | BM-12 c1, BR-10 | BB-1004, BB-1005 |
+| TC-BM12-02 | Normal | Check the closing balance | Closing balance = opening balance + total collected - total spent | BR-10, NFR-26 | BB-1004 |
+| TC-BM12-03 | Normal | Check total collected | Counts only payments confirmed in that month (by the date they were confirmed), each exactly once | BR-10, NFR-26 | BB-1004 |
+| TC-BM12-04 | Normal | Check total spent | Counts expenses by their expense date, and only Approved ones; a negative correcting expense reduces the total | BR-10, BM-08 c5 | BB-1004 |
+| TC-BM12-05 | Normal | A month has expenses that are Waiting for approval or Rejected | They are left out of total spent | BM-12 c4, BR-10 | BB-1004 |
+| TC-BM12-06 | Normal | Check total outstanding | Equals the sum of the saved bills that are still unpaid, to the poisha | BM-12 c1, NFR-26 | BB-1004 |
+| TC-BM12-07 | Normal | Open the next month's summary | Its opening balance equals the previous month's closing balance | BR-10 | BB-1004 |
+| TC-BM12-08 | Boundary | A month with no payments and no expenses | Collected and spent are ৳0.00; closing balance equals opening balance | BR-10 | BB-1004 |
+| TC-BM12-09 | Boundary | Publish on the last day of the month, and on the first day of the next month | Refused on the last day; allowed from the first day of the next month (Dhaka date) | BM-12 c2, BR-01 | BB-1005 |
+| TC-BM12-10 | Invalid | Publish a month that has not ended | "You can publish once the month has ended"; nothing is published | BM-12 c2 | BB-1005 |
+| TC-BM12-11 | Exception | Publish a month that is already Published | Refused (409); nothing changes | State diagram | BB-1005 |
+| TC-BM12-12 | Normal | First month in the system: enter an opening balance | The balance is saved as Waiting for approval; the summary cannot be published yet | BM-12 c3 | BB-1003, BB-1005 |
+| TC-BM12-13 | Exception | Publish the first month's summary before the committee approves the opening balance | Refused; nothing is published | BM-12 c3 | BB-1005 |
+| TC-BM12-14 | Normal | The committee approves the opening balance | The manager can now publish the first summary | BM-12 c3, CM-02 c5 | BB-1003, BB-1005 |
+| TC-BM12-15 | Normal | The committee rejects the opening balance with a reason | The manager sees the reason, enters a corrected balance, and it goes back to Waiting for approval | BM-12 c3, CM-02 c6 | BB-1003 |
+| TC-BM12-16 | Invalid | Enter an opening balance that is blank or not a number | Refused (400); nothing saved | BM-12 c3 | BB-1003 |
+| TC-BM12-17 | Exception | Enter or change an opening balance that is already Approved | Refused (409); Approved is final | State diagram | BB-1003 |
+| TC-BM12-18 | Normal | Enter, approve or reject an opening balance | One audit log entry each, with the account, the time and the values | NFR-27 | BB-1003 |
+| TC-BM12-19 | Normal | An expense dated in a published month is approved later | That month's summary is updated and marked Revised; later months' balances change with it | BM-12 c5, BR-10 | Not built: left out unless there is time |
+| TC-BM12-20 | Normal | Send the summary as an announcement | The committee can read it there and in their email | BM-12 c6, BM-11 | Not built: left out unless there is time |
+| TC-BM12-21 | Exception | Anyone other than the manager calls publish or opening-balance entry; or nobody is signed in | 403 for other roles; 401 when signed out | NFR-06 | BB-1006 |
+| TC-BM12-22 | Exception | Anyone other than a committee member approves or rejects the opening balance | 403 (the manager cannot approve) | NFR-06, CM-02 | BB-1006 |
+| TC-BM12-23 | Exception | The database fails while publishing | An error is shown; the summary is not shown as published; no audit entry | NFR-17 | BB-1005, BB-1006 |
+| TC-BM12-24 | Normal | Open Fund for the manager at 360 px and at 1280 px | No sideways scrolling; the opening balance form works | NFR-23 | BB-1007 |
+
+## RES-05 · See how the building fund is spent
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-R05-01 | Normal | Open Fund summary after the manager published a month | Shows the opening balance, total collected, total spent by category, the closing balance and the total outstanding | RES-05 c1, BR-10 | BB-1008 |
+| TC-R05-02 | Normal | An expense is Waiting for approval or Rejected | It is not counted in the summary | RES-05 c2, BR-10 | BB-1004, BB-1008 |
+| TC-R05-03 | Normal | This month's summary is not published yet | Shows the last published month and a note that this month is not ready | RES-05 c3 | BB-1006, BB-1008 |
+| TC-R05-04 | Boundary | No month has been published yet | A clear "not ready" message, no error and no empty table | RES-05 c3 | BB-1008 |
+| TC-R05-05 | Exception | A Draft summary is requested by a resident | Not shown; only Published summaries are visible | RES-05 c3 | BB-1006 |
+| TC-R05-06 | Normal | A resident opens the summary | Totals only; no flat names, no list of who owes money | NFR-12 | BB-1006, BB-1008 |
+| TC-R05-07 | Normal | Resident and committee member open the same month | Both see the same figures | CM-04 c1 | BB-1006, BB-1008 |
+| TC-R05-08 | Normal | A new household in the same flat opens the summary | It sees the same building totals; the summary is not household data | BR-09 | BB-1006 |
+| TC-R05-09 | Exception | Guard, maintenance or admin calls the fund summary route; or nobody is signed in | 403 for those roles; 401 when signed out. Resident, manager and committee may view | NFR-06 | BB-1006 |
+| TC-R05-10 | Normal | Open Fund summary with data for 200 flats on a throttled Fast 3G connection | Loads within 3 s for 95% of requests | NFR-01 | BB-1008 |
+| TC-R05-11 | Normal | Open Fund summary at 360 px and at 1280 px | No sideways scrolling; readable at 150% text size | NFR-23 | BB-1008 |
+
+## Open questions for BM-12 and RES-05
+
+1. "Total outstanding" has no exact definition in the SRS. We take it as the sum of bills that are still unpaid; the team should confirm whether bills in Awaiting verification or Payment pending count.
+2. Which month counts as "the first month in the system"? We take the first month that has a bill or an expense.
+3. The wording for the messages "Not published yet" (CM-04) and the "this month isn't ready" note (RES-05) is not fixed in the SRS.
