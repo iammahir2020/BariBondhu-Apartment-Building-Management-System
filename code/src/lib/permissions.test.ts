@@ -27,6 +27,7 @@ const TABLE: Record<Action, Partial<Record<Role, Scope>>> = {
   manageAccounts: { manager: 'all' },
   endOccupancy: { manager: 'all' },
   setChargeRates: { committee: 'all' },
+  viewRateHistory: { committee: 'all' },
   manageBills: { manager: 'all' },
   viewBills: { resident: 'own', manager: 'all' },
   payBill: { resident: 'own' },
