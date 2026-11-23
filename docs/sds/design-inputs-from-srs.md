@@ -69,6 +69,7 @@ Moved here from SRS section 2.1.7 in SRS version 1.4. Every page and API route c
 | Check passes; record guest entry and exit; see visitors inside |  | Yes |  |  |  |  |
 | Record expenses |  |  | Yes |  |  |  |
 | Approve or reject expenses and the opening balance |  |  |  | Yes |  |  |
+| See the list of expenses |  |  | Yes | Yes |  |  |
 | Publish the monthly fund summary |  |  | Yes |  |  |  |
 | See the fund summary (totals only) | Yes |  | Yes | Yes |  |  |
 | Send announcements |  |  | Yes |  |  |  |
