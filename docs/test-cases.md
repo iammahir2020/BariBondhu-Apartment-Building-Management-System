@@ -180,3 +180,43 @@ in the test):
 | TC-SG03-04 | Exception | Try to check a pass or confirm an entry while the device cannot reach the server | Within 5 seconds, "No connection: use the intercom and paper register" is displayed; nothing is shown as saved | SG-03 | BB-1701 |
 | TC-SG03-05 | Normal | Restore connection and enter a visit from the paper register using its actual entry time | Visit is saved with the actual entry time and marked "Entered later" | SG-03 | BB-1701 |
 | TC-SG03-06 | Normal | A guest entry is successfully saved | The resident receives a notification containing the number of guests who arrived | SG-03, RES-03 c5, NFR-29 | BB-1701, Feature 23 |
+
+
+# Test cases: CM-01
+
+Test cases for feature 4 (Charge rates and rate history), written from CM-01's confirmation criteria and the business rules and NFRs it cites in [SRS.md](srs/SRS.md). Same columns and types as the RES tables above. Amounts are ৳ in the Case column; the service and the database keep them in whole poisha.
+
+## CM-01 · Set building charge rates
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-C01-01 | Normal | Enter a new service charge of ৳3,800 and the meeting date 13 Nov 2026, then save | The new rate is saved as Current; the old service rate becomes Replaced; the new rate is used for bills made after the save | CM-01 c1 | BB-0404, BB-0407 |
+| TC-C01-02 | Normal | Set a rate for service, then generator, then water | Each charge keeps exactly one Current rate; setting one does not change the others | CM-01 c1 | BB-0404 |
+| TC-C01-03 | Normal | Set the first rate ever for a charge | Saved as Current; there is no old value; the history shows it with no "from" value | CM-01 c1, c5 | BB-0404, BB-0405 |
+| TC-C01-04 | Boundary | Enter a rate of ৳0 | Saved; the SRS refuses only a blank or negative rate | CM-01 c4 | BB-0404 |
+| TC-C01-05 | Boundary | Enter the smallest amount, ৳0.01 (1 poisha) | Saved as 1 poisha | CM-01 c1, BR-01 | BB-0404 |
+| TC-C01-06 | Invalid | Leave the rate blank | "Enter a valid rate and meeting date"; the rate and the history do not change | CM-01 c4 | BB-0404, BB-0407 |
+| TC-C01-07 | Invalid | Enter a negative rate (for example ৳-1) | "Enter a valid rate and meeting date"; nothing changes | CM-01 c4 | BB-0404 |
+| TC-C01-08 | Invalid | Enter an amount that is not whole poisha (for example 1.5 poisha) | "Enter a valid rate and meeting date"; nothing changes | CM-01 c4, BR-01 | BB-0404 |
+| TC-C01-09 | Invalid | Leave out the meeting date | "Enter a valid rate and meeting date"; nothing changes | CM-01 c4 | BB-0404, BB-0407 |
+| TC-C01-10 | Invalid | A meeting date that is not a real date (30 Feb 2026) or not written as a date | "Enter a valid rate and meeting date"; nothing changes | CM-01 c4 | BB-0404 |
+| TC-C01-11 | Invalid | A charge type that is not service, generator or water | "Enter a valid rate and meeting date"; nothing changes | CM-01 c1 | BB-0404, BB-0406 |
+| TC-C01-12 | Normal | Save a rate | One audit log entry (`chargeRate.set`) with the committee member, the time, the old values and the new values | R-12, NFR-27 | BB-0404 |
+| TC-C01-13 | Invalid | Save a refused rate (any of TC-C01-06 to TC-C01-11) | No audit log entry is written; the earlier rate is still Current | CM-01 c4, NFR-27 | BB-0404 |
+| TC-C01-14 | Exception | The database fails while saving the rate | An error is shown and the change is never shown as saved; no audit entry; the old rate stays Current | NFR-17 | BB-0404, BB-0406 |
+| TC-C01-15 | Normal | The manager runs a month's bills after a new rate was saved | The bill lines use the new rate | CM-01 c1 | BB-0505 (feature 5, Nishi) |
+| TC-C01-16 | Normal | Change a rate after a month's bills already exist | Those bills keep their old rates; only later bill runs use the new one | CM-01 c2, BR-07 | BB-0505 (feature 5, Nishi) |
+| TC-C01-17 | Exception | Save a new rate while a bill run is in progress | The run finishes with the rates it started with; the new rate applies from the next run | CM-01 c3 | BB-0505 (feature 5, Nishi) |
+| TC-C01-18 | Normal | Open Rate history after a rate changed | Each change shows who changed it, when, the meeting date, and the old and new values | CM-01 c5 | BB-0405, BB-0407 |
+| TC-C01-19 | Normal | Change service twice and water once, then open Rate history | All three changes show, newest first; each charge's old value is the rate before it | CM-01 c5 | BB-0405 |
+| TC-C01-20 | Boundary | Open Rate history before any rate was set | An empty list ("No rate changes yet."), no error | CM-01 c5 | BB-0405, BB-0407 |
+| TC-C01-21 | Normal | Open Rates | The Current rates show in the order service, generator, water, each as "Now ৳... per flat" | CM-01 c1 | BB-0405, BB-0407 |
+| TC-C01-22 | Exception | Resident, guard, manager, maintenance or admin calls the set-rate or rate-history route; or nobody is signed in | 403 for each other role; 401 when signed out; nothing is read or saved | NFR-06 | BB-0406 |
+| TC-C01-23 | Exception | A committee member who has not yet replaced the temporary password calls the route | 403 "Choose your own password before continuing." | BR-15, NFR-06 | BB-0406 |
+| TC-C01-24 | Normal | Save succeeds on the page | A success message shows and the history gets a new row | CM-01 c1, c5 | BB-0407 |
+| TC-C01-25 | Normal | Open Rates at 360 px and at 1280 px | No sideways scrolling; inputs and the Save button are at least 48 px tall | NFR-23 | BB-0407 |
+
+## Open questions for CM-01
+
+1. Can the meeting date be in the future? The SRS only says a meeting date is required, so our service accepts any real date.
+2. Should the manager see Rate history too? CM-01 says "any member" (committee), so only the committee has the `viewRateHistory` row for now.
