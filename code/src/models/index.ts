@@ -20,4 +20,4 @@ export * from './ChargeRate';
 export * from './Expense';
 export * from './GuestPass';
 export * from './Bill';
-export * from './Bill_line_item';
+export * from './BillLineItem';
