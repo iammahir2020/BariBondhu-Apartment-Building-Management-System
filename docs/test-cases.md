@@ -181,6 +181,26 @@ in the test):
 | TC-SG03-05 | Normal | Restore connection and enter a visit from the paper register using its actual entry time | Visit is saved with the actual entry time and marked "Entered later" | SG-03 | BB-1701 |
 | TC-SG03-06 | Normal | A guest entry is successfully saved | The resident receives a notification containing the number of guests who arrived | SG-03, RES-03 c5, NFR-29 | BB-1701, Feature 23 |
 
+## BM-10 - Keep emergency numbers up to date
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-BM10-01 | Normal | Enter valid guard-desk and manager emergency numbers and save | Both numbers are saved successfully | BM-10 | BB-2001 |
+| TC-BM10-02 | Normal | Open or refresh the emergency screen after the manager changes a number | Every user sees the newly saved emergency numbers | BM-10, SG-06 | BB-2001 |
+| TC-BM10-03 | Boundary | Save valid Bangladeshi phone numbers containing 9 digits and 11 digits | Both numbers are accepted and saved | BM-10, BR-12 | BB-2001 |
+| TC-BM10-04 | Invalid | Leave the guard-desk number empty and save | "Enter a valid phone number" is displayed; nothing is saved | BM-10, BR-12 | BB-2001 |
+| TC-BM10-05 | Invalid | Leave the manager number empty and save | "Enter a valid phone number" is displayed; nothing is saved | BM-10, BR-12 | BB-2001 |
+| TC-BM10-06 | Invalid | Enter a phone number with fewer than 9 or more than 11 digits and save | "Enter a valid phone number" is displayed; nothing is saved | BM-10, BR-12 | BB-2001 |
+| TC-BM10-07 | Invalid | Try to edit or remove the 999 emergency number | 999 remains unchanged, first in the emergency list, and cannot be edited or removed | BM-10, BR-12 | BB-2001 |
+| TC-BM10-08 | Exception | Save changed emergency numbers when the connection or server operation fails | An error is displayed within 5 seconds; the changes are not shown as saved | BM-10, NFR-17 | BB-2001 |
+
+## SG-06 - Open emergency numbers
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-SG06-01 | Normal | Open Emergency from a guard screen | Emergency numbers appear within 2 taps, with 999 first, followed by guard-desk and manager numbers; each has a Call button | SG-06, BR-12, NFR-16 | BB-2001 |
+| TC-SG06-02 | Normal | Open or refresh the Emergency screen after the manager changes a number | The updated building number is displayed | SG-06, BM-10 | BB-2001 |
+| TC-SG06-03 | Exception | Open Emergency on the gate device after its internet connection is lost | 999 and the last loaded building numbers remain visible and can be called | SG-06 | BB-2001 |
 
 # Test cases: CM-01
 
