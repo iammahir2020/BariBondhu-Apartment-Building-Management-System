@@ -220,3 +220,69 @@ Test cases for feature 4 (Charge rates and rate history), written from CM-01's c
 
 1. Can the meeting date be in the future? The SRS only says a meeting date is required, so our service accepts any real date.
 2. Should the manager see Rate history too? CM-01 says "any member" (committee), so only the committee has the `viewRateHistory` row for now.
+
+
+# Test cases: BM-08 and CM-02
+
+Test cases for feature 9 (Record expenses, approve or reject them), written from the confirmation criteria of BM-08 and CM-02 and the business rules and NFRs they cite in [SRS.md](srs/SRS.md). Same columns and types as the RES tables above. Amounts are ৳ in the Case column; the service and the database keep them in whole poisha.
+
+## BM-08 · Record building expenses
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-BM08-01 | Normal | Enter amount ৳2,500, today's date, category repair, a description and no receipt photo, then save | Expense saved as Waiting for approval, recorded by the manager | BM-08 c1 | BB-0904 |
+| TC-BM08-02 | Normal | Save an expense with a receipt photo | Saved as Waiting for approval; the photo is kept with it | BM-08 c1 | BB-0904, BB-0906 |
+| TC-BM08-03 | Normal | Record one expense in each category: repair, salary, utility, other | All four are saved | BM-08 c1 | BB-0904 |
+| TC-BM08-04 | Normal | Save an expense | One audit log entry (`expense.record`) with the manager, the time and the new values | NFR-27 | BB-0904 |
+| TC-BM08-05 | Boundary | Expense date is today (Dhaka date) | Saved | BM-08 c2, BR-01 | BB-0904 |
+| TC-BM08-06 | Boundary | It is 00:30 on the 24th in Dhaka (still the 23rd in UTC) and the date is the 24th | Saved; the Dhaka date is used, not the UTC date | BR-01 | BB-0904 |
+| TC-BM08-07 | Invalid | Expense date is tomorrow | "Check the expense date"; nothing saved; no audit entry | BM-08 c2 | BB-0904 |
+| TC-BM08-08 | Invalid | Expense date is missing, not a date, or does not exist (30 Feb 2026) | "Check the expense date"; nothing saved | BM-08 c2 | BB-0904 |
+| TC-BM08-09 | Invalid | Amount is blank, ৳0, negative, or not whole poisha | Refused (400); nothing saved | BM-08 c1 | BB-0904 |
+| TC-BM08-10 | Invalid | Category missing, or description empty or only spaces | Refused (400); nothing saved | BM-08 c1 | BB-0904 |
+| TC-BM08-11 | Invalid | Receipt photo over 5 MB, or not JPG or PNG | Refused with a message; nothing saved | NFR-09 | BB-0906 |
+| TC-BM08-12 | Normal | Edit an expense that is Waiting for approval and give a note | The change is saved with the note; still Waiting for approval; audit entry shows old and new values | BM-08 c3, NFR-27 | BB-0904 |
+| TC-BM08-13 | Invalid | Edit a waiting expense with no note | Refused (400); nothing changes | BM-08 c3 | BB-0904 |
+| TC-BM08-14 | Invalid | Edit a waiting expense and set a future date | "Check the expense date"; nothing changes | BM-08 c2 | BB-0904 |
+| TC-BM08-15 | Normal | Open an expense the committee rejected | The manager sees the committee's reason | BM-08 c4, CM-02 c2 | BB-0904, BB-0908 |
+| TC-BM08-16 | Normal | Resubmit a Rejected expense with corrected details | Back to Waiting for approval; the earlier decision is cleared from the row but stays in the audit log | BM-08 c4 | BB-0904 |
+| TC-BM08-17 | Exception | Resubmit an expense that is Waiting for approval or Approved | Refused (409); nothing changes | BM-08 c4 | BB-0904 |
+| TC-BM08-18 | Exception | Edit a Rejected expense instead of resubmitting it | Refused (409); the manager must resubmit | BM-08 c4 | BB-0904 |
+| TC-BM08-19 | Exception | Edit an Approved expense | Refused (409) with a message to add a correcting expense; there is no delete | BM-08 c5, CM-02 c4 | BB-0904 |
+| TC-BM08-20 | Normal | Add a correcting expense of -৳500 to an Approved expense | New expense linked to the original, Waiting for approval; the original is unchanged | BM-08 c5 | BB-0904 |
+| TC-BM08-21 | Normal | Add a positive correcting expense | Saved, linked, Waiting for approval | BM-08 c5 | BB-0904 |
+| TC-BM08-22 | Boundary | Add a correcting expense of ৳0 | Refused (400) | BM-08 c5 | BB-0904 |
+| TC-BM08-23 | Exception | Add a correcting expense to an expense that is not Approved, or does not exist | Refused (409 or 404) | BM-08 c5 | BB-0904 |
+| TC-BM08-24 | Exception | Edit a correcting expense while it is waiting | Allowed with a note; a negative amount stays allowed | BM-08 c3, c5 | BB-0904 |
+| TC-BM08-25 | Normal | Open the list of expenses | Every expense, newest first, with its status | BM-08 | BB-0904, BB-0906, BB-0907 |
+| TC-BM08-26 | Exception | Anyone other than the manager calls record, edit, resubmit or correct; or nobody is signed in | 403 for other roles; 401 when signed out | NFR-06 | BB-0906 |
+| TC-BM08-27 | Exception | The database fails while saving | An error is shown; nothing is shown as saved; no audit entry | NFR-17 | BB-0904, BB-0906 |
+
+## CM-02 · Approve or reject building expenses
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-C02-01 | Normal | Approve an expense that is Waiting for approval | Becomes Approved; who and when are saved; it counts in the fund summary | CM-02 c1, BR-10 | BB-0905 |
+| TC-C02-02 | Normal | Approve a correcting expense | Becomes Approved, like any other | CM-02 c1, BM-08 c5 | BB-0905 |
+| TC-C02-03 | Normal | Approve an expense | One audit log entry (`expense.approve`) with old and new values | NFR-27 | BB-0905 |
+| TC-C02-04 | Normal | Reject a waiting expense with the reason "No receipt attached" | Becomes Rejected; the reason, who and when are saved; it does not count in the fund summary | CM-02 c2, BR-10 | BB-0905 |
+| TC-C02-05 | Normal | Reject an expense | One audit log entry (`expense.reject`) with the reason | NFR-27 | BB-0905 |
+| TC-C02-06 | Invalid | Reject with no reason, or only spaces | "Write a reason"; status does not change; no audit entry | CM-02 c2 | BB-0905 |
+| TC-C02-07 | Boundary | Reject with a reason that has spaces around it | The reason is saved trimmed | CM-02 c2 | BB-0905 |
+| TC-C02-08 | Exception | Approve or reject an expense that is already Approved | Refused (409) with "This expense is already Approved."; nothing changes | CM-02 c3 | BB-0905 |
+| TC-C02-09 | Exception | Approve or reject an expense that is already Rejected | Refused (409) with "This expense is already Rejected."; nothing changes | CM-02 c3 | BB-0905 |
+| TC-C02-10 | Exception | Approve or reject an expense that does not exist | 404; nothing changes | CM-02 | BB-0905 |
+| TC-C02-11 | Exception | Try to change the amount of an Approved expense, or delete it | Refused; the member is told to ask the manager for a correcting expense | CM-02 c4, BM-08 c5 | BB-0904, BB-0905 |
+| TC-C02-12 | Normal | The manager resubmits after a rejection, then the committee decides again | The expense can be approved or rejected again; each decision is in the audit log | BM-08 c4, CM-02 | BB-0904, BB-0905 |
+| TC-C02-13 | Normal | Open the approval screen | The committee sees expenses with the amount, date, category, description and receipt photo | CM-02 | BB-0906, BB-0908 |
+| TC-C02-14 | Normal | From Home, approve an expense | At most 4 taps | NFR-24 | BB-0908 |
+| TC-C02-15 | Exception | Anyone other than a committee member calls approve or reject; or nobody is signed in | 403 for other roles (the manager cannot approve); 401 when signed out | NFR-06 | BB-0906 |
+| TC-C02-16 | Exception | The database fails while saving a decision | An error is shown; the status is not shown as changed; no audit entry | NFR-17 | BB-0905, BB-0906 |
+| TC-C02-17 | Normal | The manager enters the first month's opening balance and the committee approves it | The first summary can be published | CM-02 c5 | BB-1003 (feature 10) |
+| TC-C02-18 | Normal | The committee rejects the opening balance with a reason | The manager sees the reason and can enter a corrected figure that comes back for approval | CM-02 c6 | BB-1003 (feature 10) |
+| TC-C02-19 | Invalid | Reject the opening balance with no reason | "Write a reason"; nothing changes | CM-02 c6 | BB-1003 (feature 10) |
+
+## Open questions for BM-08 and CM-02
+
+1. The SRS gives wording only for "Check the expense date" and "Write a reason". Our messages for a missing amount, category or description, for an edit with no note, and for "This expense is already Approved." are our own and need the team's approval.
+2. Is the note on an edit required? BM-08 says the change is "saved with a note", so we require it.
