@@ -1,8 +1,8 @@
 /**
  * Demo data in place of features 2 and 3 (ADM-01 building setup, BM-02 accounts): one building, two blocks, twelve
  * flats, occupancies for some of them, and one account per role with a known password. Run with `npm run db:seed`.
- * Feature data has its own file next to this one, called from `main` once the accounts exist: `seedGuestPasses.ts`
- * for the sample guest passes.
+ * Feature data has its own file next to this one, called from `main` once the accounts exist: `seedTickets.ts` for
+ * the common-area places and sample fault tickets, `seedGuestPasses.ts` for the sample guest passes.
  *
  * Safe to run again: it finds what already exists by its natural key (building name, block name, flat number,
  * username) and only adds what is missing. Demo accounts get the demo password and first-login state back, so a
@@ -23,10 +23,21 @@ import * as schema from '../src/models';
 import { internalEmail } from '../src/services/accountService';
 import { passwordProblem } from '../src/services/passwordRules';
 import { seedGuestPasses } from './seedGuestPasses';
+import { seedTickets } from './seedTickets';
 
 loadEnvConfig(process.cwd());
 
-const { auditLogs, blocks, buildings, flats, occupancies, profiles } = schema;
+const {
+  announcements,
+  auditLogs,
+  blocks,
+  buildings,
+  chargeRates,
+  expenses,
+  flats,
+  occupancies,
+  profiles,
+} = schema;
 
 /** The Drizzle client this script uses. */
 type SeedDatabase = ReturnType<typeof drizzle<typeof schema>>;
@@ -154,6 +165,39 @@ const ACCOUNTS: readonly DemoAccount[] = [
   },
 ];
 
+/**
+ * Demo announcements for BM-11 and RES-08.
+ * @author Jannatul Ferdus Nishi
+ */
+const DEMO_ANNOUNCEMENTS = [
+  {
+    title: '[Demo] Building Maintenance Notice',
+    message: 'Routine maintenance will be carried out this week.',
+    audience: 'All',
+    urgent: false,
+  },
+  {
+    title: '[Demo] Block A Cleaning Notice',
+    message: 'Cleaning work is scheduled for Block A.',
+    audience: 'Block',
+    targetBlock: 'A',
+    urgent: false,
+  },
+  {
+    title: '[Demo] Floor 2 Water Supply Notice',
+    message: 'Water supply maintenance is planned for Floor 2.',
+    audience: 'Floor',
+    targetFloor: 2,
+    urgent: false,
+  },
+  {
+    title: '[Demo] Urgent Power Supply Notice',
+    message: 'Temporary power interruption. Please check updates.',
+    audience: 'All',
+    urgent: true,
+  },
+] as const;
+
 /** Finds or creates the building, blocks and flats; returns flat ids by `block/flat`. */
 async function seedFlats(db: SeedDatabase): Promise<Map<string, string>> {
   let [building] = await db.select().from(buildings).where(eq(buildings.name, BUILDING.name));
@@ -273,6 +317,159 @@ async function seedAccount(
   return 'created';
 }
 
+/**
+ * Adds demo announcements without duplicating existing titles.
+ * Requires the Announcement migration to be applied first.
+ *
+ * @author Jannatul Ferdus Nishi
+ */
+async function seedAnnouncements(db: SeedDatabase): Promise<void> {
+  const [manager] = await db.select().from(profiles).where(eq(profiles.username, 'bb-manager'));
+
+  if (!manager) {
+    throw new Error('Demo manager account is missing.');
+  }
+
+  const [building] = await db.select().from(buildings).where(eq(buildings.name, BUILDING.name));
+
+  if (!building) {
+    throw new Error('Demo building is missing.');
+  }
+
+  const [blockA] = await db
+    .select()
+    .from(blocks)
+    .where(and(eq(blocks.buildingId, building.id), eq(blocks.name, 'A')));
+
+  if (!blockA) {
+    throw new Error('Block A is missing.');
+  }
+
+  for (const item of DEMO_ANNOUNCEMENTS) {
+    const [existing] = await db
+      .select({ id: announcements.id })
+      .from(announcements)
+      .where(eq(announcements.title, item.title))
+      .limit(1);
+
+    if (existing) {
+      console.log(`Announcement already exists: ${item.title}`);
+      continue;
+    }
+
+    await db.insert(announcements).values({
+      title: item.title,
+      message: item.message,
+      audience: item.audience,
+      targetBlockId: 'targetBlock' in item ? blockA.id : null,
+      targetFloor: 'targetFloor' in item ? item.targetFloor : null,
+      urgent: item.urgent,
+      expiresAt: item.urgent ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null,
+      status: 'Published',
+      createdById: manager.id,
+    });
+
+    console.log(`Created announcement: ${item.title}`);
+  }
+}
+
+/** Demo rates the committee set at a meeting: one Current rate for each charge (CM-01). Amounts are whole poisha. */
+const RATES = [
+  { chargeType: 'service', amountPoisha: 150000 },
+  { chargeType: 'generator', amountPoisha: 50000 },
+  { chargeType: 'water', amountPoisha: 30000 },
+] as const;
+
+/**
+ * Adds a Current rate for each charge that has none yet, set by the demo committee account.
+ * @param db - The seed script's database client.
+ * @returns How many rates were added.
+ */
+async function seedChargeRates(db: SeedDatabase): Promise<number> {
+  const [committee] = await db.select().from(profiles).where(eq(profiles.username, 'bb-committee'));
+  if (!committee) throw new Error('The bb-committee account is missing.');
+
+  let added = 0;
+  for (const rate of RATES) {
+    const [current] = await db
+      .select()
+      .from(chargeRates)
+      .where(and(eq(chargeRates.chargeType, rate.chargeType), eq(chargeRates.status, 'Current')));
+    if (current) continue;
+    await db.insert(chargeRates).values({
+      chargeType: rate.chargeType,
+      amountPoisha: rate.amountPoisha,
+      meetingDate: '2026-11-01',
+      setBy: committee.id,
+      status: 'Current',
+    });
+    added += 1;
+  }
+  return added;
+}
+
+/** Demo expenses, one in each state, so every screen has something to show (BM-08, CM-02). Amounts are whole poisha. */
+const EXPENSES = [
+  {
+    description: 'Lift 1 motor repair',
+    amountPoisha: 1200000,
+    expenseDate: '2026-11-05',
+    category: 'repair',
+    status: 'Approved',
+    decisionReason: null,
+  },
+  {
+    description: 'Guard salary, November',
+    amountPoisha: 1800000,
+    expenseDate: '2026-11-10',
+    category: 'salary',
+    status: 'Waiting for approval',
+    decisionReason: null,
+  },
+  {
+    description: 'Lobby decoration',
+    amountPoisha: 500000,
+    expenseDate: '2026-11-12',
+    category: 'other',
+    status: 'Rejected',
+    decisionReason: 'Not agreed at the committee meeting',
+  },
+] as const;
+
+/**
+ * Adds one demo expense in each state, recorded by the demo manager and decided by the demo committee account.
+ * @param db - The seed script's database client.
+ * @returns How many expenses were added.
+ */
+async function seedExpenses(db: SeedDatabase): Promise<number> {
+  const [manager] = await db.select().from(profiles).where(eq(profiles.username, 'bb-manager'));
+  const [committee] = await db.select().from(profiles).where(eq(profiles.username, 'bb-committee'));
+  if (!manager || !committee) throw new Error('The bb-manager or bb-committee account is missing.');
+
+  let added = 0;
+  for (const expense of EXPENSES) {
+    const [existing] = await db
+      .select()
+      .from(expenses)
+      .where(eq(expenses.description, expense.description));
+    if (existing) continue;
+    const decided = expense.status !== 'Waiting for approval';
+    await db.insert(expenses).values({
+      amountPoisha: expense.amountPoisha,
+      expenseDate: expense.expenseDate,
+      category: expense.category,
+      description: expense.description,
+      status: expense.status,
+      recordedBy: manager.id,
+      decidedBy: decided ? committee.id : null,
+      decidedAt: decided ? new Date() : null,
+      decisionReason: expense.decisionReason,
+    });
+    added += 1;
+  }
+  return added;
+}
+
 async function main(): Promise<void> {
   const password = env('SEED_DEMO_PASSWORD');
   const problem = passwordProblem(password);
@@ -299,6 +496,19 @@ async function main(): Promise<void> {
         `  ${account.username.padEnd(15)} ${account.role.padEnd(12)} ${result}${where}${first}`,
       );
     }
+    await seedAnnouncements(db);
+
+    const ticketSeed = await seedTickets(db, occupancyIds, flatIds);
+    console.log(
+      `\nFault tickets: ${ticketSeed.places} common-area places, ${ticketSeed.tickets} sample tickets.`,
+    );
+
+    const addedRates = await seedChargeRates(db);
+    console.log(`\nCharge rates: ${addedRates} added.`);
+
+    const addedExpenses = await seedExpenses(db);
+    console.log(`Expenses: ${addedExpenses} added.`);
+
     const passCount = await seedGuestPasses(db);
     console.log(`\nGuest passes: ${passCount} sample passes, one in each state, times from now.`);
   } finally {
