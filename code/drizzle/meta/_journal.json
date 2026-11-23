@@ -26,8 +26,6 @@
     {
       "idx": 3,
       "version": "7",
-      "when": 1795292001345,
-      "tag": "0003_announcement",
       "when": 1795381060829,
       "tag": "0003_add-charge-rate",
       "breakpoints": true
@@ -37,6 +35,13 @@
       "version": "7",
       "when": 1795384558893,
       "tag": "0004_add-expense",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795461660949,
+      "tag": "0005_announcement",
       "breakpoints": true
     }
   ]
