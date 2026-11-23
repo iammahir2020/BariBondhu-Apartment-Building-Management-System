@@ -41,6 +41,7 @@ const TABLE: Record<Action, Partial<Record<Role, Scope>>> = {
   runGate: { guard: 'all' },
   recordExpenses: { manager: 'all' },
   decideExpenses: { committee: 'all' },
+  viewExpenses: { manager: 'all', committee: 'all' },
   publishFundSummary: { manager: 'all' },
   viewFundSummary: { resident: 'all', manager: 'all', committee: 'all' },
   sendAnnouncements: { manager: 'all' },

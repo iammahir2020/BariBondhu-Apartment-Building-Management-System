@@ -58,6 +58,8 @@ export const PERMISSIONS = {
   recordExpenses: { manager: 'all' },
   /** Approve or reject expenses and the opening balance (CM-02). */
   decideExpenses: { committee: 'all' },
+  /** See the list of expenses with their status (BM-08, CM-02). */
+  viewExpenses: { manager: 'all', committee: 'all' },
   /** Publish the monthly fund summary (BM-12). */
   publishFundSummary: { manager: 'all' },
   /** See the fund summary, totals only (RES-05, CM-04, NFR-12). */
