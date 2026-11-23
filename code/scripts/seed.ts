@@ -26,9 +26,17 @@ import { seedTickets } from './seedTickets';
 
 loadEnvConfig(process.cwd());
 
-const { announcements, auditLogs, blocks, buildings, flats, occupancies, profiles } = schema;
-const { auditLogs, blocks, buildings, chargeRates, expenses, flats, occupancies, profiles } =
-  schema;
+const {
+  announcements,
+  auditLogs,
+  blocks,
+  buildings,
+  chargeRates,
+  expenses,
+  flats,
+  occupancies,
+  profiles,
+} = schema;
 
 /** The Drizzle client this script uses. */
 type SeedDatabase = ReturnType<typeof drizzle<typeof schema>>;
@@ -362,6 +370,8 @@ async function seedAnnouncements(db: SeedDatabase): Promise<void> {
 
     console.log(`Created announcement: ${item.title}`);
   }
+}
+
 /** Demo rates the committee set at a meeting: one Current rate for each charge (CM-01). Amounts are whole poisha. */
 const RATES = [
   { chargeType: 'service', amountPoisha: 150000 },
@@ -497,7 +507,6 @@ async function main(): Promise<void> {
 
     const addedExpenses = await seedExpenses(db);
     console.log(`Expenses: ${addedExpenses} added.`);
-
   } finally {
     await client.end();
   }
