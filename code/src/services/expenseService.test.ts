@@ -9,9 +9,12 @@ import {
   APPROVED_EXPENSE_MESSAGE,
   CHECK_EXPENSE_DATE_MESSAGE,
   EDIT_NOTE_MESSAGE,
+  WRITE_REASON_MESSAGE,
   addCorrectingExpense,
+  approveExpense,
   editExpense,
   recordExpense,
+  rejectExpense,
   resubmitExpense,
   type ExpenseDeps,
   type ExpenseInput,
@@ -445,5 +448,181 @@ describe('addCorrectingExpense', () => {
       NOW,
     );
     expect(after.amountPoisha).toBe(-60000);
+  });
+});
+
+const COMMITTEE_ID = 'committee-1';
+/** 24 Nov 2026, 10:00 in Dhaka. */
+const DECIDED_AT = new Date('2026-11-24T04:00:00Z');
+
+describe('approveExpense', () => {
+  it('approves a waiting expense, records who and when, and logs it (normal, CM-02)', async () => {
+    const setup = setUp();
+    const created = await recordExpense(setup.deps, input(), MANAGER_ID, NOW);
+    const after = await approveExpense(setup.deps, created.id, COMMITTEE_ID, DECIDED_AT);
+
+    expect(after).toMatchObject({
+      status: 'Approved',
+      decidedBy: COMMITTEE_ID,
+      decidedAt: DECIDED_AT,
+      decisionReason: null,
+    });
+    expect(setup.entries.at(-1)).toMatchObject({
+      actorId: COMMITTEE_ID,
+      action: 'expense.approve',
+      entityId: created.id,
+      oldValues: { status: 'Waiting for approval' },
+      newValues: { status: 'Approved' },
+    });
+  });
+
+  it('approves a correcting expense too (normal)', async () => {
+    const setup = setUp();
+    const approved = await recordWithStatus(setup, 'Approved');
+    const correcting = await addCorrectingExpense(
+      setup.deps,
+      approved.id,
+      input({ amountPoisha: -50000 }),
+      MANAGER_ID,
+      NOW,
+    );
+    const after = await approveExpense(setup.deps, correcting.id, COMMITTEE_ID, DECIDED_AT);
+    expect(after.status).toBe('Approved');
+  });
+
+  it.each<Expense['status']>(['Approved', 'Rejected'])(
+    'shows the current status and changes nothing when it is already %s (CM-02)',
+    async (status) => {
+      const setup = setUp();
+      const row = await recordWithStatus(setup, status);
+      const entriesBefore = setup.entries.length;
+      await expect(
+        approveExpense(setup.deps, row.id, COMMITTEE_ID, DECIDED_AT),
+      ).rejects.toMatchObject({
+        code: 'CONFLICT',
+        status: 409,
+        message: `This expense is already ${status}.`,
+      });
+      expect(row.status).toBe(status);
+      expect(setup.entries).toHaveLength(entriesBefore);
+    },
+  );
+
+  it('answers 404 for an expense that does not exist (exception)', async () => {
+    const { deps } = setUp();
+    await expect(approveExpense(deps, 'nope', COMMITTEE_ID, DECIDED_AT)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+      status: 404,
+    });
+  });
+
+  it('writes no audit entry if saving fails (exception)', async () => {
+    const setup = setUp();
+    const created = await recordExpense(setup.deps, input(), MANAGER_ID, NOW);
+    const entriesBefore = setup.entries.length;
+    setup.deps.expenses.update = async () => Promise.reject(new Error('save failed'));
+    await expect(approveExpense(setup.deps, created.id, COMMITTEE_ID, DECIDED_AT)).rejects.toThrow(
+      'save failed',
+    );
+    expect(setup.entries).toHaveLength(entriesBefore);
+  });
+});
+
+describe('rejectExpense', () => {
+  it('rejects a waiting expense with a reason the manager can see (normal, CM-02)', async () => {
+    const setup = setUp();
+    const created = await recordExpense(setup.deps, input(), MANAGER_ID, NOW);
+    const after = await rejectExpense(
+      setup.deps,
+      created.id,
+      '  No receipt attached  ',
+      COMMITTEE_ID,
+      DECIDED_AT,
+    );
+
+    expect(after).toMatchObject({
+      status: 'Rejected',
+      decidedBy: COMMITTEE_ID,
+      decidedAt: DECIDED_AT,
+      decisionReason: 'No receipt attached',
+    });
+    expect(setup.entries.at(-1)).toMatchObject({
+      actorId: COMMITTEE_ID,
+      action: 'expense.reject',
+      oldValues: { status: 'Waiting for approval' },
+      newValues: { status: 'Rejected', decisionReason: 'No receipt attached' },
+    });
+  });
+
+  it('uses the exact SRS wording (CM-02)', () => {
+    expect(WRITE_REASON_MESSAGE).toBe('Write a reason');
+  });
+
+  it.each<[string, string | null]>([
+    ['a missing reason', null],
+    ['an empty reason', ''],
+    ['a reason of only spaces', '   '],
+  ])(
+    'refuses %s with "Write a reason" and changes nothing (invalid input)',
+    async (_name, reason) => {
+      const setup = setUp();
+      const created = await recordExpense(setup.deps, input(), MANAGER_ID, NOW);
+      const entriesBefore = setup.entries.length;
+      await expect(
+        rejectExpense(setup.deps, created.id, reason, COMMITTEE_ID, DECIDED_AT),
+      ).rejects.toMatchObject({ code: 'BAD_REQUEST', status: 400, message: 'Write a reason' });
+      expect(setup.store.rows[0]?.status).toBe('Waiting for approval');
+      expect(setup.entries).toHaveLength(entriesBefore);
+    },
+  );
+
+  it.each<Expense['status']>(['Approved', 'Rejected'])(
+    'shows the current status and changes nothing when it is already %s (CM-02)',
+    async (status) => {
+      const setup = setUp();
+      const row = await recordWithStatus(setup, status);
+      await expect(
+        rejectExpense(setup.deps, row.id, 'Too high', COMMITTEE_ID, DECIDED_AT),
+      ).rejects.toMatchObject({
+        code: 'CONFLICT',
+        status: 409,
+        message: `This expense is already ${status}.`,
+      });
+      expect(row.status).toBe(status);
+    },
+  );
+
+  it('answers 404 for an expense that does not exist (exception)', async () => {
+    const { deps } = setUp();
+    await expect(
+      rejectExpense(deps, 'nope', 'Too high', COMMITTEE_ID, DECIDED_AT),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+
+  it('lets the manager resubmit after a rejection, which clears the decision (BM-08)', async () => {
+    const setup = setUp();
+    const created = await recordExpense(setup.deps, input(), MANAGER_ID, NOW);
+    await rejectExpense(setup.deps, created.id, 'No receipt', COMMITTEE_ID, DECIDED_AT);
+    const after = await resubmitExpense(
+      setup.deps,
+      created.id,
+      input({ receiptPhoto: 'receipts/lift.jpg' }),
+      MANAGER_ID,
+      DECIDED_AT,
+    );
+    expect(after).toMatchObject({
+      status: 'Waiting for approval',
+      decidedBy: null,
+      decisionReason: null,
+    });
+  });
+
+  it('cannot change an Approved expense afterwards: edit is refused (CM-02)', async () => {
+    const setup = setUp();
+    const created = await recordExpense(setup.deps, input(), MANAGER_ID, NOW);
+    await approveExpense(setup.deps, created.id, COMMITTEE_ID, DECIDED_AT);
+    await expect(
+      editExpense(setup.deps, created.id, input({ amountPoisha: 1 }), 'Change', MANAGER_ID, NOW),
+    ).rejects.toMatchObject({ code: 'CONFLICT', message: APPROVED_EXPENSE_MESSAGE });
   });
 });

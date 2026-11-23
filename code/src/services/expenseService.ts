@@ -1,7 +1,7 @@
 /**
  * Recording expenses (BM-08): the manager records an expense, edits it while it is waiting, resubmits it after the
  * committee rejected it, or adds a correcting expense to an Approved one. Every change is written to the audit
- * log (NFR-27). Approving and rejecting are in the same service file family (CM-02) and come in a later ticket.
+ * log (NFR-27). The committee approves or rejects an expense here too (CM-02).
  *
  * @author Ayesha Siddiqa
  */
@@ -317,4 +317,98 @@ export async function addCorrectingExpense(
     newValues: snapshot(created),
   });
   return created;
+}
+
+/** Shown when the committee rejects an expense with no reason (CM-02). */
+export const WRITE_REASON_MESSAGE = 'Write a reason';
+
+/**
+ * Refuses to decide an expense that is not waiting. The message shows its current status (CM-02).
+ * @param expense - The expense.
+ * @throws AppError 409 if it is already Approved or Rejected.
+ */
+function requireWaiting(expense: Expense): void {
+  if (expense.status !== 'Waiting for approval') {
+    throw new AppError('CONFLICT', `This expense is already ${expense.status}.`);
+  }
+}
+
+/**
+ * Approves an expense that is Waiting for approval. From now on it counts in the fund summary (CM-02, BR-10).
+ * @param deps - Expense store and audit writer.
+ * @param expenseId - The expense to approve.
+ * @param actorId - The committee member approving it.
+ * @param now - The current time.
+ * @returns The Approved expense.
+ * @throws AppError 404 if there is no such expense.
+ * @throws AppError 409 if it is already Approved or Rejected.
+ */
+export async function approveExpense(
+  deps: ExpenseDeps,
+  expenseId: string,
+  actorId: string,
+  now: Date = new Date(),
+): Promise<Expense> {
+  const before = await getExpense(deps, expenseId);
+  requireWaiting(before);
+
+  const after = await deps.expenses.update(expenseId, {
+    status: 'Approved',
+    decidedBy: actorId,
+    decidedAt: now,
+    decisionReason: null,
+    updatedAt: now,
+  });
+  await deps.audit({
+    actorId,
+    action: 'expense.approve',
+    entityType: 'expenses',
+    entityId: expenseId,
+    oldValues: snapshot(before),
+    newValues: snapshot(after),
+  });
+  return after;
+}
+
+/**
+ * Rejects an expense that is Waiting for approval, with a reason. It does not count in the fund summary, and the
+ * manager sees the reason (CM-02).
+ * @param deps - Expense store and audit writer.
+ * @param expenseId - The expense to reject.
+ * @param reason - Why it was rejected.
+ * @param actorId - The committee member rejecting it.
+ * @param now - The current time.
+ * @returns The Rejected expense.
+ * @throws AppError 400 "Write a reason" if the reason is empty.
+ * @throws AppError 404 if there is no such expense.
+ * @throws AppError 409 if it is already Approved or Rejected.
+ */
+export async function rejectExpense(
+  deps: ExpenseDeps,
+  expenseId: string,
+  reason: string | null,
+  actorId: string,
+  now: Date = new Date(),
+): Promise<Expense> {
+  const decisionReason = reason?.trim() ?? '';
+  if (decisionReason === '') throw new AppError('BAD_REQUEST', WRITE_REASON_MESSAGE);
+  const before = await getExpense(deps, expenseId);
+  requireWaiting(before);
+
+  const after = await deps.expenses.update(expenseId, {
+    status: 'Rejected',
+    decidedBy: actorId,
+    decidedAt: now,
+    decisionReason,
+    updatedAt: now,
+  });
+  await deps.audit({
+    actorId,
+    action: 'expense.reject',
+    entityType: 'expenses',
+    entityId: expenseId,
+    oldValues: snapshot(before),
+    newValues: { ...snapshot(after), decisionReason },
+  });
+  return after;
 }
