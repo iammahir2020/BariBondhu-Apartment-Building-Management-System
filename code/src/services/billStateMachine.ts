@@ -115,6 +115,12 @@ export const BILL_TRANSITIONS: readonly BillTransition[] = [
 /** Paid and Carried forward bills cannot change status again. */
 export const FINAL_BILL_STATUSES: readonly BillStatus[] = ['Paid', 'Carried forward'];
 
+/**
+ * Checks whether a bill has reached a final status.
+ *
+ * @param status - The current status of the bill.
+ * @returns True if the bill is Paid or Carried forward; otherwise, false.
+ */
 export function isFinalBillStatus(status: BillStatus): boolean {
   return FINAL_BILL_STATUSES.includes(status);
 }
