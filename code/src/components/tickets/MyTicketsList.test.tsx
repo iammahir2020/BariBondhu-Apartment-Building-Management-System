@@ -147,7 +147,7 @@ describe('MyTicketsList: the list', () => {
   });
 });
 
-describe('MyTicketsList: cancel or stop following (TC-R02-17 to TC-R02-21)', () => {
+describe('MyTicketsList: cancel or stop following (TC-R02-17 to TC-R02-19)', () => {
   const reported = row({ id: 't-2', title: 'Bathroom fan very noisy', status: 'Reported' });
 
   it('asks once, then cancels my Reported ticket and reloads the list', async () => {

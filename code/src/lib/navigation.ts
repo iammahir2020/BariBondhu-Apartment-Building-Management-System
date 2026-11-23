@@ -52,6 +52,10 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
         { label: 'Tickets', href: '/resident/tickets', icon: Wrench, onPhone: true },
       ],
     },
+    {
+      title: 'More',
+      items: [{ label: 'Report a fault', href: '/resident/report-fault', icon: Wrench }],
+    },
   ],
   guard: [{ items: [{ label: 'Check a pass', href: '/guard', icon: ScanLine, onPhone: true }] }],
   manager: [

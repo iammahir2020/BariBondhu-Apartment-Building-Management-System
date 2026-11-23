@@ -2,7 +2,7 @@
  * The resident's My tickets list (prototype `R-Tickets.html`, RES-02): every ticket my household reported or follows
  * with "Me too", newest first. The newest open ticket shows its progress; the rest show their status. A Reported
  * ticket can be cancelled, or unfollowed when other households follow it; the service decides which (TC-R02-17 to
- * TC-R02-21).
+ * TC-R02-19).
  *
  * @author Mahir Al Kamal
  */
