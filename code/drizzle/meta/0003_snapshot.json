@@ -1,4 +1,5 @@
 {
+  "id": "760bbe8c-fb7f-4180-a65a-5f3d3b3770c8",
   "id": "6fc0d833-8705-4ef4-919d-1bc6fc8d511a",
   "prevId": "53127de4-1339-4594-8c18-7036f7356bc1",
   "version": "7",
@@ -997,6 +998,8 @@
       "checkConstraints": {},
       "isRLSEnabled": true
     },
+    "public.announcements": {
+      "name": "announcements",
     "public.charge_rates": {
       "name": "charge_rates",
       "schema": "",
@@ -1008,6 +1011,64 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "audience": {
+          "name": "audience",
+          "type": "announcement_audience",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'All'"
+        },
+        "target_block_id": {
+          "name": "target_block_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_floor": {
+          "name": "target_floor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "urgent": {
+          "name": "urgent",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "announcement_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Published'"
+        },
+        "created_by_id": {
+          "name": "created_by_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         "charge_type": {
           "name": "charge_type",
           "type": "charge_type",
@@ -1047,6 +1108,62 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "announcements_status_idx": {
+          "name": "announcements_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "announcements_audience_idx": {
+          "name": "announcements_audience_idx",
+          "columns": [
+            {
+              "expression": "audience",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "announcements_target_block_id_blocks_id_fk": {
+          "name": "announcements_target_block_id_blocks_id_fk",
+          "tableFrom": "announcements",
+          "tableTo": "blocks",
+          "columnsFrom": ["target_block_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "announcements_created_by_id_profiles_id_fk": {
+          "name": "announcements_created_by_id_profiles_id_fk",
+          "tableFrom": "announcements",
+          "tableTo": "profiles",
+          "columnsFrom": ["created_by_id"],
         }
       },
       "indexes": {},
@@ -1064,6 +1181,24 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
+      "checkConstraints": {
+        "announcements_title_not_blank": {
+          "name": "announcements_title_not_blank",
+          "value": "length(trim(\"announcements\".\"title\")) > 0"
+        },
+        "announcements_message_not_blank": {
+          "name": "announcements_message_not_blank",
+          "value": "length(trim(\"announcements\".\"message\")) > 0"
+        },
+        "announcements_audience_target": {
+          "name": "announcements_audience_target",
+          "value": "(\n        (\"announcements\".\"audience\" = 'All'\n          AND \"announcements\".\"target_block_id\" IS NULL\n          AND \"announcements\".\"target_floor\" IS NULL)\n        OR\n        (\"announcements\".\"audience\" = 'Block'\n          AND \"announcements\".\"target_block_id\" IS NOT NULL\n          AND \"announcements\".\"target_floor\" IS NULL)\n        OR\n        (\"announcements\".\"audience\" = 'Floor'\n          AND \"announcements\".\"target_block_id\" IS NULL\n          AND \"announcements\".\"target_floor\" IS NOT NULL)\n      )"
+        },
+        "announcements_urgent_expiry": {
+          "name": "announcements_urgent_expiry",
+          "value": "NOT \"announcements\".\"urgent\"\n          OR \"announcements\".\"expires_at\" IS NOT NULL"
+        }
+      },
       "checkConstraints": {},
       "isRLSEnabled": true
     }
@@ -1104,6 +1239,15 @@
         "Won't fix"
       ]
     },
+    "public.announcement_audience": {
+      "name": "announcement_audience",
+      "schema": "public",
+      "values": ["All", "Block", "Floor"]
+    },
+    "public.announcement_status": {
+      "name": "announcement_status",
+      "schema": "public",
+      "values": ["Published", "Removed"]
     "public.charge_rate_status": {
       "name": "charge_rate_status",
       "schema": "public",

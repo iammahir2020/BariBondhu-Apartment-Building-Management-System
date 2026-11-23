@@ -26,6 +26,7 @@ import { seedTickets } from './seedTickets';
 
 loadEnvConfig(process.cwd());
 
+const { announcements, auditLogs, blocks, buildings, flats, occupancies, profiles } = schema;
 const { auditLogs, blocks, buildings, chargeRates, expenses, flats, occupancies, profiles } =
   schema;
 
@@ -155,6 +156,39 @@ const ACCOUNTS: readonly DemoAccount[] = [
   },
 ];
 
+/**
+ * Demo announcements for BM-11 and RES-08.
+ * @author Jannatul Ferdus Nishi
+ */
+const DEMO_ANNOUNCEMENTS = [
+  {
+    title: '[Demo] Building Maintenance Notice',
+    message: 'Routine maintenance will be carried out this week.',
+    audience: 'All',
+    urgent: false,
+  },
+  {
+    title: '[Demo] Block A Cleaning Notice',
+    message: 'Cleaning work is scheduled for Block A.',
+    audience: 'Block',
+    targetBlock: 'A',
+    urgent: false,
+  },
+  {
+    title: '[Demo] Floor 2 Water Supply Notice',
+    message: 'Water supply maintenance is planned for Floor 2.',
+    audience: 'Floor',
+    targetFloor: 2,
+    urgent: false,
+  },
+  {
+    title: '[Demo] Urgent Power Supply Notice',
+    message: 'Temporary power interruption. Please check updates.',
+    audience: 'All',
+    urgent: true,
+  },
+] as const;
+
 /** Finds or creates the building, blocks and flats; returns flat ids by `block/flat`. */
 async function seedFlats(db: SeedDatabase): Promise<Map<string, string>> {
   let [building] = await db.select().from(buildings).where(eq(buildings.name, BUILDING.name));
@@ -274,6 +308,60 @@ async function seedAccount(
   return 'created';
 }
 
+/**
+ * Adds demo announcements without duplicating existing titles.
+ * Requires the Announcement migration to be applied first.
+ *
+ * @author Jannatul Ferdus Nishi
+ */
+async function seedAnnouncements(db: SeedDatabase): Promise<void> {
+  const [manager] = await db.select().from(profiles).where(eq(profiles.username, 'bb-manager'));
+
+  if (!manager) {
+    throw new Error('Demo manager account is missing.');
+  }
+
+  const [building] = await db.select().from(buildings).where(eq(buildings.name, BUILDING.name));
+
+  if (!building) {
+    throw new Error('Demo building is missing.');
+  }
+
+  const [blockA] = await db
+    .select()
+    .from(blocks)
+    .where(and(eq(blocks.buildingId, building.id), eq(blocks.name, 'A')));
+
+  if (!blockA) {
+    throw new Error('Block A is missing.');
+  }
+
+  for (const item of DEMO_ANNOUNCEMENTS) {
+    const [existing] = await db
+      .select({ id: announcements.id })
+      .from(announcements)
+      .where(eq(announcements.title, item.title))
+      .limit(1);
+
+    if (existing) {
+      console.log(`Announcement already exists: ${item.title}`);
+      continue;
+    }
+
+    await db.insert(announcements).values({
+      title: item.title,
+      message: item.message,
+      audience: item.audience,
+      targetBlockId: 'targetBlock' in item ? blockA.id : null,
+      targetFloor: 'targetFloor' in item ? item.targetFloor : null,
+      urgent: item.urgent,
+      expiresAt: item.urgent ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null,
+      status: 'Published',
+      createdById: manager.id,
+    });
+
+    console.log(`Created announcement: ${item.title}`);
+  }
 /** Demo rates the committee set at a meeting: one Current rate for each charge (CM-01). Amounts are whole poisha. */
 const RATES = [
   { chargeType: 'service', amountPoisha: 150000 },
@@ -397,6 +485,7 @@ async function main(): Promise<void> {
         `  ${account.username.padEnd(15)} ${account.role.padEnd(12)} ${result}${where}${first}`,
       );
     }
+    await seedAnnouncements(db);
 
     const ticketSeed = await seedTickets(db, occupancyIds, flatIds);
     console.log(
