@@ -28,6 +28,15 @@
       "version": "7",
       "when": 1795292001345,
       "tag": "0003_announcement",
+      "when": 1795381060829,
+      "tag": "0003_add-charge-rate",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795384558893,
+      "tag": "0004_add-expense",
       "breakpoints": true
     }
   ]

@@ -1,6 +1,8 @@
 /**
  * Demo data in place of features 2 and 3 (ADM-01 building setup, BM-02 accounts): one building, two blocks, twelve
  * flats, occupancies for some of them, and one account per role with a known password. Run with `npm run db:seed`.
+ * Feature data has its own file next to this one, called from `main` once the accounts exist: `seedTickets.ts` for
+ * the common-area places and sample fault tickets.
  *
  * Safe to run again: it finds what already exists by its natural key (building name, block name, flat number,
  * username) and only adds what is missing. Demo accounts get the demo password and first-login state back, so a
@@ -20,10 +22,13 @@ import type { Role } from '../src/lib/roles';
 import * as schema from '../src/models';
 import { internalEmail } from '../src/services/accountService';
 import { passwordProblem } from '../src/services/passwordRules';
+import { seedTickets } from './seedTickets';
 
 loadEnvConfig(process.cwd());
 
 const { announcements, auditLogs, blocks, buildings, flats, occupancies, profiles } = schema;
+const { auditLogs, blocks, buildings, chargeRates, expenses, flats, occupancies, profiles } =
+  schema;
 
 /** The Drizzle client this script uses. */
 type SeedDatabase = ReturnType<typeof drizzle<typeof schema>>;
@@ -357,6 +362,101 @@ async function seedAnnouncements(db: SeedDatabase): Promise<void> {
 
     console.log(`Created announcement: ${item.title}`);
   }
+/** Demo rates the committee set at a meeting: one Current rate for each charge (CM-01). Amounts are whole poisha. */
+const RATES = [
+  { chargeType: 'service', amountPoisha: 150000 },
+  { chargeType: 'generator', amountPoisha: 50000 },
+  { chargeType: 'water', amountPoisha: 30000 },
+] as const;
+
+/**
+ * Adds a Current rate for each charge that has none yet, set by the demo committee account.
+ * @param db - The seed script's database client.
+ * @returns How many rates were added.
+ */
+async function seedChargeRates(db: SeedDatabase): Promise<number> {
+  const [committee] = await db.select().from(profiles).where(eq(profiles.username, 'bb-committee'));
+  if (!committee) throw new Error('The bb-committee account is missing.');
+
+  let added = 0;
+  for (const rate of RATES) {
+    const [current] = await db
+      .select()
+      .from(chargeRates)
+      .where(and(eq(chargeRates.chargeType, rate.chargeType), eq(chargeRates.status, 'Current')));
+    if (current) continue;
+    await db.insert(chargeRates).values({
+      chargeType: rate.chargeType,
+      amountPoisha: rate.amountPoisha,
+      meetingDate: '2026-11-01',
+      setBy: committee.id,
+      status: 'Current',
+    });
+    added += 1;
+  }
+  return added;
+}
+
+/** Demo expenses, one in each state, so every screen has something to show (BM-08, CM-02). Amounts are whole poisha. */
+const EXPENSES = [
+  {
+    description: 'Lift 1 motor repair',
+    amountPoisha: 1200000,
+    expenseDate: '2026-11-05',
+    category: 'repair',
+    status: 'Approved',
+    decisionReason: null,
+  },
+  {
+    description: 'Guard salary, November',
+    amountPoisha: 1800000,
+    expenseDate: '2026-11-10',
+    category: 'salary',
+    status: 'Waiting for approval',
+    decisionReason: null,
+  },
+  {
+    description: 'Lobby decoration',
+    amountPoisha: 500000,
+    expenseDate: '2026-11-12',
+    category: 'other',
+    status: 'Rejected',
+    decisionReason: 'Not agreed at the committee meeting',
+  },
+] as const;
+
+/**
+ * Adds one demo expense in each state, recorded by the demo manager and decided by the demo committee account.
+ * @param db - The seed script's database client.
+ * @returns How many expenses were added.
+ */
+async function seedExpenses(db: SeedDatabase): Promise<number> {
+  const [manager] = await db.select().from(profiles).where(eq(profiles.username, 'bb-manager'));
+  const [committee] = await db.select().from(profiles).where(eq(profiles.username, 'bb-committee'));
+  if (!manager || !committee) throw new Error('The bb-manager or bb-committee account is missing.');
+
+  let added = 0;
+  for (const expense of EXPENSES) {
+    const [existing] = await db
+      .select()
+      .from(expenses)
+      .where(eq(expenses.description, expense.description));
+    if (existing) continue;
+    const decided = expense.status !== 'Waiting for approval';
+    await db.insert(expenses).values({
+      amountPoisha: expense.amountPoisha,
+      expenseDate: expense.expenseDate,
+      category: expense.category,
+      description: expense.description,
+      status: expense.status,
+      recordedBy: manager.id,
+      decidedBy: decided ? committee.id : null,
+      decidedAt: decided ? new Date() : null,
+      decisionReason: expense.decisionReason,
+    });
+    added += 1;
+  }
+  return added;
 }
 
 async function main(): Promise<void> {
@@ -386,6 +486,18 @@ async function main(): Promise<void> {
       );
     }
     await seedAnnouncements(db);
+
+    const ticketSeed = await seedTickets(db, occupancyIds, flatIds);
+    console.log(
+      `\nFault tickets: ${ticketSeed.places} common-area places, ${ticketSeed.tickets} sample tickets.`,
+    );
+
+    const addedRates = await seedChargeRates(db);
+    console.log(`\nCharge rates: ${addedRates} added.`);
+
+    const addedExpenses = await seedExpenses(db);
+    console.log(`Expenses: ${addedExpenses} added.`);
+
   } finally {
     await client.end();
   }
