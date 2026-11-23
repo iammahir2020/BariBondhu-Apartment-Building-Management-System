@@ -201,3 +201,164 @@ in the test):
 | TC-SG06-01 | Normal | Open Emergency from a guard screen | Emergency numbers appear within 2 taps, with 999 first, followed by guard-desk and manager numbers; each has a Call button | SG-06, BR-12, NFR-16 | BB-2001 |
 | TC-SG06-02 | Normal | Open or refresh the Emergency screen after the manager changes a number | The updated building number is displayed | SG-06, BM-10 | BB-2001 |
 | TC-SG06-03 | Exception | Open Emergency on the gate device after its internet connection is lost | 999 and the last loaded building numbers remain visible and can be called | SG-06 | BB-2001 |
+
+# Test cases: CM-01
+
+Test cases for feature 4 (Charge rates and rate history), written from CM-01's confirmation criteria and the business rules and NFRs it cites in [SRS.md](srs/SRS.md). Same columns and types as the RES tables above. Amounts are ৳ in the Case column; the service and the database keep them in whole poisha.
+
+## CM-01 · Set building charge rates
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-C01-01 | Normal | Enter a new service charge of ৳3,800 and the meeting date 13 Nov 2026, then save | The new rate is saved as Current; the old service rate becomes Replaced; the new rate is used for bills made after the save | CM-01 c1 | BB-0404, BB-0407 |
+| TC-C01-02 | Normal | Set a rate for service, then generator, then water | Each charge keeps exactly one Current rate; setting one does not change the others | CM-01 c1 | BB-0404 |
+| TC-C01-03 | Normal | Set the first rate ever for a charge | Saved as Current; there is no old value; the history shows it with no "from" value | CM-01 c1, c5 | BB-0404, BB-0405 |
+| TC-C01-04 | Boundary | Enter a rate of ৳0 | Saved; the SRS refuses only a blank or negative rate | CM-01 c4 | BB-0404 |
+| TC-C01-05 | Boundary | Enter the smallest amount, ৳0.01 (1 poisha) | Saved as 1 poisha | CM-01 c1, BR-01 | BB-0404 |
+| TC-C01-06 | Invalid | Leave the rate blank | "Enter a valid rate and meeting date"; the rate and the history do not change | CM-01 c4 | BB-0404, BB-0407 |
+| TC-C01-07 | Invalid | Enter a negative rate (for example ৳-1) | "Enter a valid rate and meeting date"; nothing changes | CM-01 c4 | BB-0404 |
+| TC-C01-08 | Invalid | Enter an amount that is not whole poisha (for example 1.5 poisha) | "Enter a valid rate and meeting date"; nothing changes | CM-01 c4, BR-01 | BB-0404 |
+| TC-C01-09 | Invalid | Leave out the meeting date | "Enter a valid rate and meeting date"; nothing changes | CM-01 c4 | BB-0404, BB-0407 |
+| TC-C01-10 | Invalid | A meeting date that is not a real date (30 Feb 2026) or not written as a date | "Enter a valid rate and meeting date"; nothing changes | CM-01 c4 | BB-0404 |
+| TC-C01-11 | Invalid | A charge type that is not service, generator or water | "Enter a valid rate and meeting date"; nothing changes | CM-01 c1 | BB-0404, BB-0406 |
+| TC-C01-12 | Normal | Save a rate | One audit log entry (`chargeRate.set`) with the committee member, the time, the old values and the new values | R-12, NFR-27 | BB-0404 |
+| TC-C01-13 | Invalid | Save a refused rate (any of TC-C01-06 to TC-C01-11) | No audit log entry is written; the earlier rate is still Current | CM-01 c4, NFR-27 | BB-0404 |
+| TC-C01-14 | Exception | The database fails while saving the rate | An error is shown and the change is never shown as saved; no audit entry; the old rate stays Current | NFR-17 | BB-0404, BB-0406 |
+| TC-C01-15 | Normal | The manager runs a month's bills after a new rate was saved | The bill lines use the new rate | CM-01 c1 | BB-0505 (feature 5, Nishi) |
+| TC-C01-16 | Normal | Change a rate after a month's bills already exist | Those bills keep their old rates; only later bill runs use the new one | CM-01 c2, BR-07 | BB-0505 (feature 5, Nishi) |
+| TC-C01-17 | Exception | Save a new rate while a bill run is in progress | The run finishes with the rates it started with; the new rate applies from the next run | CM-01 c3 | BB-0505 (feature 5, Nishi) |
+| TC-C01-18 | Normal | Open Rate history after a rate changed | Each change shows who changed it, when, the meeting date, and the old and new values | CM-01 c5 | BB-0405, BB-0407 |
+| TC-C01-19 | Normal | Change service twice and water once, then open Rate history | All three changes show, newest first; each charge's old value is the rate before it | CM-01 c5 | BB-0405 |
+| TC-C01-20 | Boundary | Open Rate history before any rate was set | An empty list ("No rate changes yet."), no error | CM-01 c5 | BB-0405, BB-0407 |
+| TC-C01-21 | Normal | Open Rates | The Current rates show in the order service, generator, water, each as "Now ৳... per flat" | CM-01 c1 | BB-0405, BB-0407 |
+| TC-C01-22 | Exception | Resident, guard, manager, maintenance or admin calls the set-rate or rate-history route; or nobody is signed in | 403 for each other role; 401 when signed out; nothing is read or saved | NFR-06 | BB-0406 |
+| TC-C01-23 | Exception | A committee member who has not yet replaced the temporary password calls the route | 403 "Choose your own password before continuing." | BR-15, NFR-06 | BB-0406 |
+| TC-C01-24 | Normal | Save succeeds on the page | A success message shows and the history gets a new row | CM-01 c1, c5 | BB-0407 |
+| TC-C01-25 | Normal | Open Rates at 360 px and at 1280 px | No sideways scrolling; inputs and the Save button are at least 48 px tall | NFR-23 | BB-0407 |
+
+## Open questions for CM-01
+
+1. Can the meeting date be in the future? The SRS only says a meeting date is required, so our service accepts any real date.
+2. Should the manager see Rate history too? CM-01 says "any member" (committee), so only the committee has the `viewRateHistory` row for now.
+
+
+# Test cases: BM-08 and CM-02
+
+Test cases for feature 9 (Record expenses, approve or reject them), written from the confirmation criteria of BM-08 and CM-02 and the business rules and NFRs they cite in [SRS.md](srs/SRS.md). Same columns and types as the RES tables above. Amounts are ৳ in the Case column; the service and the database keep them in whole poisha.
+
+## BM-08 · Record building expenses
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-BM08-01 | Normal | Enter amount ৳2,500, today's date, category repair, a description and no receipt photo, then save | Expense saved as Waiting for approval, recorded by the manager | BM-08 c1 | BB-0904 |
+| TC-BM08-02 | Normal | Save an expense with a receipt photo | Saved as Waiting for approval; the photo is kept with it | BM-08 c1 | BB-0904, BB-0906 |
+| TC-BM08-03 | Normal | Record one expense in each category: repair, salary, utility, other | All four are saved | BM-08 c1 | BB-0904 |
+| TC-BM08-04 | Normal | Save an expense | One audit log entry (`expense.record`) with the manager, the time and the new values | NFR-27 | BB-0904 |
+| TC-BM08-05 | Boundary | Expense date is today (Dhaka date) | Saved | BM-08 c2, BR-01 | BB-0904 |
+| TC-BM08-06 | Boundary | It is 00:30 on the 24th in Dhaka (still the 23rd in UTC) and the date is the 24th | Saved; the Dhaka date is used, not the UTC date | BR-01 | BB-0904 |
+| TC-BM08-07 | Invalid | Expense date is tomorrow | "Check the expense date"; nothing saved; no audit entry | BM-08 c2 | BB-0904 |
+| TC-BM08-08 | Invalid | Expense date is missing, not a date, or does not exist (30 Feb 2026) | "Check the expense date"; nothing saved | BM-08 c2 | BB-0904 |
+| TC-BM08-09 | Invalid | Amount is blank, ৳0, negative, or not whole poisha | Refused (400); nothing saved | BM-08 c1 | BB-0904 |
+| TC-BM08-10 | Invalid | Category missing, or description empty or only spaces | Refused (400); nothing saved | BM-08 c1 | BB-0904 |
+| TC-BM08-11 | Invalid | Receipt photo over 5 MB, or not JPG or PNG | Refused with a message; nothing saved | NFR-09 | BB-0906 |
+| TC-BM08-12 | Normal | Edit an expense that is Waiting for approval and give a note | The change is saved with the note; still Waiting for approval; audit entry shows old and new values | BM-08 c3, NFR-27 | BB-0904 |
+| TC-BM08-13 | Invalid | Edit a waiting expense with no note | Refused (400); nothing changes | BM-08 c3 | BB-0904 |
+| TC-BM08-14 | Invalid | Edit a waiting expense and set a future date | "Check the expense date"; nothing changes | BM-08 c2 | BB-0904 |
+| TC-BM08-15 | Normal | Open an expense the committee rejected | The manager sees the committee's reason | BM-08 c4, CM-02 c2 | BB-0904, BB-0908 |
+| TC-BM08-16 | Normal | Resubmit a Rejected expense with corrected details | Back to Waiting for approval; the earlier decision is cleared from the row but stays in the audit log | BM-08 c4 | BB-0904 |
+| TC-BM08-17 | Exception | Resubmit an expense that is Waiting for approval or Approved | Refused (409); nothing changes | BM-08 c4 | BB-0904 |
+| TC-BM08-18 | Exception | Edit a Rejected expense instead of resubmitting it | Refused (409); the manager must resubmit | BM-08 c4 | BB-0904 |
+| TC-BM08-19 | Exception | Edit an Approved expense | Refused (409) with a message to add a correcting expense; there is no delete | BM-08 c5, CM-02 c4 | BB-0904 |
+| TC-BM08-20 | Normal | Add a correcting expense of -৳500 to an Approved expense | New expense linked to the original, Waiting for approval; the original is unchanged | BM-08 c5 | BB-0904 |
+| TC-BM08-21 | Normal | Add a positive correcting expense | Saved, linked, Waiting for approval | BM-08 c5 | BB-0904 |
+| TC-BM08-22 | Boundary | Add a correcting expense of ৳0 | Refused (400) | BM-08 c5 | BB-0904 |
+| TC-BM08-23 | Exception | Add a correcting expense to an expense that is not Approved, or does not exist | Refused (409 or 404) | BM-08 c5 | BB-0904 |
+| TC-BM08-24 | Exception | Edit a correcting expense while it is waiting | Allowed with a note; a negative amount stays allowed | BM-08 c3, c5 | BB-0904 |
+| TC-BM08-25 | Normal | Open the list of expenses | Every expense, newest first, with its status | BM-08 | BB-0904, BB-0906, BB-0907 |
+| TC-BM08-26 | Exception | Anyone other than the manager calls record, edit, resubmit or correct; or nobody is signed in | 403 for other roles; 401 when signed out | NFR-06 | BB-0906 |
+| TC-BM08-27 | Exception | The database fails while saving | An error is shown; nothing is shown as saved; no audit entry | NFR-17 | BB-0904, BB-0906 |
+
+## CM-02 · Approve or reject building expenses
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-C02-01 | Normal | Approve an expense that is Waiting for approval | Becomes Approved; who and when are saved; it counts in the fund summary | CM-02 c1, BR-10 | BB-0905 |
+| TC-C02-02 | Normal | Approve a correcting expense | Becomes Approved, like any other | CM-02 c1, BM-08 c5 | BB-0905 |
+| TC-C02-03 | Normal | Approve an expense | One audit log entry (`expense.approve`) with old and new values | NFR-27 | BB-0905 |
+| TC-C02-04 | Normal | Reject a waiting expense with the reason "No receipt attached" | Becomes Rejected; the reason, who and when are saved; it does not count in the fund summary | CM-02 c2, BR-10 | BB-0905 |
+| TC-C02-05 | Normal | Reject an expense | One audit log entry (`expense.reject`) with the reason | NFR-27 | BB-0905 |
+| TC-C02-06 | Invalid | Reject with no reason, or only spaces | "Write a reason"; status does not change; no audit entry | CM-02 c2 | BB-0905 |
+| TC-C02-07 | Boundary | Reject with a reason that has spaces around it | The reason is saved trimmed | CM-02 c2 | BB-0905 |
+| TC-C02-08 | Exception | Approve or reject an expense that is already Approved | Refused (409) with "This expense is already Approved."; nothing changes | CM-02 c3 | BB-0905 |
+| TC-C02-09 | Exception | Approve or reject an expense that is already Rejected | Refused (409) with "This expense is already Rejected."; nothing changes | CM-02 c3 | BB-0905 |
+| TC-C02-10 | Exception | Approve or reject an expense that does not exist | 404; nothing changes | CM-02 | BB-0905 |
+| TC-C02-11 | Exception | Try to change the amount of an Approved expense, or delete it | Refused; the member is told to ask the manager for a correcting expense | CM-02 c4, BM-08 c5 | BB-0904, BB-0905 |
+| TC-C02-12 | Normal | The manager resubmits after a rejection, then the committee decides again | The expense can be approved or rejected again; each decision is in the audit log | BM-08 c4, CM-02 | BB-0904, BB-0905 |
+| TC-C02-13 | Normal | Open the approval screen | The committee sees expenses with the amount, date, category, description and receipt photo | CM-02 | BB-0906, BB-0908 |
+| TC-C02-14 | Normal | From Home, approve an expense | At most 4 taps | NFR-24 | BB-0908 |
+| TC-C02-15 | Exception | Anyone other than a committee member calls approve or reject; or nobody is signed in | 403 for other roles (the manager cannot approve); 401 when signed out | NFR-06 | BB-0906 |
+| TC-C02-16 | Exception | The database fails while saving a decision | An error is shown; the status is not shown as changed; no audit entry | NFR-17 | BB-0905, BB-0906 |
+| TC-C02-17 | Normal | The manager enters the first month's opening balance and the committee approves it | The first summary can be published | CM-02 c5 | BB-1003 (feature 10) |
+| TC-C02-18 | Normal | The committee rejects the opening balance with a reason | The manager sees the reason and can enter a corrected figure that comes back for approval | CM-02 c6 | BB-1003 (feature 10) |
+| TC-C02-19 | Invalid | Reject the opening balance with no reason | "Write a reason"; nothing changes | CM-02 c6 | BB-1003 (feature 10) |
+
+## Open questions for BM-08 and CM-02
+
+1. The SRS gives wording only for "Check the expense date" and "Write a reason". Our messages for a missing amount, category or description, for an edit with no note, and for "This expense is already Approved." are our own and need the team's approval.
+2. Is the note on an edit required? BM-08 says the change is "saved with a note", so we require it.
+
+
+# Test cases: BM-12 and RES-05
+
+Test cases for feature 10 (Monthly fund summary, with the opening balance), written from the confirmation criteria of BM-12 and RES-05 and the business rules and NFRs they cite in [SRS.md](srs/SRS.md). Same columns and types as the RES tables above. Amounts are ৳ in the Case column; the service and the database keep them in whole poisha.
+
+## BM-12 · Publish the monthly fund summary
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-BM12-01 | Normal | Publish the summary of a month that has ended | Shows the opening balance, total collected, total spent by category (repair, salary, utility, other), the closing balance and the total outstanding | BM-12 c1, BR-10 | BB-1004, BB-1005 |
+| TC-BM12-02 | Normal | Check the closing balance | Closing balance = opening balance + total collected - total spent | BR-10, NFR-26 | BB-1004 |
+| TC-BM12-03 | Normal | Check total collected | Counts only payments confirmed in that month (by the date they were confirmed), each exactly once | BR-10, NFR-26 | BB-1004 |
+| TC-BM12-04 | Normal | Check total spent | Counts expenses by their expense date, and only Approved ones; a negative correcting expense reduces the total | BR-10, BM-08 c5 | BB-1004 |
+| TC-BM12-05 | Normal | A month has expenses that are Waiting for approval or Rejected | They are left out of total spent | BM-12 c4, BR-10 | BB-1004 |
+| TC-BM12-06 | Normal | Check total outstanding | Equals the sum of the saved bills that are still unpaid, to the poisha | BM-12 c1, NFR-26 | BB-1004 |
+| TC-BM12-07 | Normal | Open the next month's summary | Its opening balance equals the previous month's closing balance | BR-10 | BB-1004 |
+| TC-BM12-08 | Boundary | A month with no payments and no expenses | Collected and spent are ৳0.00; closing balance equals opening balance | BR-10 | BB-1004 |
+| TC-BM12-09 | Boundary | Publish on the last day of the month, and on the first day of the next month | Refused on the last day; allowed from the first day of the next month (Dhaka date) | BM-12 c2, BR-01 | BB-1005 |
+| TC-BM12-10 | Invalid | Publish a month that has not ended | "You can publish once the month has ended"; nothing is published | BM-12 c2 | BB-1005 |
+| TC-BM12-11 | Exception | Publish a month that is already Published | Refused (409); nothing changes | State diagram | BB-1005 |
+| TC-BM12-12 | Normal | First month in the system: enter an opening balance | The balance is saved as Waiting for approval; the summary cannot be published yet | BM-12 c3 | BB-1003, BB-1005 |
+| TC-BM12-13 | Exception | Publish the first month's summary before the committee approves the opening balance | Refused; nothing is published | BM-12 c3 | BB-1005 |
+| TC-BM12-14 | Normal | The committee approves the opening balance | The manager can now publish the first summary | BM-12 c3, CM-02 c5 | BB-1003, BB-1005 |
+| TC-BM12-15 | Normal | The committee rejects the opening balance with a reason | The manager sees the reason, enters a corrected balance, and it goes back to Waiting for approval | BM-12 c3, CM-02 c6 | BB-1003 |
+| TC-BM12-16 | Invalid | Enter an opening balance that is blank or not a number | Refused (400); nothing saved | BM-12 c3 | BB-1003 |
+| TC-BM12-17 | Exception | Enter or change an opening balance that is already Approved | Refused (409); Approved is final | State diagram | BB-1003 |
+| TC-BM12-18 | Normal | Enter, approve or reject an opening balance | One audit log entry each, with the account, the time and the values | NFR-27 | BB-1003 |
+| TC-BM12-19 | Normal | An expense dated in a published month is approved later | That month's summary is updated and marked Revised; later months' balances change with it | BM-12 c5, BR-10 | Not built: left out unless there is time |
+| TC-BM12-20 | Normal | Send the summary as an announcement | The committee can read it there and in their email | BM-12 c6, BM-11 | Not built: left out unless there is time |
+| TC-BM12-21 | Exception | Anyone other than the manager calls publish or opening-balance entry; or nobody is signed in | 403 for other roles; 401 when signed out | NFR-06 | BB-1006 |
+| TC-BM12-22 | Exception | Anyone other than a committee member approves or rejects the opening balance | 403 (the manager cannot approve) | NFR-06, CM-02 | BB-1006 |
+| TC-BM12-23 | Exception | The database fails while publishing | An error is shown; the summary is not shown as published; no audit entry | NFR-17 | BB-1005, BB-1006 |
+| TC-BM12-24 | Normal | Open Fund for the manager at 360 px and at 1280 px | No sideways scrolling; the opening balance form works | NFR-23 | BB-1007 |
+
+## RES-05 · See how the building fund is spent
+
+| ID | Type | Case | Expected result | Source | Built in |
+|---|---|---|---|---|---|
+| TC-R05-01 | Normal | Open Fund summary after the manager published a month | Shows the opening balance, total collected, total spent by category, the closing balance and the total outstanding | RES-05 c1, BR-10 | BB-1008 |
+| TC-R05-02 | Normal | An expense is Waiting for approval or Rejected | It is not counted in the summary | RES-05 c2, BR-10 | BB-1004, BB-1008 |
+| TC-R05-03 | Normal | This month's summary is not published yet | Shows the last published month and a note that this month is not ready | RES-05 c3 | BB-1006, BB-1008 |
+| TC-R05-04 | Boundary | No month has been published yet | A clear "not ready" message, no error and no empty table | RES-05 c3 | BB-1008 |
+| TC-R05-05 | Exception | A Draft summary is requested by a resident | Not shown; only Published summaries are visible | RES-05 c3 | BB-1006 |
+| TC-R05-06 | Normal | A resident opens the summary | Totals only; no flat names, no list of who owes money | NFR-12 | BB-1006, BB-1008 |
+| TC-R05-07 | Normal | Resident and committee member open the same month | Both see the same figures | CM-04 c1 | BB-1006, BB-1008 |
+| TC-R05-08 | Normal | A new household in the same flat opens the summary | It sees the same building totals; the summary is not household data | BR-09 | BB-1006 |
+| TC-R05-09 | Exception | Guard, maintenance or admin calls the fund summary route; or nobody is signed in | 403 for those roles; 401 when signed out. Resident, manager and committee may view | NFR-06 | BB-1006 |
+| TC-R05-10 | Normal | Open Fund summary with data for 200 flats on a throttled Fast 3G connection | Loads within 3 s for 95% of requests | NFR-01 | BB-1008 |
+| TC-R05-11 | Normal | Open Fund summary at 360 px and at 1280 px | No sideways scrolling; readable at 150% text size | NFR-23 | BB-1008 |
+
+## Open questions for BM-12 and RES-05
+
+1. "Total outstanding" has no exact definition in the SRS. We take it as the sum of bills that are still unpaid; the team should confirm whether bills in Awaiting verification or Payment pending count.
+2. Which month counts as "the first month in the system"? We take the first month that has a bill or an expense.
+3. The wording for the messages "Not published yet" (CM-04) and the "this month isn't ready" note (RES-05) is not fixed in the SRS.
