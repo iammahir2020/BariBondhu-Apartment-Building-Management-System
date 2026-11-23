@@ -1,6 +1,8 @@
 /**
  * Demo data in place of features 2 and 3 (ADM-01 building setup, BM-02 accounts): one building, two blocks, twelve
  * flats, occupancies for some of them, and one account per role with a known password. Run with `npm run db:seed`.
+ * Feature data has its own file next to this one, called from `main` once the accounts exist: `seedTickets.ts` for
+ * the common-area places and sample fault tickets.
  *
  * Safe to run again: it finds what already exists by its natural key (building name, block name, flat number,
  * username) and only adds what is missing. Demo accounts get the demo password and first-login state back, so a
@@ -20,6 +22,7 @@ import type { Role } from '../src/lib/roles';
 import * as schema from '../src/models';
 import { internalEmail } from '../src/services/accountService';
 import { passwordProblem } from '../src/services/passwordRules';
+import { seedTickets } from './seedTickets';
 
 loadEnvConfig(process.cwd());
 
@@ -395,10 +398,17 @@ async function main(): Promise<void> {
       );
     }
 
+    const ticketSeed = await seedTickets(db, occupancyIds, flatIds);
+    console.log(
+      `\nFault tickets: ${ticketSeed.places} common-area places, ${ticketSeed.tickets} sample tickets.`,
+    );
+
     const addedRates = await seedChargeRates(db);
     console.log(`\nCharge rates: ${addedRates} added.`);
+
     const addedExpenses = await seedExpenses(db);
     console.log(`Expenses: ${addedExpenses} added.`);
+
   } finally {
     await client.end();
   }
