@@ -1,5 +1,5 @@
 {
-  "id": "33058ac3-e72f-4bdd-be78-1e9f3c1941bf",
+  "id": "6fc0d833-8705-4ef4-919d-1bc6fc8d511a",
   "prevId": "53127de4-1339-4594-8c18-7036f7356bc1",
   "version": "7",
   "dialect": "postgresql",
@@ -997,8 +997,8 @@
       "checkConstraints": {},
       "isRLSEnabled": true
     },
-    "public.guest_passes": {
-      "name": "guest_passes",
+    "public.charge_rates": {
+      "name": "charge_rates",
       "schema": "",
       "columns": {
         "id": {
@@ -1008,60 +1008,38 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "occupancy_id": {
-          "name": "occupancy_id",
-          "type": "uuid",
+        "charge_type": {
+          "name": "charge_type",
+          "type": "charge_type",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
-        "created_by_id": {
-          "name": "created_by_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "guest_name": {
-          "name": "guest_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "guest_count": {
-          "name": "guest_count",
+        "amount_poisha": {
+          "name": "amount_poisha",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "starts_at": {
-          "name": "starts_at",
-          "type": "timestamp with time zone",
+        "meeting_date": {
+          "name": "meeting_date",
+          "type": "date",
           "primaryKey": false,
           "notNull": true
         },
-        "ends_at": {
-          "name": "ends_at",
-          "type": "timestamp with time zone",
+        "set_by": {
+          "name": "set_by",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "code": {
-          "name": "code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "guests_used": {
-          "name": "guests_used",
-          "type": "integer",
+        "status": {
+          "name": "status",
+          "type": "charge_rate_status",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": 0
-        },
-        "cancelled_at": {
-          "name": "cancelled_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
+          "default": "'Current'"
         },
         "created_at": {
           "name": "created_at",
@@ -1071,53 +1049,13 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "guest_passes_code_idx": {
-          "name": "guest_passes_code_idx",
-          "columns": [
-            {
-              "expression": "code",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "guest_passes_occupancy_idx": {
-          "name": "guest_passes_occupancy_idx",
-          "columns": [
-            {
-              "expression": "occupancy_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
-        "guest_passes_occupancy_id_occupancies_id_fk": {
-          "name": "guest_passes_occupancy_id_occupancies_id_fk",
-          "tableFrom": "guest_passes",
-          "tableTo": "occupancies",
-          "columnsFrom": ["occupancy_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "guest_passes_created_by_id_profiles_id_fk": {
-          "name": "guest_passes_created_by_id_profiles_id_fk",
-          "tableFrom": "guest_passes",
+        "charge_rates_set_by_profiles_id_fk": {
+          "name": "charge_rates_set_by_profiles_id_fk",
+          "tableFrom": "charge_rates",
           "tableTo": "profiles",
-          "columnsFrom": ["created_by_id"],
+          "columnsFrom": ["set_by"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -1126,28 +1064,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "guest_passes_guest_name_not_blank": {
-          "name": "guest_passes_guest_name_not_blank",
-          "value": "length(trim(\"guest_passes\".\"guest_name\")) > 0"
-        },
-        "guest_passes_guest_count_1_to_20": {
-          "name": "guest_passes_guest_count_1_to_20",
-          "value": "\"guest_passes\".\"guest_count\" between 1 and 20"
-        },
-        "guest_passes_window_up_to_24_hours": {
-          "name": "guest_passes_window_up_to_24_hours",
-          "value": "\"guest_passes\".\"ends_at\" > \"guest_passes\".\"starts_at\" and \"guest_passes\".\"ends_at\" <= \"guest_passes\".\"starts_at\" + interval '24 hours'"
-        },
-        "guest_passes_code_6_digits": {
-          "name": "guest_passes_code_6_digits",
-          "value": "\"guest_passes\".\"code\" ~ '^[0-9]{6}$'"
-        },
-        "guest_passes_guests_used_in_range": {
-          "name": "guest_passes_guests_used_in_range",
-          "value": "\"guest_passes\".\"guests_used\" between 0 and \"guest_passes\".\"guest_count\""
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": true
     }
   },
@@ -1186,6 +1103,16 @@
         "Duplicate",
         "Won't fix"
       ]
+    },
+    "public.charge_rate_status": {
+      "name": "charge_rate_status",
+      "schema": "public",
+      "values": ["Current", "Replaced"]
+    },
+    "public.charge_type": {
+      "name": "charge_type",
+      "schema": "public",
+      "values": ["service", "generator", "water"]
     }
   },
   "schemas": {},
