@@ -57,6 +57,7 @@ Moved here from SRS section 2.1.7 in SRS version 1.4. Every page and API route c
 | Create and deactivate flat, guard, maintenance and committee accounts |  |  | Yes |  |  |  |
 | End a household's occupancy |  |  | Yes |  |  |  |
 | Set charge rates |  |  |  | Yes |  |  |
+| See the current charge rates and the rate history |  |  |  | Yes |  |  |
 | Make and correct bills |  |  | Yes |  |  |  |
 | See and pay a bill | Own |  | View all |  |  |  |
 | Record a cash or bank payment claim | Own |  |  |  |  |  |

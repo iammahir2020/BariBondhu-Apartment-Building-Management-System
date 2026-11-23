@@ -30,6 +30,8 @@ export const PERMISSIONS = {
   endOccupancy: { manager: 'all' },
   /** Set charge rates (CM-01). */
   setChargeRates: { committee: 'all' },
+  /** See the current charge rates and the rate history (CM-01). */
+  viewRateHistory: { committee: 'all' },
   /** Make and correct bills (BM-03). */
   manageBills: { manager: 'all' },
   /** See a bill: residents their own, the manager all of them (RES-01, BM-04). */
