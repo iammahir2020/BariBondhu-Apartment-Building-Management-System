@@ -9,7 +9,7 @@ import {
   allowedBillTransitions,
   checkBillTransition,
   isFinalBillStatus,
-} from './Bill_state_machine';
+} from './billStateMachine';
 
 describe('Bill state machine', () => {
   it.each(BILL_TRANSITIONS)('allows $from -> $to using $action by $actor', (transition) => {
