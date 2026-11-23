@@ -18,3 +18,4 @@ export * from './TicketStatusChange';
 export * from './Announcement';
 export * from './ChargeRate';
 export * from './Expense';
+export * from './GuestPass';
