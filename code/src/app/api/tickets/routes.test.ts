@@ -198,6 +198,14 @@ describe('as a resident', () => {
     expect(response.status).toBe(404);
   });
 
+  it('answers a match query with no open ticket as null match and relation', async () => {
+    const response = await findMatch(
+      new Request(`http://app/api/tickets/match?placeId=${mockPlaceId}&category=Plumbing`),
+    );
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ match: null, relation: null });
+  });
+
   it('answers 400 to a match query with no place', async () => {
     const response = await findMatch(new Request('http://app/api/tickets/match?category=Lift'));
     expect(response.status).toBe(400);

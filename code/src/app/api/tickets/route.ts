@@ -32,7 +32,7 @@ export async function GET(request: Request): Promise<Response> {
  * Reports a fault from the Report a fault form (`multipart/form-data`: where, placeId, category, title,
  * description, homeTimes, photo, emergency).
  * @param request - The request.
- * @returns 201 with `{ ticket }` for a new ticket; 200 with `{ match }` when an open common-area ticket already
+ * @returns 201 with `{ ticket }` for a new ticket; 200 with `{ match, relation }` when an open common-area ticket already
  * covers it, for "Me too" (BR-13); or an error (400 rule broken, 401 signed out, 403 not a resident).
  */
 export async function POST(request: Request): Promise<Response> {
@@ -48,7 +48,7 @@ export async function POST(request: Request): Promise<Response> {
     const result = await reportFault(ticketDeps(db, getSupabaseAdmin()), user.actor, input);
     return result.kind === 'created'
       ? Response.json({ ticket: result.ticket }, { status: 201 })
-      : Response.json({ match: result.ticket });
+      : Response.json({ match: result.ticket, relation: result.relation });
   } catch (error) {
     return toErrorResponse(error);
   }

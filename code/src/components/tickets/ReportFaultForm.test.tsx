@@ -240,6 +240,48 @@ describe('ReportFaultForm: common area', () => {
     expect(push).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['reported', 'Your household already reported this'],
+    ['following', 'You already follow this ticket'],
+  ] as const)(
+    "doesn't call it a neighbour's or offer Me too when my household %s it",
+    async (relation, heading) => {
+      serve({
+        method: 'GET',
+        url: '/api/tickets/match*',
+        status: 200,
+        body: { match: PUMP_TICKET, relation },
+      });
+      render(<ReportFaultForm />);
+      const user = await pickPumpPlumbing();
+
+      const card = await screen.findByRole('region', { name: heading });
+      expect(within(card).getByText('No water pressure on floors 5 to 8')).toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Already reported by a neighbour' })).toBeNull();
+      expect(within(card).queryByRole('button', { name: 'Me too: follow this ticket' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Send report' })).toBeNull();
+
+      await user.click(within(card).getByRole('button', { name: 'See my tickets' }));
+      expect(push).toHaveBeenCalledWith('/resident/tickets');
+    },
+  );
+
+  it('says it is my own report when the report itself comes back with my match', async () => {
+    serve({
+      method: 'POST',
+      url: '/api/tickets',
+      status: 200,
+      body: { match: PUMP_TICKET, relation: 'reported' },
+    });
+    render(<ReportFaultForm />);
+    const user = await pickPumpPlumbing();
+    await user.click(screen.getByRole('button', { name: 'Send report' }));
+    expect(
+      await screen.findByRole('region', { name: 'Your household already reported this' }),
+    ).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+  });
+
   it('drops the match when I go back to inside my flat', async () => {
     serve({ method: 'GET', url: '/api/tickets/match*', status: 200, body: { match: PUMP_TICKET } });
     render(<ReportFaultForm />);

@@ -14,16 +14,17 @@ import { findOpenMatch } from '@/services/ticketService';
 /**
  * Finds the open ticket for `?placeId=...&category=...`.
  * @param request - The request.
- * @returns 200 with `{ match }` (the ticket, or null), or an error (400 bad place or category, 401, 403).
+ * @returns 200 with `{ match, relation }` (the ticket and whether my household reported it, follows it or neither;
+ * both null when there is none), or an error (400 bad place or category, 401, 403).
  */
 export async function GET(request: Request): Promise<Response> {
   try {
-    await requireRole(request, 'reportFault');
+    const user = await requireRole(request, 'reportFault');
     const query = new URL(request.url).searchParams;
     const placeId = parsePlaceId(query.get('placeId'));
     const category = parseCategory(query.get('category'));
-    const match = await findOpenMatch(databaseTicketStore(db), placeId, category);
-    return Response.json({ match });
+    const found = await findOpenMatch(databaseTicketStore(db), user.actor, placeId, category);
+    return Response.json({ match: found?.ticket ?? null, relation: found?.relation ?? null });
   } catch (error) {
     return toErrorResponse(error);
   }

@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { callApi } from '@/lib/apiClient';
 import type { TicketCategory } from '@/models/Ticket';
+import type { MatchRelation } from '@/services/ticketService';
 import {
   EMERGENCY_LABELS,
   EmergencyFirst,
@@ -43,6 +44,32 @@ const EMERGENCY_CATEGORY: Readonly<Record<EmergencyKind, TicketCategory>> = {
 
 /** Where to go once the report is in. */
 const MY_TICKETS = '/resident/tickets';
+
+/** An open ticket that matches the report, and how my household stands with it, as the routes send them. */
+interface Match {
+  ticket: TicketView;
+  relation: MatchRelation;
+}
+
+/** The match card's heading for each relation, so my own report isn't called a neighbour's. */
+const MATCH_HEADINGS: Readonly<Record<MatchRelation, string>> = {
+  neighbour: 'Already reported by a neighbour',
+  reported: 'Your household already reported this',
+  following: 'You already follow this ticket',
+};
+
+/**
+ * Reads a match from a route's answer.
+ * @param ticket - The ticket the route sent, if any.
+ * @param relation - How my household stands with it; a missing one counts as a neighbour's.
+ * @returns The match, or null when there is no ticket.
+ */
+function toMatch(
+  ticket: TicketView | null | undefined,
+  relation: MatchRelation | null | undefined,
+): Match | null {
+  return ticket ? { ticket, relation: relation ?? 'neighbour' } : null;
+}
 
 /** Shared look of the description box, matching {@link Input}. */
 const TEXTAREA =
@@ -73,7 +100,7 @@ export function ReportFaultForm({ emergency: startAs = null }: ReportFaultFormPr
   const [description, setDescription] = useState('');
   const [homeTimes, setHomeTimes] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
-  const [match, setMatch] = useState<TicketView | null>(null);
+  const [match, setMatch] = useState<Match | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
@@ -91,11 +118,12 @@ export function ReportFaultForm({ emergency: startAs = null }: ReportFaultFormPr
     }
     let current = true;
     const query = new URLSearchParams({ placeId, category });
-    void callApi<{ match: TicketView | null }>(`/api/tickets/match?${query}`, 'GET').then(
-      (result) => {
-        if (current && result.ok) setMatch(result.data.match);
-      },
-    );
+    void callApi<{ match: TicketView | null; relation?: MatchRelation | null }>(
+      `/api/tickets/match?${query}`,
+      'GET',
+    ).then((result) => {
+      if (current && result.ok) setMatch(toMatch(result.data.match, result.data.relation));
+    });
     return () => {
       current = false;
     };
@@ -130,16 +158,16 @@ export function ReportFaultForm({ emergency: startAs = null }: ReportFaultFormPr
     if (photo) form.set('photo', photo);
     if (emergency) form.set('emergency', 'true');
 
-    const result = await callApi<{ ticket?: TicketView; match?: TicketView }>(
-      '/api/tickets',
-      'POST',
-      form,
-    );
+    const result = await callApi<{
+      ticket?: TicketView;
+      match?: TicketView;
+      relation?: MatchRelation;
+    }>('/api/tickets', 'POST', form);
     setSending(false);
     if (!result.ok) {
       setError(result.error.message);
     } else if (result.data.match) {
-      setMatch(result.data.match);
+      setMatch(toMatch(result.data.match, result.data.relation));
     } else {
       router.push(MY_TICKETS);
     }
@@ -272,29 +300,48 @@ export function ReportFaultForm({ emergency: startAs = null }: ReportFaultFormPr
             className="flex flex-col gap-2.5 rounded-xl border border-primary bg-secondary p-4"
           >
             <h2 id="match-heading" className="text-sm font-semibold text-brand-900">
-              Already reported by a neighbour
+              {MATCH_HEADINGS[match.relation]}
             </h2>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-semibold">{match.title ?? 'Fault'}</p>
-                <p className="text-sm text-muted-foreground">{match.category}</p>
+                <p className="font-semibold">{match.ticket.title ?? 'Fault'}</p>
+                <p className="text-sm text-muted-foreground">{match.ticket.category}</p>
               </div>
-              <Badge variant={STATUS_BADGE[match.status]} className="shrink-0">
-                {match.status}
+              <Badge variant={STATUS_BADGE[match.ticket.status]} className="shrink-0">
+                {match.ticket.status}
               </Badge>
             </div>
-            <Button
-              type="button"
-              size="sm"
-              className="w-full"
-              disabled={sending}
-              onClick={() => void meToo(match.id)}
-            >
-              Me too: follow this ticket
-            </Button>
-            <p className="text-sm text-muted-foreground">
-              You&apos;ll get the same updates. No new ticket is made.
-            </p>
+            {match.relation === 'neighbour' ? (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="w-full"
+                  disabled={sending}
+                  onClick={() => void meToo(match.ticket.id)}
+                >
+                  Me too: follow this ticket
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  You&apos;ll get the same updates. No new ticket is made.
+                </p>
+              </>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => router.push(MY_TICKETS)}
+                >
+                  See my tickets
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  You already get its updates. No new ticket is made.
+                </p>
+              </>
+            )}
           </section>
         ) : (
           <>

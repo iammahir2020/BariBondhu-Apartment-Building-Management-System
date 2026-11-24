@@ -614,7 +614,7 @@ describe('reportFault: a common-area fault that is already reported (BR-13)', ()
       const open = tickets.add({ status });
       const result = await reportFault(deps, resident, pumpReport(), NOW);
 
-      expect(result).toEqual({ kind: 'match', ticket: open });
+      expect(result).toEqual({ kind: 'match', ticket: open, relation: 'neighbour' });
       expect(tickets.saved).toHaveLength(0);
       expect(entries).toHaveLength(0);
     },
@@ -626,6 +626,7 @@ describe('reportFault: a common-area fault that is already reported (BR-13)', ()
     await expect(reportFault(deps, resident, pumpReport(), NOW)).resolves.toEqual({
       kind: 'match',
       ticket: fixed,
+      relation: 'neighbour',
     });
   });
 
@@ -663,6 +664,17 @@ describe('reportFault: a common-area fault that is already reported (BR-13)', ()
     expect(ticket.placeId).toBe('place-lift-1');
   });
 
+  it("tells me when the open ticket is my own household's report", async () => {
+    const { deps, tickets } = setup();
+    const mine = tickets.add({ reportedById: resident.id, occupancyId: 'occupancy-1A' });
+    await expect(reportFault(deps, resident, pumpReport(), NOW)).resolves.toEqual({
+      kind: 'match',
+      ticket: mine,
+      relation: 'reported',
+    });
+    expect(tickets.saved).toHaveLength(0);
+  });
+
   it('returns the match before uploading a photo', async () => {
     const { deps, tickets, photos } = setup();
     tickets.add({});
@@ -690,14 +702,59 @@ describe('findOpenMatch', () => {
       status: 'Closed',
       createdAt: new Date('2026-11-01T10:00:00+06:00'),
     });
-    await expect(findOpenMatch(tickets, 'place-pump', 'Plumbing')).resolves.toMatchObject({
-      id: 'older',
-    });
+    await expect(findOpenMatch(tickets, resident, 'place-pump', 'Plumbing')).resolves.toMatchObject(
+      { ticket: { id: 'older' } },
+    );
   });
 
   it('returns null when nothing is reported there', async () => {
     const { tickets } = setup();
-    await expect(findOpenMatch(tickets, 'place-pump', 'Plumbing')).resolves.toBeNull();
+    await expect(findOpenMatch(tickets, resident, 'place-pump', 'Plumbing')).resolves.toBeNull();
+  });
+
+  it("says it is a neighbour's when another household reported it and mine doesn't follow it", async () => {
+    const { tickets } = setup();
+    tickets.add({});
+    await expect(findOpenMatch(tickets, resident, 'place-pump', 'Plumbing')).resolves.toMatchObject(
+      { relation: 'neighbour' },
+    );
+  });
+
+  it('says my household reported it when the open ticket is our own report', async () => {
+    const { tickets } = setup();
+    tickets.add({ reportedById: resident.id, occupancyId: 'occupancy-1A' });
+    await expect(findOpenMatch(tickets, resident, 'place-pump', 'Plumbing')).resolves.toMatchObject(
+      { relation: 'reported' },
+    );
+  });
+
+  it("says my household follows it after a Me too on a neighbour's ticket", async () => {
+    const { tickets } = setup();
+    const theirs = tickets.add({});
+    tickets.followers.push({ ticketId: theirs.id, occupancyId: 'occupancy-1A' });
+    await expect(findOpenMatch(tickets, resident, 'place-pump', 'Plumbing')).resolves.toMatchObject(
+      { relation: 'following' },
+    );
+  });
+
+  it('counts a report by someone else in my household as ours', async () => {
+    const { tickets } = setup();
+    tickets.add({ reportedById: 'resident-1A-other', occupancyId: 'occupancy-1A' });
+    await expect(findOpenMatch(tickets, resident, 'place-pump', 'Plumbing')).resolves.toMatchObject(
+      { relation: 'reported' },
+    );
+  });
+
+  it('refuses an account with no household (403)', async () => {
+    const { tickets } = setup();
+    await expect(
+      findOpenMatch(
+        tickets,
+        makeProfile({ role: 'manager', occupancyId: null }),
+        'place-pump',
+        'Plumbing',
+      ),
+    ).rejects.toMatchObject({ status: 403 });
   });
 });
 

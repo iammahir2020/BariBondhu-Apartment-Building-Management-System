@@ -94,8 +94,20 @@ export interface NewReportedTicket {
   statusChange: NewTicketStatusChange;
 }
 
+/**
+ * How my household stands with an open ticket that matches its report: it reported the ticket, it already follows it
+ * ("Me too"), or another household reported it and mine doesn't follow it yet.
+ */
+export type MatchRelation = 'reported' | 'following' | 'neighbour';
+
+/** An open common-area ticket that matches a report, and how my household stands with it. */
+export interface TicketMatch {
+  ticket: Ticket;
+  relation: MatchRelation;
+}
+
 /** What happened to a report: a new ticket, or an open common-area ticket to follow instead (BR-13). */
-export type ReportResult = { kind: 'created'; ticket: Ticket } | { kind: 'match'; ticket: Ticket };
+export type ReportResult = { kind: 'created'; ticket: Ticket } | ({ kind: 'match' } & TicketMatch);
 
 /** What "Me too" leaves behind. */
 export interface MeTooResult {
@@ -244,19 +256,29 @@ function householdOf(resident: Profile): string {
 /**
  * The open ticket a new common-area report would duplicate: same place and category, in any status but Closed,
  * Cancelled, Duplicate and Won't fix (BR-13). The Report a fault page asks for it as soon as a place and category
- * are picked, so it can show the ticket with "Me too" before anything is typed.
+ * are picked, so it can show the ticket with "Me too" before anything is typed. It also says whether my household
+ * reported or already follows the ticket, so the page doesn't call my own report a neighbour's.
  * @param tickets - The ticket store.
+ * @param resident - The signed-in resident.
  * @param placeId - The common-area place.
  * @param category - The fault category.
- * @returns The oldest open matching ticket, or null if there is none.
+ * @returns The oldest open matching ticket and how my household stands with it, or null if there is none.
+ * @throws AppError 403 if the account has no household.
  */
 export async function findOpenMatch(
   tickets: TicketStore,
+  resident: Profile,
   placeId: string,
   category: TicketCategory,
-): Promise<Ticket | null> {
+): Promise<TicketMatch | null> {
+  const occupancyId = householdOf(resident);
   const atPlace = await tickets.ticketsAt(placeId, category);
-  return atPlace.find((t) => !isFinalTicketStatus(t.status)) ?? null;
+  const ticket = atPlace.find((t) => !isFinalTicketStatus(t.status));
+  if (!ticket) return null;
+  let relation: MatchRelation = 'neighbour';
+  if (ticket.occupancyId === occupancyId) relation = 'reported';
+  else if (await tickets.isFollowing(ticket.id, occupancyId)) relation = 'following';
+  return { ticket, relation };
 }
 
 /**
@@ -268,7 +290,7 @@ export async function findOpenMatch(
  * @param reporter - The signed-in resident.
  * @param input - What the resident filled in.
  * @param now - The current time.
- * @returns The new ticket, or the open ticket that matches.
+ * @returns The new ticket, or the open ticket that matches and how my household stands with it.
  * @throws AppError 403 if the account has no household, or the household has moved out.
  * @throws AppError 400 "Describe the problem", "Give it a short title", "Use a JPG or PNG photo of 5 MB or less",
  *   "Choose a place from the list", or an emergency with another category.
@@ -303,8 +325,8 @@ export async function reportFault(
       throw new AppError('BAD_REQUEST', REPORT_ERRORS.place);
     }
     placeId = input.placeId;
-    const match = await findOpenMatch(deps.tickets, placeId, input.category);
-    if (match) return { kind: 'match', ticket: match };
+    const match = await findOpenMatch(deps.tickets, reporter, placeId, input.category);
+    if (match) return { kind: 'match', ...match };
   }
 
   const priority: TicketPriority =
