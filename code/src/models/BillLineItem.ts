@@ -15,6 +15,7 @@ export const billLineItemTypeEnum = pgEnum('bill_line_item_type', [
   'water',
   'carried_forward',
   'adjustment',
+  'credit',
 ]);
 
 /** Each row represents one component of a bill's total. */
@@ -41,6 +42,15 @@ export const billLineItems = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
+    check(
+      'bill_line_items_nonnegative_charges',
+      sql`${table.type} IN ('adjustment', 'credit') OR ${table.amountPoisha} >= 0`,
+    ),
+    check(
+      'bill_line_items_credit_nonpositive',
+      sql`${table.type} <> 'credit' OR ${table.amountPoisha} <= 0`,
+    ),
+
     check(
       'bill_line_items_adjustment_reason',
       sql`${table.type} <> 'adjustment' OR
