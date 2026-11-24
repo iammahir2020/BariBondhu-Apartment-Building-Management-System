@@ -10,6 +10,7 @@ import 'server-only';
 import { and, desc, eq, inArray, isNull, lte } from 'drizzle-orm';
 import { databaseSimulatedGateway } from '@/lib/adapters/gatewayAdapters';
 import type { Database } from '@/lib/db';
+import { gatewaySecret } from '@/lib/gatewaySecret';
 import {
   billLineItems,
   bills,
@@ -22,7 +23,12 @@ import {
 } from '@/models';
 import { databaseAuditWriter } from '@/services/auditService';
 import type { MyBillRow, MyBillStore, ReceiptRow } from '@/services/myBillsService';
-import type { PaymentDeps, PaymentStore } from '@/services/paymentService';
+import {
+  receiveGatewayMessage,
+  type PaymentDeps,
+  type PaymentStore,
+} from '@/services/paymentService';
+import type { CheckoutDeps } from '@/services/simulatedCheckout';
 
 /**
  * Everything the payment service needs, wired to the database and the simulated gateway (SRS v1.6).
@@ -34,6 +40,22 @@ export function databasePaymentDeps(db: Database): PaymentDeps {
     payments: databasePaymentStore(db),
     gateway: databaseSimulatedGateway(db),
     audit: databaseAuditWriter(db),
+  };
+}
+
+/**
+ * The test checkout's dependencies (BB-0608): the simulated gateway, the shared secret, and delivery straight into
+ * the webhook's code, as the gateway's server-to-server call would arrive.
+ * @param db - Database to use.
+ * @returns The checkout's dependencies.
+ */
+export function databaseCheckoutDeps(db: Database): CheckoutDeps {
+  const secret = gatewaySecret();
+  return {
+    gateway: databaseSimulatedGateway(db),
+    secret,
+    deliver: (message) =>
+      receiveGatewayMessage(databasePaymentDeps(db), secret, message, new Date()),
   };
 }
 
