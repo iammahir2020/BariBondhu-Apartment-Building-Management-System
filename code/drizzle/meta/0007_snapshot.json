@@ -1,5 +1,5 @@
 {
-  "id": "8d905951-2519-4e6b-a0be-6cb03ee86fdf",
+  "id": "5a4f816b-4b1b-4db2-9c1a-cdf9d064e6ff",
   "prevId": "59c29c2b-c27d-4763-af39-83a83f7dbd9b",
   "version": "7",
   "dialect": "postgresql",
@@ -1517,8 +1517,8 @@
       },
       "isRLSEnabled": true
     },
-    "public.emergency_contacts": {
-      "name": "emergency_contacts",
+    "public.shifts": {
+      "name": "shifts",
       "schema": "",
       "columns": {
         "id": {
@@ -1528,27 +1528,61 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "label": {
-          "name": "label",
-          "type": "text",
+        "guard_id": {
+          "name": "guard_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "phone": {
-          "name": "phone",
-          "type": "text",
+        "starts_at": {
+          "name": "starts_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
-        "order": {
-          "name": "order",
-          "type": "integer",
+        "ends_at": {
+          "name": "ends_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "shift_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Planned'"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "shifts_guard_idx": {
+          "name": "shifts_guard_idx",
+          "columns": [
+            {
+              "expression": "guard_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "shifts_guard_id_profiles_id_fk": {
+          "name": "shifts_guard_id_profiles_id_fk",
+          "tableFrom": "shifts",
+          "tableTo": "profiles",
+          "columnsFrom": ["guard_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -1621,6 +1655,11 @@
       "name": "expense_status",
       "schema": "public",
       "values": ["Waiting for approval", "Approved", "Rejected"]
+    },
+    "public.shift_status": {
+      "name": "shift_status",
+      "schema": "public",
+      "values": ["Planned", "On duty", "Finished", "Removed"]
     }
   },
   "schemas": {},
