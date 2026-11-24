@@ -57,6 +57,13 @@
       "when": 1795534978677,
       "tag": "0007_shift",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795539747960,
+      "tag": "0008_add_notifications",
+      "breakpoints": true
     }
   ]
 }
