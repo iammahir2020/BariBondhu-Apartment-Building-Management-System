@@ -7,6 +7,7 @@
  *
  * @author Jannatul Ferdus Nishi
  */
+
 import { AppError } from '@/lib/errors';
 import { ROLE_LABELS, type Role } from '@/lib/roles';
 import { billStatusEnum } from '@/models/Bill';
@@ -38,78 +39,36 @@ export interface BillTransition {
   readonly needsReason: boolean;
 }
 
-/** Allowed transitions; anything not listed is rejected. */
+/** Creates a transition with consistent fields. */
+function transition(
+  from: BillStatus,
+  to: BillStatus,
+  action: BillAction,
+  actor: BillActor,
+  needsReason = false,
+): BillTransition {
+  return { from, to, action, actor, needsReason };
+}
+
+/**
+ * Allowed transitions; anything not listed is rejected.
+ *
+ * The system may confirm a payment after a successful gateway re-check.
+ * The manager may settle a zero-balance bill after a correction.
+ */
 export const BILL_TRANSITIONS: readonly BillTransition[] = [
-  {
-    from: 'Unpaid',
-    to: 'Payment pending',
-    action: 'start_online_payment',
-    actor: 'resident',
-    needsReason: false,
-  },
-  {
-    from: 'Payment pending',
-    to: 'Paid',
-    action: 'confirm_online_payment',
-    actor: 'gateway',
-    needsReason: false,
-  },
-  {
-    from: 'Unpaid',
-    to: 'Paid',
-    action: 'confirm_online_payment',
-    actor: 'gateway',
-    needsReason: false,
-  },
-  {
-    from: 'Payment pending',
-    to: 'Unpaid',
-    action: 'fail_online_payment',
-    actor: 'system',
-    needsReason: false,
-  },
-  {
-    from: 'Unpaid',
-    to: 'Awaiting verification',
-    action: 'submit_payment_claim',
-    actor: 'resident',
-    needsReason: false,
-  },
-  {
-    from: 'Awaiting verification',
-    to: 'Paid',
-    action: 'accept_payment_claim',
-    actor: 'manager',
-    needsReason: false,
-  },
-  {
-    from: 'Awaiting verification',
-    to: 'Unpaid',
-    action: 'reject_payment_claim',
-    actor: 'manager',
-    needsReason: true,
-  },
-  {
-    from: 'Unpaid',
-    to: 'Paid',
-    action: 'record_direct_payment',
-    actor: 'manager',
-    needsReason: false,
-  },
-  {
-    from: 'Unpaid',
-    to: 'Carried forward',
-    action: 'carry_forward',
-    actor: 'system',
-    needsReason: false,
-  },
-  {
-    from: 'Unpaid',
-    to: 'Paid',
-    action: 'settle_zero_balance',
-    actor: 'system',
-    needsReason: false,
-  },
+  transition('Unpaid', 'Payment pending', 'start_online_payment', 'resident'),
+  transition('Payment pending', 'Paid', 'confirm_online_payment', 'gateway'),
+  transition('Payment pending', 'Paid', 'confirm_online_payment', 'system'),
+  transition('Unpaid', 'Paid', 'confirm_online_payment', 'gateway'),
+  transition('Payment pending', 'Unpaid', 'fail_online_payment', 'system'),
+  transition('Unpaid', 'Awaiting verification', 'submit_payment_claim', 'resident'),
+  transition('Awaiting verification', 'Paid', 'accept_payment_claim', 'manager'),
+  transition('Awaiting verification', 'Unpaid', 'reject_payment_claim', 'manager', true),
+  transition('Unpaid', 'Paid', 'record_direct_payment', 'manager'),
+  transition('Unpaid', 'Carried forward', 'carry_forward', 'system'),
+  transition('Unpaid', 'Paid', 'settle_zero_balance', 'system'),
+  transition('Unpaid', 'Paid', 'settle_zero_balance', 'manager'),
 ];
 
 /** Paid and Carried forward bills cannot change status again. */
@@ -127,9 +86,7 @@ export function isFinalBillStatus(status: BillStatus): boolean {
 
 /** Returns actions available to a particular actor for a bill. */
 export function allowedBillTransitions(from: BillStatus, actor: BillActor): BillTransition[] {
-  return BILL_TRANSITIONS.filter(
-    (transition) => transition.from === from && transition.actor === actor,
-  );
+  return BILL_TRANSITIONS.filter((item) => item.from === from && item.actor === actor);
 }
 
 /**
@@ -144,11 +101,11 @@ export function checkBillTransition(
   action: BillAction,
   reason?: string | null,
 ): BillTransition {
-  const transition = BILL_TRANSITIONS.find(
+  const matchingTransitions = BILL_TRANSITIONS.filter(
     (item) => item.from === from && item.to === to && item.action === action,
   );
 
-  if (!transition) {
+  if (matchingTransitions.length === 0) {
     throw new AppError('CONFLICT', `A bill cannot go from ${from} to ${to} using ${action}.`, {
       from,
       to,
@@ -156,13 +113,20 @@ export function checkBillTransition(
     });
   }
 
-  if (transition.actor !== actor) {
-    const expectedActor =
-      transition.actor === 'system' || transition.actor === 'gateway'
-        ? transition.actor
-        : ROLE_LABELS[transition.actor].toLowerCase();
+  const selectedTransition = matchingTransitions.find((item) => item.actor === actor);
 
-    throw new AppError('FORBIDDEN', `Only the ${expectedActor} can perform ${action}.`, {
+  if (!selectedTransition) {
+    const expectedActors = [
+      ...new Set(
+        matchingTransitions.map((item) =>
+          item.actor === 'system' || item.actor === 'gateway'
+            ? item.actor
+            : ROLE_LABELS[item.actor].toLowerCase(),
+        ),
+      ),
+    ].join(' or ');
+
+    throw new AppError('FORBIDDEN', `Only the ${expectedActors} can perform ${action}.`, {
       from,
       to,
       actor,
@@ -170,7 +134,7 @@ export function checkBillTransition(
     });
   }
 
-  if (transition.needsReason && !reason?.trim()) {
+  if (selectedTransition.needsReason && !reason?.trim()) {
     throw new AppError('BAD_REQUEST', 'Give a reason.', {
       from,
       to,
@@ -178,5 +142,5 @@ export function checkBillTransition(
     });
   }
 
-  return transition;
+  return selectedTransition;
 }
