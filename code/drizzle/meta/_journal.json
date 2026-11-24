@@ -50,6 +50,13 @@
       "when": 1795462384498,
       "tag": "0006_guest_passes",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795516436903,
+      "tag": "0007_sim_gateway",
+      "breakpoints": true
     }
   ]
 }
