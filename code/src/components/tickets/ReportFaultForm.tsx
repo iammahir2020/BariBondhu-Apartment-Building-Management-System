@@ -189,7 +189,7 @@ export function ReportFaultForm({ emergency: startAs = null }: ReportFaultFormPr
       <h1 className="text-xl font-bold">Report a fault</h1>
 
       {emergency === null && (
-        <fieldset className="flex flex-col gap-2">
+        <fieldset className="flex min-w-0 flex-col gap-2">
           <legend className="pb-2 font-semibold">Is it an emergency?</legend>
           <div className="flex flex-wrap gap-2">
             {(['fire', 'lift'] as const).map((kind) => (
@@ -197,7 +197,7 @@ export function ReportFaultForm({ emergency: startAs = null }: ReportFaultFormPr
                 key={kind}
                 type="button"
                 variant="outline"
-                className="rounded-full border-destructive text-destructive"
+                className="h-auto min-h-13 max-w-full rounded-full border-destructive py-2 whitespace-normal text-destructive"
                 aria-pressed={asking === kind}
                 onClick={() => setAsking(kind)}
               >

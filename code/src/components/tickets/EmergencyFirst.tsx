@@ -76,7 +76,11 @@ export function EmergencyFirst({ kind, onLog, onClose }: EmergencyFirstProps) {
           Log it for repair
         </Button>
       </Card>
-      <Button variant="ghost" className="self-start" onClick={onClose}>
+      <Button
+        variant="ghost"
+        className="h-auto min-h-13 max-w-full self-start py-2 whitespace-normal"
+        onClick={onClose}
+      >
         It isn&apos;t an emergency
       </Button>
     </section>
