@@ -3,9 +3,10 @@ CREATE TABLE "notifications" (
 	"recipient_id" uuid NOT NULL,
 	"text" text NOT NULL,
 	"link" text,
-	"read_at" timestamp with time zone
+	"read_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 ALTER TABLE "notifications" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_recipient_id_profiles_id_fk" FOREIGN KEY ("recipient_id") REFERENCES "public"."profiles"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "notifications_recipient_id_idx" ON "notifications" USING btree ("recipient_id");
+CREATE INDEX "notifications_recipient_id_idx" ON "notifications" USING btree ("recipient_id","created_at");

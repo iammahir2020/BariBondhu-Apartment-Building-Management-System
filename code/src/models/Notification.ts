@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Notification database model for in-app messages sent to individual profiles.
  *
  * @author Adika Rahman
@@ -10,19 +10,22 @@ import { profiles } from './Profile';
 export const notifications = pgTable(
   'notifications',
   {
+    /** Unique notification ID. */
     id: uuid().primaryKey().defaultRandom(),
-
+    /** Profile receiving the notification. */
     recipientId: uuid()
       .notNull()
       .references(() => profiles.id),
-
+    /** Notification message. */
     text: text().notNull(),
-
+    /** Optional destination link. */
     link: text(),
-
+    /** When the notification was read. */
     readAt: timestamp({ withTimezone: true }),
+    /** When it was sent: the list shows newest first (BB-2303). */
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index('notifications_recipient_id_idx').on(table.recipientId)],
+  (table) => [index('notifications_recipient_id_idx').on(table.recipientId, table.createdAt)],
 ).enableRLS();
 
 /** Notification record returned from the database. */

@@ -64,6 +64,13 @@
       "when": 1795545432338,
       "tag": "0008_bills",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795547495563,
+      "tag": "0009_add_notifications",
+      "breakpoints": true
     }
   ]
 }
