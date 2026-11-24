@@ -23,3 +23,4 @@ export * from './EmergencyContact';
 export * from './Shift';
 export * from './Bill';
 export * from './BillLineItem';
+export * from './Notification';

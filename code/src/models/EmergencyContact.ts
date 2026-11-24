@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Emergency contact numbers displayed on the emergency screens. The national emergency number 999 is fixed
  * and must always appear first (BR-12).
  *

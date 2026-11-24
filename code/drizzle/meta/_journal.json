@@ -68,8 +68,15 @@
     {
       "idx": 9,
       "version": "7",
-      "when": 1795549005899,
-      "tag": "0009_add_emergency_contact",
+      "when": 1795547495563,
+      "tag": "0009_add_notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795550444882,
+      "tag": "0010_add_emergency_contact",
       "breakpoints": true
     }
   ]
