@@ -276,3 +276,29 @@ export async function listMyGuestPasses(
     .map((pass) => ({ pass, status: guestPassStatusAt(pass, now) }))
     .sort((a, b) => b.pass.startsAt.getTime() - a.pass.startsAt.getTime());
 }
+
+/**
+ * One of my household's passes with its status now, for the Pass code screen (RES-03 c1 and c3): the code and QR
+ * code to share, and how many guests have come in.
+ * @param passes - The pass store.
+ * @param resident - The signed-in resident.
+ * @param passId - The pass to show.
+ * @param now - The current time.
+ * @returns The pass with its status.
+ * @throws AppError 403 if the account has no household, the household has moved out, or the pass is another
+ *   household's (TC-R03-23).
+ * @throws AppError 404 if there is no such pass.
+ */
+export async function getMyGuestPass(
+  passes: GuestPassStore,
+  resident: Profile,
+  passId: string,
+  now: Date = new Date(),
+): Promise<PassWithStatus> {
+  const occupancyId = await householdOf(passes, resident);
+  const pass = await passes.findById(passId);
+  if (!pass) throw new AppError('NOT_FOUND', CANCEL_PASS_ERRORS.notFound);
+  if (pass.occupancyId !== occupancyId)
+    throw new AppError('FORBIDDEN', CANCEL_PASS_ERRORS.notYours);
+  return { pass, status: guestPassStatusAt(pass, now) };
+}

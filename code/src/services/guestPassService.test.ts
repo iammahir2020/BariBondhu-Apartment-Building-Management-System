@@ -14,6 +14,7 @@ import {
   cancelGuestPass,
   createGuestPass,
   drawPassCode,
+  getMyGuestPass,
   listMyGuestPasses,
   type GuestPassDeps,
   type GuestPassStore,
@@ -616,5 +617,49 @@ describe('listMyGuestPasses', () => {
     passes.flats.clear();
     const error = await errorFrom(() => listMyGuestPasses(passes, resident, NOW));
     expect(error).toMatchObject({ status: 403, message: PASS_ERRORS.household });
+  });
+});
+
+describe('getMyGuestPass', () => {
+  it('returns my pass with its status now (TC-R03-01)', async () => {
+    const mine = makePass({ startsAt: dhaka('11:00'), endsAt: dhaka('15:00'), guestsUsed: 2 });
+    const { passes } = setupWith(mine);
+    await expect(getMyGuestPass(passes, resident, 'pass-1', NOW)).resolves.toEqual({
+      pass: mine,
+      status: 'Partly used',
+    });
+  });
+
+  it('still shows a pass that is Cancelled, so the screen can say so', async () => {
+    const { passes } = setupWith(makePass({ cancelledAt: dhaka('10:00') }));
+    const { status } = await getMyGuestPass(passes, resident, 'pass-1', NOW);
+    expect(status).toBe('Cancelled');
+  });
+
+  it('answers 404 for a pass that does not exist', async () => {
+    const { passes } = setupWith();
+    const error = await errorFrom(() => getMyGuestPass(passes, resident, 'missing', NOW));
+    expect(error).toMatchObject({ status: 404, message: CANCEL_PASS_ERRORS.notFound });
+  });
+
+  it("refuses another household's pass (403, TC-R03-23)", async () => {
+    const { passes } = setupWith(makePass({ occupancyId: 'occupancy-2B' }));
+    const error = await errorFrom(() => getMyGuestPass(passes, resident, 'pass-1', NOW));
+    expect(error).toMatchObject({ status: 403, message: CANCEL_PASS_ERRORS.notYours });
+  });
+
+  it('refuses an account with no household (403)', async () => {
+    const { passes } = setupWith(makePass());
+    const guard = makeProfile({ role: 'guard', occupancyId: null });
+    const error = await errorFrom(() => getMyGuestPass(passes, guard, 'pass-1', NOW));
+    expect(error).toMatchObject({ status: 403, message: PASS_ERRORS.household });
+  });
+
+  it('uses the real clock when no time is given', async () => {
+    const { passes } = setupWith(
+      makePass({ endsAt: dhaka('22:00', 20), startsAt: dhaka('18:00', 20) }),
+    );
+    const { status } = await getMyGuestPass(passes, resident, 'pass-1');
+    expect(status).toBe('Expired');
   });
 });

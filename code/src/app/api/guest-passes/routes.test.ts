@@ -9,6 +9,7 @@
 import { FORBIDDEN_MESSAGE } from '@/lib/permissions';
 import type { GuestPass, Profile } from '@/models';
 import { GET as listMine, POST as create } from '@/app/api/guest-passes/route';
+import { GET as showOne } from '@/app/api/guest-passes/[id]/route';
 import { POST as cancel } from '@/app/api/guest-passes/[id]/cancel/route';
 import { CANCEL_PASS_ERRORS, PASS_ERRORS } from '@/services/guestPassService';
 import { makeProfile } from '@/services/testFakes';
@@ -112,6 +113,10 @@ beforeEach(() => {
 const ROUTES: readonly [string, () => Promise<Response>][] = [
   ['GET /api/guest-passes', () => listMine(new Request('http://app/api/guest-passes'))],
   ['POST /api/guest-passes', () => create(post('http://app/api/guest-passes', newPass()))],
+  [
+    'GET /api/guest-passes/[id]',
+    () => showOne(new Request('http://app/api/guest-passes/x'), params(mockTheirPassId)),
+  ],
   [
     'POST /api/guest-passes/[id]/cancel',
     () => cancel(post('http://app/api/guest-passes/x/cancel', {}), params(mockTheirPassId)),
@@ -256,6 +261,30 @@ describe('as a resident', () => {
       post('http://app/api/guest-passes/x/cancel', {}),
       params(mockTheirPassId),
     );
+    expect(response.status).toBe(404);
+  });
+
+  it('shows my pass with its code', async () => {
+    const created = await create(post('http://app/api/guest-passes', newPass()));
+    const { pass } = (await created.json()) as { pass: { id: string; code: string } };
+    const response = await showOne(new Request('http://app/api/guest-passes/x'), params(pass.id));
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      pass: { id: pass.id, code: pass.code, status: 'Scheduled' },
+    });
+  });
+
+  it("refuses to show another household's pass (403, TC-R03-23)", async () => {
+    mockPasses.push(theirPass());
+    const response = await showOne(
+      new Request('http://app/api/guest-passes/x'),
+      params(mockTheirPassId),
+    );
+    expect(response.status).toBe(403);
+  });
+
+  it('answers 404 to a pass id that is not a UUID', async () => {
+    const response = await showOne(new Request('http://app/api/guest-passes/x'), params('nope'));
     expect(response.status).toBe(404);
   });
 });
