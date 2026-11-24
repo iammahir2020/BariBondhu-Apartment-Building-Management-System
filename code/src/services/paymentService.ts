@@ -1,6 +1,7 @@
 /**
  * Paying a bill online (RES-01, UC-R06), with the simulated gateway or any other {@link PaymentGateway}:
- * starting a payment (BB-0604) and acting on what the gateway reports (BB-0605).
+ * starting a payment (BB-0604), acting on what the gateway reports (BB-0605) and the 30-minute re-check of payments
+ * that never got an answer (BB-0606).
  *
  * Only one payment flow runs per bill (BR-03): a payment starts only while the bill is Unpaid, and the bill moves to
  * Payment pending in the same write that saves the payment, so two taps on Pay can't start two payments. The bill
@@ -42,7 +43,11 @@ export const PAYMENT_ERRORS = {
 /** Why a payment ended without money, when the gateway gives no reason of its own (RES-01 c5). */
 export const PAYMENT_END_REASONS = {
   failed: 'The payment did not go through. You can pay again.',
+  timedOut: 'No payment arrived within 30 minutes. You can pay again.',
 } as const;
+
+/** How long a payment may stay Payment pending before the app asks the gateway (BR-04). */
+export const PAYMENT_TIMEOUT_MS = 30 * 60 * 1000;
 
 /** What a payment needs to know about a bill. */
 export interface PayableBill {
@@ -89,6 +94,8 @@ export interface PaymentStore {
    * @returns False if the payment had already been confirmed or ended, so nothing changed.
    */
   endIfOpen(change: EndedPayment): Promise<boolean>;
+  /** Payments neither confirmed nor ended that started at or before the cutoff. */
+  openPaymentsStartedBy(cutoff: Date): Promise<Payment[]>;
 }
 
 /** A payment the gateway confirmed. */
@@ -379,4 +386,45 @@ export async function receiveGatewayMessage(
   const payment = await deps.payments.findPaymentByTransaction(status.transactionId);
   if (!payment) throw new AppError('NOT_FOUND', PAYMENT_ERRORS.unknownPayment);
   return applyGatewayStatus(deps, payment, status, now);
+}
+
+/** What the re-check did with one payment; `skipped` means it stays Payment pending and is checked next time. */
+export interface RecheckedPayment {
+  paymentId: string;
+  outcome: GatewayOutcome | 'skipped';
+}
+
+/**
+ * The re-check (BB-0606, BR-04): for every payment Payment pending for 30 minutes or more, asks the gateway how it
+ * went. A success makes the bill Paid with a receipt, or an overpayment if the bill was settled meanwhile
+ * (TC-R01-15). A failure or cancellation ends it with the gateway's reason (TC-R01-17). No answer yet means no
+ * successful payment, so it ends as timed out and the bill is Unpaid again (TC-R01-14). If the gateway can't be
+ * reached, or its answer can't be used, the payment is left as it is and checked again next time; it never becomes
+ * Paid without a confirmation (TC-R01-16).
+ * @param deps - The payment store, the gateway and the audit writer.
+ * @param now - The time of the re-check.
+ * @returns What happened to each payment checked.
+ */
+export async function recheckPendingPayments(
+  deps: PaymentDeps,
+  now: Date,
+): Promise<RecheckedPayment[]> {
+  const due = await deps.payments.openPaymentsStartedBy(
+    new Date(now.getTime() - PAYMENT_TIMEOUT_MS),
+  );
+  const results: RecheckedPayment[] = [];
+  for (const payment of due) {
+    let outcome: RecheckedPayment['outcome'];
+    try {
+      const status = await deps.gateway.getStatus(payment.gatewayTransactionId);
+      outcome =
+        status.state === 'Pending'
+          ? (await endPayment(deps, payment, PAYMENT_END_REASONS.timedOut, now)).outcome
+          : (await applyGatewayStatus(deps, payment, status, now)).outcome;
+    } catch {
+      outcome = 'skipped';
+    }
+    results.push({ paymentId: payment.id, outcome });
+  }
+  return results;
 }

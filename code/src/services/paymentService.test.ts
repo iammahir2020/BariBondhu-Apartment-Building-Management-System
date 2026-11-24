@@ -1,6 +1,6 @@
 /**
- * Tests for paying a bill online (RES-01): starting a payment (BB-0604) and the gateway's confirmation (BB-0605).
- * The store and the gateway are in memory.
+ * Tests for paying a bill online (RES-01): starting a payment (BB-0604), the gateway's confirmation (BB-0605) and
+ * the 30-minute re-check (BB-0606). The store and the gateway are in memory.
  *
  * @author Mahir Al Kamal
  */
@@ -16,7 +16,9 @@ import type {
 import {
   PAYMENT_END_REASONS,
   PAYMENT_ERRORS,
+  PAYMENT_TIMEOUT_MS,
   receiveGatewayMessage,
+  recheckPendingPayments,
   startBillPayment,
   type ConfirmedPayment,
   type EndedPayment,
@@ -155,6 +157,16 @@ class MemoryPaymentStore implements PaymentStore {
     const bill = this.bills.get(change.billId);
     if (bill?.status === 'Payment pending') bill.status = 'Unpaid';
     return true;
+  }
+
+  /** The cutoffs the re-check asked for. */
+  readonly cutoffs: Date[] = [];
+
+  async openPaymentsStartedBy(cutoff: Date): Promise<Payment[]> {
+    this.cutoffs.push(cutoff);
+    return this.payments
+      .filter((p) => p.confirmedAt === null && p.endedAt === null && p.startedAt <= cutoff)
+      .map((p) => ({ ...p }));
   }
 }
 
@@ -664,5 +676,147 @@ describe('receiveGatewayMessage', () => {
     expect(result).toEqual({ outcome: 'pending' });
     expect(store.bills.get(bill.id)?.status).toBe('Payment pending');
     expect(entries).toEqual([]);
+  });
+});
+
+describe('recheckPendingPayments', () => {
+  /** The default start time of `addPayment`, plus 30 minutes. */
+  const DUE = new Date('2026-11-25T09:30:00+06:00');
+
+  /** A Payment pending bill whose payment the gateway reports in the given state. */
+  function reported(
+    store: MemoryPaymentStore,
+    gateway: FakeGateway,
+    state: GatewayPaymentStatus['state'],
+    reason: string | null = null,
+  ) {
+    const { bill, payment } = pendingBill(store);
+    gateway.statuses.set(payment.gatewayTransactionId, {
+      transactionId: payment.gatewayTransactionId,
+      reference: payment.id,
+      amountPoisha: payment.amountPoisha,
+      state,
+      reason,
+    });
+    return { bill, payment };
+  }
+
+  it('asks for the payments started 30 minutes or more before now', async () => {
+    const { store, deps } = setup();
+
+    await recheckPendingPayments(deps, DUE);
+
+    expect(store.cutoffs).toEqual([new Date(DUE.getTime() - PAYMENT_TIMEOUT_MS)]);
+    expect(PAYMENT_TIMEOUT_MS).toBe(30 * 60 * 1000);
+  });
+
+  it('leaves a payment alone at 29 minutes 59 seconds (TC-R01-13)', async () => {
+    const { store, gateway, deps } = setup();
+    const { bill } = reported(store, gateway, 'Pending');
+
+    const results = await recheckPendingPayments(deps, new Date(DUE.getTime() - 1000));
+
+    expect(results).toEqual([]);
+    expect(store.bills.get(bill.id)?.status).toBe('Payment pending');
+  });
+
+  it('puts the bill back to Unpaid at 30 minutes when the gateway has no successful payment (TC-R01-14)', async () => {
+    const { store, gateway, entries, deps } = setup();
+    const { bill, payment } = reported(store, gateway, 'Pending');
+
+    const results = await recheckPendingPayments(deps, DUE);
+
+    expect(results).toEqual([{ paymentId: payment.id, outcome: 'ended' }]);
+    expect(store.bills.get(bill.id)?.status).toBe('Unpaid');
+    expect(store.payments[0]).toMatchObject({
+      endedAt: DUE,
+      endReason: PAYMENT_END_REASONS.timedOut,
+    });
+    expect(entries[0]?.action).toBe('bill.end_payment');
+  });
+
+  it('lets the resident pay again once the bill is back to Unpaid (TC-R01-14)', async () => {
+    const { store, gateway, deps } = setup();
+    const { bill } = reported(store, gateway, 'Pending');
+    await recheckPendingPayments(deps, DUE);
+
+    const started = await startBillPayment(deps, RESIDENT, bill.id, DUE);
+
+    expect(started.paymentId).toBe('payment-1');
+    expect(store.bills.get(bill.id)?.status).toBe('Payment pending');
+  });
+
+  it('makes the bill Paid with a receipt when the gateway reports a success (TC-R01-15)', async () => {
+    const { store, gateway, deps } = setup();
+    const { bill, payment } = reported(store, gateway, 'Succeeded');
+
+    const results = await recheckPendingPayments(deps, DUE);
+
+    expect(results).toEqual([{ paymentId: payment.id, outcome: 'paid' }]);
+    expect(store.bills.get(bill.id)?.status).toBe('Paid');
+    expect(store.receipts).toHaveLength(1);
+  });
+
+  it("ends a failed payment with the gateway's reason (TC-R01-17)", async () => {
+    const { store, gateway, deps } = setup();
+    const { bill } = reported(store, gateway, 'Failed', 'The payment was declined.');
+
+    await recheckPendingPayments(deps, DUE);
+
+    expect(store.bills.get(bill.id)?.status).toBe('Unpaid');
+    expect(store.payments[0]?.endReason).toBe('The payment was declined.');
+  });
+
+  it('keeps the bill Payment pending when the gateway cannot be reached, and checks it next time (TC-R01-16)', async () => {
+    const { store, gateway, entries, deps } = setup();
+    const { bill, payment } = pendingBill(store);
+    gateway.getStatus = async () => {
+      throw new Error('connect ETIMEDOUT');
+    };
+
+    const results = await recheckPendingPayments(deps, DUE);
+    const later = await recheckPendingPayments(deps, new Date(DUE.getTime() + 60_000));
+
+    expect(results).toEqual([{ paymentId: payment.id, outcome: 'skipped' }]);
+    expect(later).toEqual([{ paymentId: payment.id, outcome: 'skipped' }]);
+    expect(store.bills.get(bill.id)?.status).toBe('Payment pending');
+    expect(store.receipts).toEqual([]);
+    expect(entries).toEqual([]);
+  });
+
+  it('skips a payment whose reported amount is wrong, and still checks the others', async () => {
+    const { store, gateway, deps } = setup();
+    const wrong = reported(store, gateway, 'Succeeded');
+    gateway.statuses.set(wrong.payment.gatewayTransactionId, {
+      transactionId: wrong.payment.gatewayTransactionId,
+      reference: wrong.payment.id,
+      amountPoisha: 1,
+      state: 'Succeeded',
+      reason: null,
+    });
+    const fine = reported(store, gateway, 'Succeeded');
+
+    const results = await recheckPendingPayments(deps, DUE);
+
+    expect(results).toEqual([
+      { paymentId: wrong.payment.id, outcome: 'skipped' },
+      { paymentId: fine.payment.id, outcome: 'paid' },
+    ]);
+    expect(store.bills.get(wrong.bill.id)?.status).toBe('Payment pending');
+  });
+
+  it('leaves alone payments that were confirmed or ended already', async () => {
+    const { store, deps } = setup();
+    const bill = store.addBill({ status: 'Paid' });
+    store.addPayment({ billId: bill.id, confirmedAt: new Date('2026-11-25T09:05:00+06:00') });
+    store.addPayment({
+      billId: bill.id,
+      endedAt: new Date('2026-11-25T09:10:00+06:00'),
+      endReason: 'The payment was declined.',
+    });
+
+    const results = await recheckPendingPayments(deps, DUE);
+
+    expect(results).toEqual([]);
   });
 });
