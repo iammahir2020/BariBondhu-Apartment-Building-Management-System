@@ -158,21 +158,25 @@ export function NewGuestPassForm({ now = () => new Date() }: NewGuestPassFormPro
           </div>
         </fieldset>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
+        {/* A date-time box has a minimum width of its own: min-w-0 lets it shrink so the page doesn't scroll sideways
+            at 360 px, and the smaller padding keeps the whole time readable at 150% text (NFR-23). */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex min-w-0 flex-col gap-2">
             <Label htmlFor="pass-from">From</Label>
             <Input
               id="pass-from"
               type="datetime-local"
+              className="min-w-0 px-2"
               value={times.from}
               onChange={(event) => changeTime('from', event.target.value)}
             />
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex min-w-0 flex-col gap-2">
             <Label htmlFor="pass-until">Until</Label>
             <Input
               id="pass-until"
               type="datetime-local"
+              className="min-w-0 px-2"
               value={times.until}
               onChange={(event) => changeTime('until', event.target.value)}
             />

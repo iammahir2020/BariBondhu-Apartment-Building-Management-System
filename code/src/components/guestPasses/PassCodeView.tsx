@@ -1,8 +1,7 @@
 /**
  * The Pass code screen (prototype `R-GuestPass-Code.html`, RES-03): the guest's name and status, how many people
- * and when, the 6-digit code and its QR code to show at the gate, Share, and Cancel pass while the pass is still
- * live. It also
- * says how many guests have come in so far. Every rule and its wording come from the API.
+ * and when, the 6-digit code and its QR code to show at the gate, and Share and Cancel pass while the pass is
+ * still live. It also says how many guests have come in so far. Every rule and its wording come from the API.
  *
  * Share uses the phone's share sheet when there is one, and otherwise copies the message, so it works on a laptop
  * too.
@@ -133,21 +132,24 @@ export function PassCodeView({ passId }: PassCodeViewProps) {
         </p>
       </section>
 
-      <div className="flex flex-col gap-2.5 sm:flex-row">
-        <Button className="grow" onClick={() => void share(pass)}>
-          <Share2 aria-hidden="true" />
-          Share
-        </Button>
-        {live && !confirming && (
-          <Button
-            variant="outline"
-            className="grow border-destructive text-destructive"
-            onClick={() => setConfirming(true)}
-          >
-            Cancel pass
+      {/* A finished pass's code no longer lets anyone in, so there is nothing to share or cancel. */}
+      {live && (
+        <div className="flex flex-col gap-2.5 sm:flex-row">
+          <Button className="sm:flex-1" onClick={() => void share(pass)}>
+            <Share2 aria-hidden="true" />
+            Share
           </Button>
-        )}
-      </div>
+          {!confirming && (
+            <Button
+              variant="outline"
+              className="border-destructive text-destructive sm:flex-1"
+              onClick={() => setConfirming(true)}
+            >
+              Cancel pass
+            </Button>
+          )}
+        </div>
+      )}
 
       <div aria-live="polite">
         {shared === 'copied' && (

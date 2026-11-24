@@ -145,6 +145,7 @@ describe('PassCodeView', () => {
     );
     expect(await screen.findByText('Cancelled')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancel pass' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument();
   });
 
   it('keeps the pass when the resident changes their mind', async () => {
@@ -179,11 +180,12 @@ describe('PassCodeView', () => {
   });
 
   it.each(['Fully used', 'Cancelled', 'Expired'] as const)(
-    'offers no Cancel pass for a %s pass',
+    'offers no Share or Cancel pass for a %s pass, since its code no longer works',
     async (status) => {
       answers({ status: 200, body: { pass: { ...PASS, status } } });
       render(<PassCodeView passId="pass-1" />);
       expect(await screen.findByText(status)).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Cancel pass' })).not.toBeInTheDocument();
       expect(screen.queryByText(/more can still come in/)).not.toBeInTheDocument();
     },
