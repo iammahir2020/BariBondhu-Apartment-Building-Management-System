@@ -71,6 +71,13 @@
       "when": 1795545963352,
       "tag": "0009_sim_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795546097665,
+      "tag": "0010_payments",
+      "breakpoints": true
     }
   ]
 }

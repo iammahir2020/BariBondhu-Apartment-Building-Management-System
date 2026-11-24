@@ -23,3 +23,6 @@ export * from './Shift';
 export * from './Bill';
 export * from './BillLineItem';
 export * from './GatewayTransaction';
+export * from './Payment';
+export * from './Receipt';
+export * from './Overpayment';
