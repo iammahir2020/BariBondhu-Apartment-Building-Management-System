@@ -24,6 +24,7 @@ import { internalEmail } from '../src/services/accountService';
 import { passwordProblem } from '../src/services/passwordRules';
 import { seedGuestPasses } from './seedGuestPasses';
 import { seedTickets } from './seedTickets';
+import { seedBills } from './seedBills';
 
 loadEnvConfig(process.cwd());
 
@@ -508,6 +509,9 @@ async function main(): Promise<void> {
 
     const addedExpenses = await seedExpenses(db);
     console.log(`Expenses: ${addedExpenses} added.`);
+
+    const addedBills = await seedBills(db, flatIds, occupancyIds);
+    console.log(`Demo monthly bills: ${addedBills} created.`);
 
     const passCount = await seedGuestPasses(db);
     console.log(`\nGuest passes: ${passCount} sample passes, one in each state, times from now.`);
