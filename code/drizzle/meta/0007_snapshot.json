@@ -1,5 +1,5 @@
 {
-  "id": "45156582-0bb8-4a31-be66-8781ea4308eb",
+  "id": "5a4f816b-4b1b-4db2-9c1a-cdf9d064e6ff",
   "prevId": "59c29c2b-c27d-4763-af39-83a83f7dbd9b",
   "version": "7",
   "dialect": "postgresql",
@@ -1517,8 +1517,8 @@
       },
       "isRLSEnabled": true
     },
-    "public.bills": {
-      "name": "bills",
+    "public.shifts": {
+      "name": "shifts",
       "schema": "",
       "columns": {
         "id": {
@@ -1528,81 +1528,39 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "flat_id": {
-          "name": "flat_id",
+        "guard_id": {
+          "name": "guard_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "occupancy_id": {
-          "name": "occupancy_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "billing_month": {
-          "name": "billing_month",
-          "type": "date",
+        "starts_at": {
+          "name": "starts_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
-        "due_date": {
-          "name": "due_date",
-          "type": "date",
+        "ends_at": {
+          "name": "ends_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
-        },
-        "total_poisha": {
-          "name": "total_poisha",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
         },
         "status": {
           "name": "status",
-          "type": "bill_status",
+          "type": "shift_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'Unpaid'"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
+          "default": "'Planned'"
         }
       },
       "indexes": {
-        "bills_status_idx": {
-          "name": "bills_status_idx",
+        "shifts_guard_idx": {
+          "name": "shifts_guard_idx",
           "columns": [
             {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "bills_occupancy_idx": {
-          "name": "bills_occupancy_idx",
-          "columns": [
-            {
-              "expression": "occupancy_id",
+              "expression": "guard_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1615,143 +1573,11 @@
         }
       },
       "foreignKeys": {
-        "bills_flat_id_flats_id_fk": {
-          "name": "bills_flat_id_flats_id_fk",
-          "tableFrom": "bills",
-          "tableTo": "flats",
-          "columnsFrom": ["flat_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "bills_occupancy_id_occupancies_id_fk": {
-          "name": "bills_occupancy_id_occupancies_id_fk",
-          "tableFrom": "bills",
-          "tableTo": "occupancies",
-          "columnsFrom": ["occupancy_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "bills_flat_month_unique": {
-          "name": "bills_flat_month_unique",
-          "nullsNotDistinct": false,
-          "columns": ["flat_id", "billing_month"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "bills_due_date_valid": {
-          "name": "bills_due_date_valid",
-          "value": "\"bills\".\"due_date\" >= \"bills\".\"billing_month\""
-        },
-        "bills_month_first_day": {
-          "name": "bills_month_first_day",
-          "value": "EXTRACT(DAY FROM \"bills\".\"billing_month\") = 1"
-        }
-      },
-      "isRLSEnabled": true
-    },
-    "public.bill_line_items": {
-      "name": "bill_line_items",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "bill_id": {
-          "name": "bill_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "type": {
-          "name": "type",
-          "type": "bill_line_item_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "amount_poisha": {
-          "name": "amount_poisha",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "source_bill_id": {
-          "name": "source_bill_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "bill_line_items_bill_idx": {
-          "name": "bill_line_items_bill_idx",
-          "columns": [
-            {
-              "expression": "bill_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "bill_line_items_source_bill_idx": {
-          "name": "bill_line_items_source_bill_idx",
-          "columns": [
-            {
-              "expression": "source_bill_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "bill_line_items_bill_id_bills_id_fk": {
-          "name": "bill_line_items_bill_id_bills_id_fk",
-          "tableFrom": "bill_line_items",
-          "tableTo": "bills",
-          "columnsFrom": ["bill_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "bill_line_items_source_bill_id_bills_id_fk": {
-          "name": "bill_line_items_source_bill_id_bills_id_fk",
-          "tableFrom": "bill_line_items",
-          "tableTo": "bills",
-          "columnsFrom": ["source_bill_id"],
+        "shifts_guard_id_profiles_id_fk": {
+          "name": "shifts_guard_id_profiles_id_fk",
+          "tableFrom": "shifts",
+          "tableTo": "profiles",
+          "columnsFrom": ["guard_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -1760,25 +1586,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "bill_line_items_nonnegative_charges": {
-          "name": "bill_line_items_nonnegative_charges",
-          "value": "\"bill_line_items\".\"type\" IN ('adjustment', 'credit') OR \"bill_line_items\".\"amount_poisha\" >= 0"
-        },
-        "bill_line_items_credit_nonpositive": {
-          "name": "bill_line_items_credit_nonpositive",
-          "value": "\"bill_line_items\".\"type\" <> 'credit' OR \"bill_line_items\".\"amount_poisha\" <= 0"
-        },
-        "bill_line_items_adjustment_reason": {
-          "name": "bill_line_items_adjustment_reason",
-          "value": "\"bill_line_items\".\"type\" <> 'adjustment' OR\n        (\"bill_line_items\".\"description\" IS NOT NULL AND length(trim(\"bill_line_items\".\"description\")) > 0)"
-        },
-        "bill_line_items_carried_source": {
-          "name": "bill_line_items_carried_source",
-          "value": "\"bill_line_items\".\"type\" <> 'carried_forward' OR \"bill_line_items\".\"source_bill_id\" IS NOT NULL"
-        }
-      },
-
+      "checkConstraints": {},
       "isRLSEnabled": true
     }
   },
@@ -1848,15 +1656,10 @@
       "schema": "public",
       "values": ["Waiting for approval", "Approved", "Rejected"]
     },
-    "public.bill_status": {
-      "name": "bill_status",
+    "public.shift_status": {
+      "name": "shift_status",
       "schema": "public",
-      "values": ["Unpaid", "Payment pending", "Awaiting verification", "Paid", "Carried forward"]
-    },
-    "public.bill_line_item_type": {
-      "name": "bill_line_item_type",
-      "schema": "public",
-      "values": ["service", "generator", "water", "carried_forward", "adjustment", "credit"]
+      "values": ["Planned", "On duty", "Finished", "Removed"]
     }
   },
   "schemas": {},
