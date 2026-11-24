@@ -15,6 +15,7 @@ import {
   ListChecks,
   Receipt,
   ScanLine,
+  UserPlus,
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
@@ -49,6 +50,7 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
     {
       items: [
         { label: 'Home', href: '/resident', icon: House, onPhone: true },
+        { label: 'Guests', href: '/resident/guest-passes', icon: UserPlus, onPhone: true },
         { label: 'Tickets', href: '/resident/tickets', icon: Wrench, onPhone: true },
       ],
     },
