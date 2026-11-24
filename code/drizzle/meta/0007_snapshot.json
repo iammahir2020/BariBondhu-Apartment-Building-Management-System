@@ -1,5 +1,5 @@
 {
-  "id": "c099f889-7a43-4deb-86f5-aea09c737a39",
+  "id": "5a4f816b-4b1b-4db2-9c1a-cdf9d064e6ff",
   "prevId": "59c29c2b-c27d-4763-af39-83a83f7dbd9b",
   "version": "7",
   "dialect": "postgresql",
@@ -1517,71 +1517,76 @@
       },
       "isRLSEnabled": true
     },
-    "public.gateway_transactions": {
-      "name": "gateway_transactions",
+    "public.shifts": {
+      "name": "shifts",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
-        "reference": {
-          "name": "reference",
-          "type": "text",
+        "guard_id": {
+          "name": "guard_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "amount_poisha": {
-          "name": "amount_poisha",
-          "type": "integer",
+        "starts_at": {
+          "name": "starts_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
-        "state": {
-          "name": "state",
-          "type": "gateway_payment_state",
+        "ends_at": {
+          "name": "ends_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "shift_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'Pending'"
-        },
-        "reason": {
-          "name": "reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "decided_at": {
-          "name": "decided_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
+          "default": "'Planned'"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "shifts_guard_idx": {
+          "name": "shifts_guard_idx",
+          "columns": [
+            {
+              "expression": "guard_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "shifts_guard_id_profiles_id_fk": {
+          "name": "shifts_guard_id_profiles_id_fk",
+          "tableFrom": "shifts",
+          "tableTo": "profiles",
+          "columnsFrom": ["guard_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "gateway_transactions_amount_positive": {
-          "name": "gateway_transactions_amount_positive",
-          "value": "\"gateway_transactions\".\"amount_poisha\" > 0"
-        },
-        "gateway_transactions_decided_when_not_pending": {
-          "name": "gateway_transactions_decided_when_not_pending",
-          "value": "(\"gateway_transactions\".\"state\" = 'Pending') = (\"gateway_transactions\".\"decided_at\" is null)"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": true
     }
   },
@@ -1651,10 +1656,10 @@
       "schema": "public",
       "values": ["Waiting for approval", "Approved", "Rejected"]
     },
-    "public.gateway_payment_state": {
-      "name": "gateway_payment_state",
+    "public.shift_status": {
+      "name": "shift_status",
       "schema": "public",
-      "values": ["Pending", "Succeeded", "Failed", "Cancelled"]
+      "values": ["Planned", "On duty", "Finished", "Removed"]
     }
   },
   "schemas": {},
