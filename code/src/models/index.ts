@@ -15,4 +15,8 @@ export * from './CommonAreaPlace';
 export * from './Ticket';
 export * from './TicketFollower';
 export * from './TicketStatusChange';
+export * from './Announcement';
+export * from './ChargeRate';
+export * from './Expense';
+export * from './GuestPass';
 export * from './Shift';

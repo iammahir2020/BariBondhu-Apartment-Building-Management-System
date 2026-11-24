@@ -26,8 +26,36 @@
     {
       "idx": 3,
       "version": "7",
-      "when": 1795281133299,
-      "tag": "0003_serious_gravity",
+      "when": 1795381060829,
+      "tag": "0003_add-charge-rate",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795384558893,
+      "tag": "0004_add-expense",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795461660949,
+      "tag": "0005_announcement",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795462384498,
+      "tag": "0006_guest_passes",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795534978677,
+      "tag": "0007_shift",
       "breakpoints": true
     }
   ]
