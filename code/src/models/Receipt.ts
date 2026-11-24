@@ -1,7 +1,7 @@
 /**
  * Receipts for paid bills (RES-01 c3, UC-R08): made when the gateway confirms a payment and the bill becomes Paid.
  * A bill has one receipt. The receipt number comes from a database counter, so two receipts can never share one; it is
- * shown as `R-000123` (see `formatReceiptNumber` in the payment service).
+ * shown as `R-000123` (see `formatReceiptNumber` in `myBillsService.ts`).
  *
  * The rest of what the receipt shows (flat, month, each charge, total) is read from the bill and its lines, which
  * can't change once the bill is Paid (BR-07).
