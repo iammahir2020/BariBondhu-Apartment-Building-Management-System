@@ -1,19 +1,28 @@
 /**
  * Paying a bill online (RES-01, UC-R06), with the simulated gateway or any other {@link PaymentGateway}:
- * starting a payment (BB-0604).
+ * starting a payment (BB-0604) and acting on what the gateway reports (BB-0605).
  *
  * Only one payment flow runs per bill (BR-03): a payment starts only while the bill is Unpaid, and the bill moves to
  * Payment pending in the same write that saves the payment, so two taps on Pay can't start two payments. The bill
  * states and who may move them come from the bill state machine.
  *
+ * Only the gateway's signed server-to-server message can make a bill Paid (BR-02); what the resident's phone reports
+ * changes nothing. A confirmation makes the bill Paid with a receipt while it is Unpaid or Payment pending; if the
+ * bill was by then settled another way, the money is flagged to the manager as an overpayment (BR-04).
+ *
  * @author Mahir Al Kamal
  */
 import { randomUUID } from 'node:crypto';
 import { AppError } from '@/lib/errors';
-import type { Profile } from '@/models';
+import type { Payment, Profile } from '@/models';
 import type { AuditWriter } from '@/services/auditService';
 import { checkBillTransition, type BillStatus } from '@/services/billStateMachine';
-import type { PaymentGateway } from '@/services/paymentGateway';
+import {
+  GATEWAY_MESSAGE_ERRORS,
+  isValidGatewaySignature,
+  parseGatewayMessage,
+} from '@/services/gatewayMessage';
+import type { GatewayPaymentStatus, PaymentGateway } from '@/services/paymentGateway';
 
 /** Error text, worded as the SRS asks (NFR-25): what went wrong and what to do next. */
 export const PAYMENT_ERRORS = {
@@ -24,6 +33,15 @@ export const PAYMENT_ERRORS = {
   paid: 'This bill is already paid.',
   carriedForward: 'This bill was carried forward to your newest bill. Pay that one instead.',
   changed: 'This bill changed while you were paying. Open Dues again.',
+  /** For the gateway, not the resident: a payment the app never started. */
+  unknownPayment: 'The app has no payment with this transaction id.',
+  /** The amount paid isn't the amount asked for (BR-06). */
+  amount: 'The amount paid does not match the bill total.',
+} as const;
+
+/** Why a payment ended without money, when the gateway gives no reason of its own (RES-01 c5). */
+export const PAYMENT_END_REASONS = {
+  failed: 'The payment did not go through. You can pay again.',
 } as const;
 
 /** What a payment needs to know about a bill. */
@@ -55,6 +73,59 @@ export interface PaymentStore {
    * @returns False if the bill was no longer Unpaid, so nothing was saved.
    */
   startIfUnpaid(payment: StartingPayment): Promise<boolean>;
+  /** The payment with this gateway transaction id, or null if the app never started one. */
+  findPaymentByTransaction(transactionId: string): Promise<Payment | null>;
+  /**
+   * In one transaction, and only if the bill's status is still `from`: the bill becomes Paid, the payment is marked
+   * confirmed (clearing any end time and reason, for a late confirmation) and the receipt is saved.
+   * @returns The new receipt's number, or null if the bill's status had changed, so nothing was saved.
+   */
+  payIfStatus(change: ConfirmedPayment & { from: BillStatus }): Promise<number | null>;
+  /** In one transaction: the payment is marked confirmed and an overpayment is flagged for it. The bill is left alone. */
+  flagOverpayment(change: ConfirmedPayment): Promise<void>;
+  /**
+   * In one transaction, and only while the payment is neither confirmed nor ended: the payment ends with the reason,
+   * and its bill goes back from Payment pending to Unpaid if it is still Payment pending.
+   * @returns False if the payment had already been confirmed or ended, so nothing changed.
+   */
+  endIfOpen(change: EndedPayment): Promise<boolean>;
+}
+
+/** A payment the gateway confirmed. */
+export interface ConfirmedPayment {
+  paymentId: string;
+  billId: string;
+  amountPoisha: number;
+  at: Date;
+}
+
+/** A payment that ended without money. */
+export interface EndedPayment {
+  paymentId: string;
+  billId: string;
+  reason: string;
+  at: Date;
+}
+
+/**
+ * What the app did with a gateway report: the bill became Paid, the money became an overpayment, the payment ended
+ * and the bill is Unpaid again, the report repeated one already acted on, or the payment isn't finished yet.
+ */
+export type GatewayOutcome = 'paid' | 'overpayment' | 'ended' | 'repeat' | 'pending';
+
+/** The result of acting on a gateway report. */
+export interface GatewayResult {
+  outcome: GatewayOutcome;
+  /** The receipt number when the bill became Paid. */
+  receiptNumber?: number;
+}
+
+/** A message as it reached the webhook. */
+export interface GatewayMessage {
+  /** The exact body, which the signature covers. */
+  body: string;
+  /** The signature header, or null if there was none. */
+  signature: string | null;
 }
 
 /** What the payment service works with. */
@@ -146,4 +217,166 @@ export async function startBillPayment(
     },
   });
   return { paymentId, transactionId: started.transactionId, checkoutUrl: started.checkoutUrl };
+}
+
+/** Bills a confirmation can still make Paid (BR-04). */
+const PAYABLE_ON_CONFIRMATION: readonly BillStatus[] = ['Unpaid', 'Payment pending'];
+
+/**
+ * Records money the gateway confirmed. While the bill is Unpaid or Payment pending and still costs what was paid,
+ * the bill becomes Paid with a receipt (BR-02, TC-R01-05, TC-R01-07). Otherwise the bill doesn't change and the
+ * money is flagged to the manager as an overpayment (BR-04, TC-R01-09); that includes an Unpaid bill whose total was
+ * corrected after this payment started, since a bill is never Paid by a different amount (BR-06).
+ */
+async function confirmPayment(
+  deps: PaymentDeps,
+  payment: Payment,
+  at: Date,
+): Promise<GatewayResult> {
+  if (payment.confirmedAt !== null) return { outcome: 'repeat' };
+  const change: ConfirmedPayment = {
+    paymentId: payment.id,
+    billId: payment.billId,
+    amountPoisha: payment.amountPoisha,
+    at,
+  };
+
+  // The bill can change between reading it and the conditional write; read it again once if it did.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const bill = await deps.payments.findBill(payment.billId);
+    if (!bill) throw new AppError('NOT_FOUND', PAYMENT_ERRORS.notFound);
+
+    if (
+      !PAYABLE_ON_CONFIRMATION.includes(bill.status) ||
+      bill.totalPoisha !== payment.amountPoisha
+    ) {
+      await deps.payments.flagOverpayment(change);
+      await deps.audit({
+        actorId: null,
+        action: 'bill.overpayment',
+        entityType: 'bills',
+        entityId: bill.id,
+        oldValues: { status: bill.status },
+        newValues: {
+          status: bill.status,
+          paymentId: payment.id,
+          gatewayTransactionId: payment.gatewayTransactionId,
+          amountPoisha: payment.amountPoisha,
+        },
+      });
+      return { outcome: 'overpayment' };
+    }
+
+    checkBillTransition(bill.status, 'Paid', 'gateway', 'confirm_online_payment');
+    const receiptNumber = await deps.payments.payIfStatus({ ...change, from: bill.status });
+    if (receiptNumber !== null) {
+      await deps.audit({
+        actorId: null,
+        action: 'bill.confirm_payment',
+        entityType: 'bills',
+        entityId: bill.id,
+        oldValues: { status: bill.status },
+        newValues: {
+          status: 'Paid',
+          paymentId: payment.id,
+          gatewayTransactionId: payment.gatewayTransactionId,
+          receiptNumber,
+        },
+      });
+      return { outcome: 'paid', receiptNumber };
+    }
+  }
+  throw new AppError('CONFLICT', PAYMENT_ERRORS.changed);
+}
+
+/**
+ * Ends a payment that failed, was cancelled or timed out: the bill goes back to Unpaid, so the resident can pay
+ * again, and the reason is kept for Dues (RES-01 c5, TC-R01-17). Ending it again changes nothing.
+ */
+async function endPayment(
+  deps: PaymentDeps,
+  payment: Payment,
+  reason: string,
+  at: Date,
+): Promise<GatewayResult> {
+  checkBillTransition('Payment pending', 'Unpaid', 'system', 'fail_online_payment');
+  const ended = await deps.payments.endIfOpen({
+    paymentId: payment.id,
+    billId: payment.billId,
+    reason,
+    at,
+  });
+  if (!ended) return { outcome: 'repeat' };
+  await deps.audit({
+    actorId: null,
+    action: 'bill.end_payment',
+    entityType: 'bills',
+    entityId: payment.billId,
+    oldValues: { status: 'Payment pending' },
+    newValues: {
+      status: 'Unpaid',
+      paymentId: payment.id,
+      gatewayTransactionId: payment.gatewayTransactionId,
+      reason,
+    },
+  });
+  return { outcome: 'ended' };
+}
+
+/**
+ * Acts on what the gateway reports about one of the app's payments, whether it came in the webhook or from a
+ * re-check: Succeeded confirms it, Failed or Cancelled ends it, Pending changes nothing.
+ * @throws AppError 400 if the report is for a different payment or a different amount (BR-06, TC-R01-11).
+ */
+async function applyGatewayStatus(
+  deps: PaymentDeps,
+  payment: Payment,
+  status: GatewayPaymentStatus,
+  at: Date,
+): Promise<GatewayResult> {
+  if (status.reference !== payment.id) {
+    throw new AppError('BAD_REQUEST', GATEWAY_MESSAGE_ERRORS.body);
+  }
+  if (status.amountPoisha !== payment.amountPoisha) {
+    throw new AppError('BAD_REQUEST', PAYMENT_ERRORS.amount, {
+      expected: payment.amountPoisha,
+      received: status.amountPoisha,
+    });
+  }
+  switch (status.state) {
+    case 'Succeeded':
+      return confirmPayment(deps, payment, at);
+    case 'Failed':
+    case 'Cancelled':
+      return endPayment(deps, payment, status.reason ?? PAYMENT_END_REASONS.failed, at);
+    case 'Pending':
+      return { outcome: 'pending' };
+  }
+}
+
+/**
+ * The gateway's server-to-server message about a payment (BB-0605). Nothing is read before the signature checks out,
+ * and the same message twice changes nothing the second time (TC-R01-08).
+ * @param deps - The payment store, the gateway and the audit writer.
+ * @param secret - The shared gateway secret.
+ * @param message - The body and signature as received.
+ * @param now - When it arrived.
+ * @returns What the app did with it.
+ * @throws AppError 401 if the signature is missing or wrong (TC-R01-10).
+ * @throws AppError 400 if the body isn't a valid message, or reports a different payment or amount (TC-R01-11).
+ * @throws AppError 404 if the app never started a payment with this transaction id.
+ */
+export async function receiveGatewayMessage(
+  deps: PaymentDeps,
+  secret: string,
+  message: GatewayMessage,
+  now: Date,
+): Promise<GatewayResult> {
+  if (!isValidGatewaySignature(message.body, message.signature, secret)) {
+    throw new AppError('UNAUTHORIZED', GATEWAY_MESSAGE_ERRORS.signature);
+  }
+  const status = parseGatewayMessage(message.body);
+  const payment = await deps.payments.findPaymentByTransaction(status.transactionId);
+  if (!payment) throw new AppError('NOT_FOUND', PAYMENT_ERRORS.unknownPayment);
+  return applyGatewayStatus(deps, payment, status, now);
 }
