@@ -9,6 +9,7 @@ import { requireRole } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { toErrorResponse } from '@/lib/errors';
 import { parseCategory, parsePlaceId } from '@/lib/ticketInput';
+import { toTicketView } from '@/lib/ticketResponse';
 import { findOpenMatch } from '@/services/ticketService';
 
 /**
@@ -24,7 +25,10 @@ export async function GET(request: Request): Promise<Response> {
     const placeId = parsePlaceId(query.get('placeId'));
     const category = parseCategory(query.get('category'));
     const found = await findOpenMatch(databaseTicketStore(db), user.actor, placeId, category);
-    return Response.json({ match: found?.ticket ?? null, relation: found?.relation ?? null });
+    return Response.json({
+      match: found ? toTicketView(found.ticket) : null,
+      relation: found?.relation ?? null,
+    });
   } catch (error) {
     return toErrorResponse(error);
   }

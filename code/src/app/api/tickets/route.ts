@@ -11,6 +11,7 @@ import { db } from '@/lib/db';
 import { AppError, toErrorResponse } from '@/lib/errors';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { parseReportForm } from '@/lib/ticketInput';
+import { toTicketView } from '@/lib/ticketResponse';
 import { listMyTickets, reportFault } from '@/services/ticketService';
 
 /**
@@ -22,7 +23,9 @@ export async function GET(request: Request): Promise<Response> {
   try {
     const user = await requireRole(request, 'reportFault');
     const tickets = await listMyTickets(databaseTicketStore(db), user.actor);
-    return Response.json({ tickets });
+    return Response.json({
+      tickets: tickets.map((row) => ({ ...row, ticket: toTicketView(row.ticket) })),
+    });
   } catch (error) {
     return toErrorResponse(error);
   }
@@ -47,8 +50,8 @@ export async function POST(request: Request): Promise<Response> {
     const input = await parseReportForm(form);
     const result = await reportFault(ticketDeps(db, getSupabaseAdmin()), user.actor, input);
     return result.kind === 'created'
-      ? Response.json({ ticket: result.ticket }, { status: 201 })
-      : Response.json({ match: result.ticket, relation: result.relation });
+      ? Response.json({ ticket: toTicketView(result.ticket) }, { status: 201 })
+      : Response.json({ match: toTicketView(result.ticket), relation: result.relation });
   } catch (error) {
     return toErrorResponse(error);
   }

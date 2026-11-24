@@ -38,11 +38,19 @@ jest.mock('@/services/auditService', () => ({ databaseAuditWriter: () => async (
 /** Another household's Reported ticket at the water pump. */
 const mockTheirTicket = {
   id: '0b6f6c1a-2d3e-4f50-8a1b-2c3d4e5f6a7b',
+  reportedById: 'resident-1B',
   occupancyId: 'occupancy-1B',
+  category: 'Plumbing',
   placeId: mockPlaceId,
   flatId: null,
+  title: 'Water pump trips the breaker',
+  description: 'The pump stops every few minutes.',
+  photoPath: 'tickets/pump.jpg',
+  homeTimes: null,
   status: 'Reported',
+  dueDate: null,
   createdAt: new Date('2026-11-22T10:00:00+06:00'),
+  updatedAt: new Date('2026-11-22T10:00:00+06:00'),
 } as unknown as Ticket;
 
 jest.mock('@/lib/adapters/ticketAdapters', () => {
@@ -171,8 +179,9 @@ describe('as a resident', () => {
       new Request('http://app/api/tickets', { method: 'POST', body: reportForm() }),
     );
     expect(response.status).toBe(201);
-    const body = (await response.json()) as { ticket: { status: string; flatId: string } };
-    expect(body.ticket).toMatchObject({ status: 'Reported', flatId: 'flat-1A' });
+    const body = (await response.json()) as { ticket: Record<string, unknown> };
+    expect(body.ticket).toMatchObject({ status: 'Reported', placeId: null });
+    expect(body.ticket).not.toHaveProperty('description');
   });
 
   it('answers 400 to a body that is not a form', async () => {
@@ -188,6 +197,25 @@ describe('as a resident', () => {
       params(mockTicketId),
     );
     expect(response.status).toBe(403);
+  });
+
+  it("sends only the screen's fields of a neighbour's ticket after Me too (NFR-06)", async () => {
+    const response = await follow(
+      new Request('http://app/api/tickets/x/followers', { method: 'POST' }),
+      params(mockTicketId),
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { ticket: Record<string, unknown> };
+    expect(body.ticket).toEqual({
+      id: mockTicketId,
+      title: 'Water pump trips the breaker',
+      category: 'Plumbing',
+      status: 'Reported',
+      placeId: mockPlaceId,
+      dueDate: null,
+      createdAt: '2026-11-22T04:00:00.000Z',
+      updatedAt: '2026-11-22T04:00:00.000Z',
+    });
   });
 
   it('answers 404 to a ticket id that is not a UUID', async () => {

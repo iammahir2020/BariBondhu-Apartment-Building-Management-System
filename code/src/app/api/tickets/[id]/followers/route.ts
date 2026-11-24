@@ -10,6 +10,7 @@ import { requireRole } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { toErrorResponse } from '@/lib/errors';
 import { requireTicketId } from '@/lib/ticketInput';
+import { toTicketView } from '@/lib/ticketResponse';
 import { databaseAuditWriter } from '@/services/auditService';
 import { meToo } from '@/services/ticketService';
 
@@ -32,7 +33,7 @@ export async function POST(
       user.actor,
       ticketId,
     );
-    return Response.json(result);
+    return Response.json({ ...result, ticket: toTicketView(result.ticket) });
   } catch (error) {
     return toErrorResponse(error);
   }
