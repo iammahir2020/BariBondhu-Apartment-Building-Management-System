@@ -34,21 +34,66 @@ export interface MonthlyBillDraft {
  * - skip existing bills without changing them;
  * - roll back all inserts if any operation fails.
  */
+
+/**
+ * Database operations required for generating monthly bills.
+ *
+ * Implementations must ensure that bills and their line items
+ * are inserted atomically and existing bills remain unchanged.
+ */
 export interface MonthlyBillStore {
+  /**
+   * Return all registered flats, including vacant flats.
+   * @returns Every flat registered in the building.
+   */
   listFlats(): Promise<Flat[]>;
+
+  /**
+   * Return occupancies that have not ended.
+   * @returns All active occupancies.
+   */
   listActiveOccupancies(): Promise<Occupancy[]>;
+
+  /**
+   * Return the currently approved charge rates.
+   * @returns Current service, generator, and water rates.
+   */
   listCurrentRates(): Promise<ChargeRate[]>;
+
+  /**
+   * Insert only bills that do not already exist.
+   *
+   * The bill and its line items must be saved in one
+   * database transaction.
+   *
+   * @param drafts - Bills and line items prepared for insertion.
+   * @returns Only the newly created bills.
+   */
   createMissing(drafts: MonthlyBillDraft[]): Promise<Bill[]>;
 }
 
+/**
+ * Dependencies required by the monthly bill generator.
+ */
 export interface GenerateMonthlyBillsDeps {
+  /** Database store used to read and create monthly bills. */
   store: MonthlyBillStore;
 }
 
+/**
+ * Result returned after monthly bill generation.
+ */
 export interface GenerateMonthlyBillsResult {
+  /** The billing month in YYYY-MM-DD format. */
   billingMonth: string;
+
+  /** Number of newly generated bills. */
   createdCount: number;
+
+  /** Number of existing bills skipped. */
   skippedCount: number;
+
+  /** Newly created bill records. */
   bills: Bill[];
 }
 
