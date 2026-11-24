@@ -57,8 +57,7 @@ export function databaseCarryForwardStore(db: Database): CarryForwardStore {
       // Both source and target changes are committed
       // together or rolled back together.
       return db.transaction(async (tx) => {
-        const affectedIds = [targetBillId, ...sourceIds].sort();
-
+        const affectedIds = [targetBillId, ...sourceIds].sort((a, b) => a.localeCompare(b));
         // Lock all affected bills in a consistent order.
         // Concurrent payment and carry-forward writers
         // must use compatible row-locking discipline.
