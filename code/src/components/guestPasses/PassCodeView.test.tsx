@@ -63,6 +63,7 @@ describe('PassCodeView', () => {
     render(<PassCodeView passId="pass-1" />);
 
     expect(await screen.findByText('482 913')).toBeInTheDocument();
+    expect(await screen.findByRole('img', { name: 'QR code for pass 482913' })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith('/api/guest-passes/pass-1', expect.anything());
     expect(screen.getByRole('heading', { name: 'Rafiq Hasan' })).toBeInTheDocument();
     expect(screen.getByText('Partly used')).toBeInTheDocument();

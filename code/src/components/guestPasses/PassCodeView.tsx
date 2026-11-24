@@ -1,6 +1,7 @@
 /**
  * The Pass code screen (prototype `R-GuestPass-Code.html`, RES-03): the guest's name and status, how many people
- * and when, the 6-digit code to show at the gate, Share, and Cancel pass while the pass is still live. It also
+ * and when, the 6-digit code and its QR code to show at the gate, Share, and Cancel pass while the pass is still
+ * live. It also
  * says how many guests have come in so far. Every rule and its wording come from the API.
  *
  * Share uses the phone's share sheet when there is one, and otherwise copies the message, so it works on a laptop
@@ -26,6 +27,7 @@ import {
   passShareText,
   peopleText,
 } from '@/components/guestPasses/passView';
+import { PassQrCode } from '@/components/guestPasses/PassQrCode';
 
 /** Props for {@link PassCodeView}. */
 export interface PassCodeViewProps {
@@ -119,6 +121,7 @@ export function PassCodeView({ passId }: PassCodeViewProps) {
         <p className="text-sm text-muted-foreground">
           {peopleText(pass.guestCount)} · {formatPassWindow(pass.startsAt, pass.endsAt)}
         </p>
+        <PassQrCode code={pass.code} />
         <p className="text-sm font-medium text-muted-foreground" id="pass-code-label">
           Pass code
         </p>
