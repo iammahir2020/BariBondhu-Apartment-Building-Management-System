@@ -1,29 +1,16 @@
 /**
- * Unit tests for BB-0505 monthly bill database store.
+ * Tests for the BB-0505 monthly bill database adapter.
  *
- * Tests Drizzle queries and transaction behavior
- * without connecting to the shared database.
+ * Uses a mocked Drizzle database. Does not access
+ * the shared Supabase database.
  *
  * @author Jannatul Ferdus Nishi
  */
 
-import { db } from '@/lib/db';
+import type { Database } from '@/lib/db';
 import { bills, billLineItems, chargeRates, flats, occupancies } from '@/models';
-
-import { monthlyBillStore } from '@/services/monthlyBillStore';
+import { databaseMonthlyBillStore } from '@/lib/adapters/billAdapters';
 import type { MonthlyBillDraft } from '@/services/generateMonthlyBills';
-
-jest.mock('@/lib/db', () => ({
-  db: {
-    select: jest.fn(),
-    transaction: jest.fn(),
-  },
-}));
-
-const mockedDb = db as unknown as {
-  select: jest.Mock;
-  transaction: jest.Mock;
-};
 
 function makeDraft(flatId = 'flat-1', withLineItems = true): MonthlyBillDraft {
   return {
@@ -60,7 +47,21 @@ function makeDraft(flatId = 'flat-1', withLineItems = true): MonthlyBillDraft {
   };
 }
 
-function setupTransaction(returnedBills: Array<{ id: string } | null>) {
+function setup() {
+  const select = jest.fn();
+  const transaction = jest.fn();
+
+  const mockDb = {
+    select,
+    transaction,
+  };
+
+  const store = databaseMonthlyBillStore(mockDb as unknown as Database);
+
+  return { store, select, transaction };
+}
+
+function setupTransaction(transaction: jest.Mock, returnedBills: Array<{ id: string } | null>) {
   const returning = jest.fn();
 
   for (const bill of returnedBills) {
@@ -89,7 +90,7 @@ function setupTransaction(returnedBills: Array<{ id: string } | null>) {
     throw new Error('Unexpected table');
   });
 
-  mockedDb.transaction.mockImplementation(
+  transaction.mockImplementation(
     async (callback: (tx: { insert: typeof insert }) => Promise<unknown>) => callback({ insert }),
   );
 
@@ -102,70 +103,102 @@ function setupTransaction(returnedBills: Array<{ id: string } | null>) {
   };
 }
 
-describe('monthlyBillStore (BB-0505)', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+describe('databaseMonthlyBillStore (BB-0505)', () => {
+  it('reads all flats', async () => {
+    const { store, select } = setup();
 
-  it('reads all flats, including vacant flats', async () => {
     const records = [{ id: 'flat-1' }, { id: 'flat-2' }];
 
     const from = jest.fn().mockResolvedValue(records);
+    select.mockReturnValue({ from });
 
-    mockedDb.select.mockReturnValue({ from });
-
-    const result = await monthlyBillStore.listFlats();
+    const result = await store.listFlats();
 
     expect(from).toHaveBeenCalledWith(flats);
     expect(result).toEqual(records);
   });
 
-  it('reads only active occupancies', async () => {
-    const records = [{ id: 'occupancy-1', flatId: 'flat-1' }];
+  it('reads active occupancies', async () => {
+    const { store, select } = setup();
+
+    const records = [{ id: 'occupancy-1' }];
 
     const where = jest.fn().mockResolvedValue(records);
     const from = jest.fn().mockReturnValue({ where });
 
-    mockedDb.select.mockReturnValue({ from });
+    select.mockReturnValue({ from });
 
-    const result = await monthlyBillStore.listActiveOccupancies();
+    const result = await store.listActiveOccupancies();
 
     expect(from).toHaveBeenCalledWith(occupancies);
     expect(where).toHaveBeenCalledTimes(1);
     expect(result).toEqual(records);
   });
 
-  it('reads only Current charge rates', async () => {
+  it('reads Current charge rates', async () => {
+    const { store, select } = setup();
+
     const records = [{ id: 'rate-1', status: 'Current' }];
 
     const where = jest.fn().mockResolvedValue(records);
     const from = jest.fn().mockReturnValue({ where });
 
-    mockedDb.select.mockReturnValue({ from });
+    select.mockReturnValue({ from });
 
-    const result = await monthlyBillStore.listCurrentRates();
+    const result = await store.listCurrentRates();
 
     expect(from).toHaveBeenCalledWith(chargeRates);
     expect(where).toHaveBeenCalledTimes(1);
     expect(result).toEqual(records);
   });
 
-  it('does not open a transaction for empty drafts', async () => {
-    const result = await monthlyBillStore.createMissing([]);
+  it('detects a month with existing bills', async () => {
+    const { store, select } = setup();
 
-    expect(result).toEqual([]);
-    expect(mockedDb.transaction).not.toHaveBeenCalled();
+    const limit = jest.fn().mockResolvedValue([{ id: 'bill-1' }]);
+
+    const where = jest.fn().mockReturnValue({ limit });
+    const from = jest.fn().mockReturnValue({ where });
+
+    select.mockReturnValue({ from });
+
+    const result = await store.monthHasBills('2026-11-01');
+
+    expect(from).toHaveBeenCalledWith(bills);
+    expect(where).toHaveBeenCalledTimes(1);
+    expect(limit).toHaveBeenCalledWith(1);
+    expect(result).toBe(true);
   });
 
-  it('inserts a bill and its three line items', async () => {
-    const mocks = setupTransaction([{ id: 'bill-1' }]);
+  it('detects a month without existing bills', async () => {
+    const { store, select } = setup();
+
+    const limit = jest.fn().mockResolvedValue([]);
+    const where = jest.fn().mockReturnValue({ limit });
+    const from = jest.fn().mockReturnValue({ where });
+
+    select.mockReturnValue({ from });
+
+    expect(await store.monthHasBills('2026-11-01')).toBe(false);
+  });
+
+  it('does not open a transaction for empty drafts', async () => {
+    const { store, transaction } = setup();
+
+    expect(await store.createMissing([])).toEqual([]);
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it('saves a bill and its three line items', async () => {
+    const { store, transaction } = setup();
+
+    const mocks = setupTransaction(transaction, [{ id: 'bill-1' }]);
 
     const draft = makeDraft();
 
-    const result = await monthlyBillStore.createMissing([draft]);
+    const result = await store.createMissing([draft]);
 
-    expect(mockedDb.transaction).toHaveBeenCalledTimes(1);
-
+    expect(transaction).toHaveBeenCalledTimes(1);
     expect(mocks.insert).toHaveBeenCalledWith(bills);
     expect(mocks.insert).toHaveBeenCalledWith(billLineItems);
 
@@ -185,23 +218,24 @@ describe('monthlyBillStore (BB-0505)', () => {
     expect(result).toEqual([{ id: 'bill-1' }]);
   });
 
-  it('skips existing bills without inserting line items', async () => {
-    const mocks = setupTransaction([null]);
+  it('skips a duplicate insert during a concurrent run', async () => {
+    const { store, transaction } = setup();
 
-    const result = await monthlyBillStore.createMissing([makeDraft()]);
+    const mocks = setupTransaction(transaction, [null]);
 
-    expect(result).toEqual([]);
+    expect(await store.createMissing([makeDraft()])).toEqual([]);
 
     expect(mocks.insert).toHaveBeenCalledWith(bills);
-    expect(mocks.insert).not.toHaveBeenCalledWith(billLineItems);
 
-    expect(mocks.lineItemValues).not.toHaveBeenCalled();
+    expect(mocks.insert).not.toHaveBeenCalledWith(billLineItems);
   });
 
-  it('creates multiple bills and skips duplicates', async () => {
-    const mocks = setupTransaction([{ id: 'bill-1' }, null, { id: 'bill-3' }]);
+  it('creates multiple bills and skips insert conflicts', async () => {
+    const { store, transaction } = setup();
 
-    const result = await monthlyBillStore.createMissing([
+    const mocks = setupTransaction(transaction, [{ id: 'bill-1' }, null, { id: 'bill-3' }]);
+
+    const result = await store.createMissing([
       makeDraft('flat-1'),
       makeDraft('flat-2'),
       makeDraft('flat-3'),
@@ -211,36 +245,36 @@ describe('monthlyBillStore (BB-0505)', () => {
 
     expect(mocks.billValues).toHaveBeenCalledTimes(3);
     expect(mocks.lineItemValues).toHaveBeenCalledTimes(2);
-    expect(mockedDb.transaction).toHaveBeenCalledTimes(1);
+    expect(transaction).toHaveBeenCalledTimes(1);
   });
 
-  it('does not insert line items when none are provided', async () => {
-    const mocks = setupTransaction([{ id: 'bill-1' }]);
+  it('handles an empty line-item list', async () => {
+    const { store, transaction } = setup();
 
-    const result = await monthlyBillStore.createMissing([makeDraft('flat-1', false)]);
+    const mocks = setupTransaction(transaction, [{ id: 'bill-1' }]);
+
+    const result = await store.createMissing([makeDraft('flat-1', false)]);
 
     expect(result).toEqual([{ id: 'bill-1' }]);
 
     expect(mocks.insert).not.toHaveBeenCalledWith(billLineItems);
   });
 
-  it('propagates transaction failures', async () => {
-    setupTransaction([{ id: 'bill-1' }]);
+  it('propagates transaction errors', async () => {
+    const { store, transaction } = setup();
 
-    mockedDb.transaction.mockRejectedValueOnce(new Error('Transaction failed'));
+    transaction.mockRejectedValue(new Error('Transaction failed'));
 
-    await expect(monthlyBillStore.createMissing([makeDraft()])).rejects.toThrow(
-      'Transaction failed',
-    );
+    await expect(store.createMissing([makeDraft()])).rejects.toThrow('Transaction failed');
   });
 
-  it('propagates line-item insertion failures', async () => {
-    const mocks = setupTransaction([{ id: 'bill-1' }]);
+  it('propagates line-item insertion errors', async () => {
+    const { store, transaction } = setup();
+
+    const mocks = setupTransaction(transaction, [{ id: 'bill-1' }]);
 
     mocks.lineItemValues.mockRejectedValueOnce(new Error('Line item insertion failed'));
 
-    await expect(monthlyBillStore.createMissing([makeDraft()])).rejects.toThrow(
-      'Line item insertion failed',
-    );
+    await expect(store.createMissing([makeDraft()])).rejects.toThrow('Line item insertion failed');
   });
 });
