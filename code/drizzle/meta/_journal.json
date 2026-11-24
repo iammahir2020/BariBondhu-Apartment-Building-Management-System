@@ -50,6 +50,13 @@
       "when": 1795462384498,
       "tag": "0006_guest_passes",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795535702353,
+      "tag": "0007_add_emergency_contact",
+      "breakpoints": true
     }
   ]
 }
