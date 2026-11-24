@@ -1,4 +1,5 @@
 {
+  "id": "780d8bc5-6720-41bb-bf38-7ddfb67dc0a5",
   "id": "5a4f816b-4b1b-4db2-9c1a-cdf9d064e6ff",
   "prevId": "59c29c2b-c27d-4763-af39-83a83f7dbd9b",
   "version": "7",
@@ -1517,6 +1518,8 @@
       },
       "isRLSEnabled": true
     },
+    "public.work_notes": {
+      "name": "work_notes",
     "public.shifts": {
       "name": "shifts",
       "schema": "",
@@ -1528,12 +1531,40 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "ticket_id": {
+          "name": "ticket_id",
         "guard_id": {
           "name": "guard_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
+        "author_id": {
+          "name": "author_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "work_notes_ticket_idx": {
+          "name": "work_notes_ticket_idx",
+          "columns": [
+            {
+              "expression": "ticket_id",
         "starts_at": {
           "name": "starts_at",
           "type": "timestamp with time zone",
@@ -1573,6 +1604,20 @@
         }
       },
       "foreignKeys": {
+        "work_notes_ticket_id_tickets_id_fk": {
+          "name": "work_notes_ticket_id_tickets_id_fk",
+          "tableFrom": "work_notes",
+          "tableTo": "tickets",
+          "columnsFrom": ["ticket_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "work_notes_author_id_profiles_id_fk": {
+          "name": "work_notes_author_id_profiles_id_fk",
+          "tableFrom": "work_notes",
+          "tableTo": "profiles",
+          "columnsFrom": ["author_id"],
         "shifts_guard_id_profiles_id_fk": {
           "name": "shifts_guard_id_profiles_id_fk",
           "tableFrom": "shifts",
@@ -1586,6 +1631,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
+      "checkConstraints": {
+        "work_notes_text_length": {
+          "name": "work_notes_text_length",
+          "value": "length(\"work_notes\".\"text\") between 1 and 1000"
+        }
+      },
       "checkConstraints": {},
       "isRLSEnabled": true
     }
