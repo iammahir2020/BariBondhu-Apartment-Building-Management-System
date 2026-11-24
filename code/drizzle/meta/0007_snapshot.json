@@ -1,5 +1,6 @@
 {
   "id": "780d8bc5-6720-41bb-bf38-7ddfb67dc0a5",
+  "id": "5a4f816b-4b1b-4db2-9c1a-cdf9d064e6ff",
   "prevId": "59c29c2b-c27d-4763-af39-83a83f7dbd9b",
   "version": "7",
   "dialect": "postgresql",
@@ -1519,6 +1520,8 @@
     },
     "public.work_notes": {
       "name": "work_notes",
+    "public.shifts": {
+      "name": "shifts",
       "schema": "",
       "columns": {
         "id": {
@@ -1530,6 +1533,8 @@
         },
         "ticket_id": {
           "name": "ticket_id",
+        "guard_id": {
+          "name": "guard_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -1560,6 +1565,33 @@
           "columns": [
             {
               "expression": "ticket_id",
+        "starts_at": {
+          "name": "starts_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ends_at": {
+          "name": "ends_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "shift_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Planned'"
+        }
+      },
+      "indexes": {
+        "shifts_guard_idx": {
+          "name": "shifts_guard_idx",
+          "columns": [
+            {
+              "expression": "guard_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1586,6 +1618,11 @@
           "tableFrom": "work_notes",
           "tableTo": "profiles",
           "columnsFrom": ["author_id"],
+        "shifts_guard_id_profiles_id_fk": {
+          "name": "shifts_guard_id_profiles_id_fk",
+          "tableFrom": "shifts",
+          "tableTo": "profiles",
+          "columnsFrom": ["guard_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -1600,6 +1637,7 @@
           "value": "length(\"work_notes\".\"text\") between 1 and 1000"
         }
       },
+      "checkConstraints": {},
       "isRLSEnabled": true
     }
   },
@@ -1668,6 +1706,11 @@
       "name": "expense_status",
       "schema": "public",
       "values": ["Waiting for approval", "Approved", "Rejected"]
+    },
+    "public.shift_status": {
+      "name": "shift_status",
+      "schema": "public",
+      "values": ["Planned", "On duty", "Finished", "Removed"]
     }
   },
   "schemas": {},
