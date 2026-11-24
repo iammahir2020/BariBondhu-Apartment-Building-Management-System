@@ -12,11 +12,14 @@ import { AppError } from '@/lib/errors';
 import {
   commonAreaPlaces,
   occupancies,
+  profiles,
   ticketFollowers,
   ticketStatusChanges,
   tickets,
 } from '@/models';
 import { databaseAuditWriter } from '@/services/auditService';
+import { noopNotifier } from '@/services/notifier';
+import type { TicketNoticeDeps, TicketRecipients } from '@/services/ticketNotifications';
 import {
   MAX_PHOTO_BYTES,
   PHOTO_TYPES,
@@ -29,13 +32,57 @@ import {
  * Everything the resident's ticket services need, wired to the database and Storage.
  * @param db - Database to use.
  * @param admin - The service-role Supabase client, for photos.
- * @returns The ticket store, photo store and audit writer.
+ * @returns The ticket store, photo store, audit writer and notices.
  */
 export function ticketDeps(db: Database, admin: SupabaseClient): TicketDeps {
   return {
     tickets: databaseTicketStore(db),
     photos: supabasePhotoStore(admin),
     audit: databaseAuditWriter(db),
+    notices: ticketNotices(db),
+  };
+}
+
+/**
+ * Who to tell about a ticket, and how. Every ticket service (features 12 to 15) takes its notices from here.
+ * Notifications go nowhere until Adika's notifier (BB-2306) is merged; then only `notify` changes.
+ * @param db - Database to use.
+ * @returns The recipients and the notifier.
+ */
+export function ticketNotices(db: Database): TicketNoticeDeps {
+  return { recipients: databaseTicketRecipients(db), notify: noopNotifier };
+}
+
+/**
+ * {@link TicketRecipients} backed by the database. A household shares one resident profile (BR-09), so a
+ * follower household is told through its active resident profile.
+ * @param db - Database to use.
+ * @returns The recipients.
+ */
+export function databaseTicketRecipients(db: Database): TicketRecipients {
+  return {
+    async activeManagerIds() {
+      const rows = await db
+        .select({ id: profiles.id })
+        .from(profiles)
+        .where(and(eq(profiles.role, 'manager'), eq(profiles.active, true)));
+      return rows.map((row) => row.id);
+    },
+
+    async followerAccountIds(ticketId) {
+      const rows = await db
+        .select({ id: profiles.id })
+        .from(ticketFollowers)
+        .innerJoin(profiles, eq(profiles.occupancyId, ticketFollowers.occupancyId))
+        .where(
+          and(
+            eq(ticketFollowers.ticketId, ticketId),
+            eq(profiles.role, 'resident'),
+            eq(profiles.active, true),
+          ),
+        );
+      return rows.map((row) => row.id);
+    },
   };
 }
 

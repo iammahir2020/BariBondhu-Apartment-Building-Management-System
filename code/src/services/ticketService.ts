@@ -29,6 +29,11 @@ import {
   type TicketPriority,
 } from '@/models';
 import type { AuditWriter } from '@/services/auditService';
+import {
+  notifyNewTicket,
+  notifyTicketCancelled,
+  type TicketNoticeDeps,
+} from '@/services/ticketNotifications';
 import { checkTicketTransition, isFinalTicketStatus } from '@/services/ticketStateMachine';
 
 /** Largest photo accepted: 5 MB (NFR-09). The phone compresses to about 1 MB first. */
@@ -190,6 +195,8 @@ export interface TicketDeps {
   tickets: TicketStore;
   photos: PhotoStore;
   audit: AuditWriter;
+  /** Tells the manager about new and cancelled tickets. */
+  notices: TicketNoticeDeps;
   /** Makes ids; tests pass a fixed one. */
   newId?: () => string;
 }
@@ -285,8 +292,8 @@ export async function findOpenMatch(
  * Reports a fault for my household (RES-02). The ticket starts as Reported, with Normal priority, or Urgent from the
  * emergency screen or for a fire or gas smell. A flat ticket is for the household's own flat, taken from its
  * occupancy, never from the request. A common-area fault that matches an open ticket is not created; the match comes
- * back instead, for "Me too" (BR-13).
- * @param deps - Ticket store, photo store and audit writer.
+ * back instead, for "Me too" (BR-13). The manager is told about every new ticket, an Urgent one as Urgent.
+ * @param deps - Ticket store, photo store, audit writer and notices.
  * @param reporter - The signed-in resident.
  * @param input - What the resident filled in.
  * @param now - The current time.
@@ -384,6 +391,7 @@ export async function reportFault(
     oldValues: null,
     newValues: { category: ticket.category, flatId, placeId, priority, status: ticket.status },
   });
+  await notifyNewTicket(deps.notices, ticket);
   return { kind: 'created', ticket };
 }
 
@@ -439,7 +447,8 @@ export async function meToo(
  * by the household that reported it when no other household follows it; then it becomes Cancelled, through the
  * ticket state machine. If others follow it, or my household only tapped "Me too", my household stops following and
  * the ticket stays Reported. From Assigned on, only the manager can close it and nobody can stop following it.
- * @param deps - Ticket store and audit writer.
+ * The manager is told when a ticket is cancelled, not when a household stops following one.
+ * @param deps - Ticket store, audit writer and notices.
  * @param resident - The signed-in resident.
  * @param ticketId - The ticket to cancel.
  * @param now - The current time.
@@ -450,7 +459,7 @@ export async function meToo(
  * @throws AppError 409 if the ticket is no longer Reported.
  */
 export async function cancelTicket(
-  deps: Pick<TicketDeps, 'tickets' | 'audit' | 'newId'>,
+  deps: Pick<TicketDeps, 'tickets' | 'audit' | 'notices' | 'newId'>,
   resident: Profile,
   ticketId: string,
   now: Date = new Date(),
@@ -507,5 +516,7 @@ export async function cancelTicket(
     oldValues: { status: 'Reported' },
     newValues: { status: 'Cancelled' },
   });
-  return { outcome: 'cancelled', ticket: { ...ticket, status: 'Cancelled', updatedAt: now } };
+  const cancelled: Ticket = { ...ticket, status: 'Cancelled', updatedAt: now };
+  await notifyTicketCancelled(deps.notices, cancelled);
+  return { outcome: 'cancelled', ticket: cancelled };
 }

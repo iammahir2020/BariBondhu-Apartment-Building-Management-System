@@ -69,12 +69,18 @@ jest.mock('@/lib/adapters/ticketAdapters', () => {
     listForHousehold: async () => [],
     activePlaces: async () => [{ id: mockPlaceId, name: 'Water pump' }],
   };
+  const notices = {
+    recipients: { activeManagerIds: async () => [], followerAccountIds: async () => [] },
+    notify: async () => {},
+  };
   return {
     databaseTicketStore: () => store,
+    ticketNotices: () => notices,
     ticketDeps: () => ({
       tickets: store,
       photos: { upload: async () => 'photo.jpg', remove: async () => {} },
       audit: async () => {},
+      notices,
     }),
   };
 });

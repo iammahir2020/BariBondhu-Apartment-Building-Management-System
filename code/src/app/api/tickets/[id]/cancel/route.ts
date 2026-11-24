@@ -5,7 +5,7 @@
  *
  * @author Mahir Al Kamal
  */
-import { databaseTicketStore } from '@/lib/adapters/ticketAdapters';
+import { databaseTicketStore, ticketNotices } from '@/lib/adapters/ticketAdapters';
 import { requireRole } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { toErrorResponse } from '@/lib/errors';
@@ -29,7 +29,11 @@ export async function POST(
     const user = await requireRole(request, 'reportFault');
     const ticketId = requireTicketId((await context.params).id);
     const result = await cancelTicket(
-      { tickets: databaseTicketStore(db), audit: databaseAuditWriter(db) },
+      {
+        tickets: databaseTicketStore(db),
+        audit: databaseAuditWriter(db),
+        notices: ticketNotices(db),
+      },
       user.actor,
       ticketId,
     );

@@ -34,7 +34,8 @@ import {
   type TicketPhoto,
   type TicketStore,
 } from '@/services/ticketService';
-import { makeProfile, memoryAudit } from '@/services/testFakes';
+import { MANAGER_TICKETS_LINK } from '@/services/ticketNotifications';
+import { makeProfile, memoryAudit, memoryNotices } from '@/services/testFakes';
 
 const NOW = new Date('2026-11-23T10:00:00+06:00');
 
@@ -241,13 +242,15 @@ function setup(): {
   tickets: MemoryTicketStore;
   photos: MemoryPhotoStore;
   entries: ReturnType<typeof memoryAudit>['entries'];
+  sent: ReturnType<typeof memoryNotices>['sent'];
 } {
   const tickets = new MemoryTicketStore();
   const photos = new MemoryPhotoStore();
   const { audit, entries } = memoryAudit();
+  const { notices, sent } = memoryNotices();
   let n = 0;
-  const deps: TicketDeps = { tickets, photos, audit, newId: () => `id-${++n}` };
-  return { deps, tickets, photos, entries };
+  const deps: TicketDeps = { tickets, photos, audit, notices, newId: () => `id-${++n}` };
+  return { deps, tickets, photos, entries, sent };
 }
 
 /** Reports a fault that must create a new ticket, and returns that ticket. */
@@ -349,10 +352,10 @@ describe('reportFault: inside my flat', () => {
   });
 
   it('makes real ids when none are given, and needs no home times', async () => {
-    const { tickets, photos } = setup();
+    const { tickets, photos, deps } = setup();
     const { audit } = memoryAudit();
     const ticket = await reportNew(
-      { tickets, photos, audit },
+      { tickets, photos, audit, notices: deps.notices },
       resident,
       flatReport({ homeTimes: undefined }),
     );
@@ -1078,11 +1081,102 @@ describe('cancelTicket', () => {
   });
 
   it('makes a real id when none is given', async () => {
-    const { tickets } = setup();
+    const { tickets, deps } = setup();
     const { audit } = memoryAudit();
     const mine = myTicket(tickets);
-    await cancelTicket({ tickets, audit }, resident, mine.id);
+    await cancelTicket({ tickets, audit, notices: deps.notices }, resident, mine.id);
     expect(tickets.changes[0]?.id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+});
+
+describe('telling the manager (BB-1211, NFR-29)', () => {
+  it('tells the manager about a new fault inside my flat (TC-R02-01)', async () => {
+    const { deps, sent } = setup();
+    await reportFault(deps, resident, flatReport(), NOW);
+    expect(sent).toEqual([
+      {
+        recipientId: 'manager-1',
+        text: 'New fault reported: Kitchen sink is leaking',
+        link: MANAGER_TICKETS_LINK,
+      },
+    ]);
+  });
+
+  it('tells the manager an emergency ticket is Urgent (TC-R02-11)', async () => {
+    const { deps, sent } = setup();
+    const ticket = await reportNew(deps, resident, commonReport({ emergency: true }), NOW);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.text).toBe(`Urgent fault reported: ${ticket.title}`);
+  });
+
+  it('tells nobody when the report matches an open ticket instead (BR-13)', async () => {
+    const { deps, tickets, sent } = setup();
+    tickets.add({});
+    await reportFault(deps, resident, pumpReport(), NOW);
+    expect(sent).toEqual([]);
+  });
+
+  it('tells nobody when the report is refused', async () => {
+    const { deps, sent } = setup();
+    await errorFrom(() => reportFault(deps, resident, flatReport({ description: ' ' }), NOW));
+    expect(sent).toEqual([]);
+  });
+
+  it('tells nobody when the ticket could not be saved', async () => {
+    const { deps, tickets, sent } = setup();
+    tickets.saveReported = async () => {
+      throw new Error('database down');
+    };
+    await expect(reportFault(deps, resident, flatReport(), NOW)).rejects.toThrow('database down');
+    expect(sent).toEqual([]);
+  });
+
+  it('still saves the report when the notification fails', async () => {
+    const { deps, tickets } = setup();
+    const logged = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const failing = {
+      ...deps,
+      notices: {
+        ...deps.notices,
+        notify: async () => {
+          throw new Error('notifications down');
+        },
+      },
+    };
+    await expect(reportFault(failing, resident, flatReport(), NOW)).resolves.toMatchObject({
+      kind: 'created',
+    });
+    expect(tickets.saved).toHaveLength(1);
+    expect(logged).toHaveBeenCalled();
+    logged.mockRestore();
+  });
+
+  it('tells the manager when I cancel my ticket (TC-R02-17)', async () => {
+    const { deps, tickets, sent } = setup();
+    const mine = myTicket(tickets);
+    await cancelTicket(deps, resident, mine.id, NOW);
+    expect(sent).toEqual([
+      {
+        recipientId: 'manager-1',
+        text: `Cancelled by the resident: ${mine.title}`,
+        link: MANAGER_TICKETS_LINK,
+      },
+    ]);
+  });
+
+  it('tells nobody when my household only stops following a ticket', async () => {
+    const { deps, tickets, sent } = setup();
+    const theirs = tickets.add({});
+    follow(tickets, theirs.id, 'occupancy-1A');
+    await cancelTicket(deps, resident, theirs.id, NOW);
+    expect(sent).toEqual([]);
+  });
+
+  it('tells nobody when the cancel is refused', async () => {
+    const { deps, tickets, sent } = setup();
+    const mine = myTicket(tickets, { status: 'Assigned' });
+    await errorFrom(() => cancelTicket(deps, resident, mine.id, NOW));
+    expect(sent).toEqual([]);
   });
 });
 
