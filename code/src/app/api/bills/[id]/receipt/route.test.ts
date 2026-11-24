@@ -37,7 +37,7 @@ describe('GET /api/bills/[id]/receipt', () => {
     const viewer = { actor: RESIDENT, scope: 'own' as const };
     jest.mocked(requireRole).mockResolvedValue(viewer);
     const view: ReceiptView = {
-      receiptNumber: 'R-000101',
+      receiptNumber: 'R-2611-0101',
       flatLabel: 'Block A, Flat 3B',
       billingMonth: '2026-11-01',
       lines: [],
@@ -54,7 +54,7 @@ describe('GET /api/bills/[id]/receipt', () => {
     expect(getReceipt).toHaveBeenCalledWith({}, viewer, BILL_ID);
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
-      receiptNumber: 'R-000101',
+      receiptNumber: 'R-2611-0101',
       gatewayTransactionId: 'SIM-1',
       paidAt: '2026-11-25T04:02:00.000Z',
     });
@@ -72,7 +72,7 @@ describe('GET /api/bills/[id]/receipt', () => {
   it('answers 404 for an id that is not a UUID', async () => {
     jest.mocked(requireRole).mockResolvedValue({ actor: RESIDENT, scope: 'own' });
 
-    const response = await receipt('R-000101');
+    const response = await receipt('R-2611-0101');
 
     expect(response.status).toBe(404);
     expect(getReceipt).not.toHaveBeenCalled();

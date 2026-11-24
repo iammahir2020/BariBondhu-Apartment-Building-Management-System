@@ -72,7 +72,7 @@ export interface MyBillView {
   canPay: boolean;
   /** Why the last payment ended without money, while the bill is Unpaid again (RES-01 c5, TC-R01-17). */
   paymentProblem: string | null;
-  /** The receipt number of a Paid bill, like `R-000101`. */
+  /** The receipt number of a Paid bill, like `R-2611-0101`. */
   receiptNumber: string | null;
 }
 
@@ -91,10 +91,13 @@ export interface ReceiptView {
 /**
  * The receipt number as printed.
  * @param number - The number the database gave the receipt.
- * @returns `R-` and the number with at least six digits, like `R-000101`.
+ * @param billingMonth - The bill's month, `YYYY-MM-01`.
+ * @returns `R-`, the bill's year and month, and the number with at least four digits, like `R-2611-0101` for
+ * receipt 101 of a November 2026 bill (as in the prototype's Dues screen).
  */
-export function formatReceiptNumber(number: number): string {
-  return `R-${String(number).padStart(6, '0')}`;
+export function formatReceiptNumber(number: number, billingMonth: string): string {
+  const yearMonth = `${billingMonth.slice(2, 4)}${billingMonth.slice(5, 7)}`;
+  return `R-${yearMonth}-${String(number).padStart(4, '0')}`;
 }
 
 function toView(row: MyBillRow): MyBillView {
@@ -109,7 +112,9 @@ function toView(row: MyBillRow): MyBillView {
     canPay: unpaid,
     paymentProblem: unpaid && row.latestPayment?.endedAt ? row.latestPayment.endReason : null,
     receiptNumber:
-      row.status === 'Paid' && row.receipt ? formatReceiptNumber(row.receipt.number) : null,
+      row.status === 'Paid' && row.receipt
+        ? formatReceiptNumber(row.receipt.number, row.billingMonth)
+        : null,
   };
 }
 
@@ -155,7 +160,7 @@ export async function getReceipt(
     throw new AppError('CONFLICT', MY_BILL_ERRORS.notPaid, { status: row.status });
   }
   return {
-    receiptNumber: formatReceiptNumber(row.receipt.number),
+    receiptNumber: formatReceiptNumber(row.receipt.number, row.billingMonth),
     flatLabel: row.flatLabel,
     billingMonth: row.billingMonth,
     lines: row.lines,

@@ -67,12 +67,13 @@ async function refusal(promise: Promise<unknown>): Promise<AppError> {
 
 describe('formatReceiptNumber', () => {
   it.each([
-    [1, 'R-000001'],
-    [101, 'R-000101'],
-    [999_999, 'R-999999'],
-    [1_234_567, 'R-1234567'],
-  ])('prints %i as %s', (number, printed) => {
-    expect(formatReceiptNumber(number)).toBe(printed);
+    [1, '2026-11-01', 'R-2611-0001'],
+    [101, '2026-11-01', 'R-2611-0101'],
+    [142, '2026-10-01', 'R-2610-0142'],
+    [9_999, '2027-01-01', 'R-2701-9999'],
+    [12_345, '2026-12-01', 'R-2612-12345'],
+  ])('prints receipt %i of a %s bill as %s', (number, month, printed) => {
+    expect(formatReceiptNumber(number, month)).toBe(printed);
   });
 });
 
@@ -151,7 +152,7 @@ describe('listMyBills', () => {
     const bills = await listMyBills(store, RESIDENT);
 
     expect(bills.map((b) => b.paymentProblem)).toEqual([null, null]);
-    expect(bills[1]?.receiptNumber).toBe('R-000007');
+    expect(bills[1]?.receiptNumber).toBe('R-2610-0007');
   });
 
   it("does not show an earlier household's bills for the same flat (TC-R01-22)", async () => {
@@ -185,7 +186,7 @@ describe('getReceipt', () => {
     const receipt = await getReceipt(storeOf([PAID]), { actor: RESIDENT, scope: 'own' }, 'bill-1');
 
     expect(receipt).toEqual({
-      receiptNumber: 'R-000101',
+      receiptNumber: 'R-2611-0101',
       flatLabel: 'Block A, Flat 3B',
       billingMonth: '2026-11-01',
       lines: LINES,
@@ -201,7 +202,7 @@ describe('getReceipt', () => {
 
     const receipt = await getReceipt(storeOf([other]), { actor: MANAGER, scope: 'all' }, 'bill-1');
 
-    expect(receipt.receiptNumber).toBe('R-000101');
+    expect(receipt.receiptNumber).toBe('R-2611-0101');
   });
 
   it.each(['Unpaid', 'Payment pending', 'Awaiting verification', 'Carried forward'] as const)(
