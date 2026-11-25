@@ -57,7 +57,7 @@ npm run dev
 
 | Path | What it holds |
 |---|---|
-| `docs/srs/SRS.md` | Software Requirements Specification, v1.6. This is the copy we edit |
+| `docs/srs/SRS.md` | Software Requirements Specification, v1.7. This is the copy we edit |
 | `archive/` folders under `docs/srs/` and `docs/sds/<class>/` | Archived Word versions, not maintained. The `.md` files are the current copies |
 | `docs/srs/figures/` | Figures used in the SRS |
 | `docs/srs/latex/` | LaTeX source of the SRS for the PDF (`main.tex` and `figures/`), made from `SRS.md`. Compile with XeLaTeX |
