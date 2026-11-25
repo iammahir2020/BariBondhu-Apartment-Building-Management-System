@@ -18,6 +18,14 @@ import type { CarryForwardOperation, CarryForwardStore } from '@/services/carryF
 
 type BillTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 
+/**
+ * Creates a database-backed store for carrying forward bill balances.
+ *
+ * @param db - Database connection.
+ * @param existingTx - Optional existing database transaction.
+ * @param actorId - Optional actor ID for audit records.
+ * @returns The carry-forward store implementation.
+ */
 export function databaseCarryForwardStore(
   db: Database,
   existingTx?: BillTransaction,

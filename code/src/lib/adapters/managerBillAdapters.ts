@@ -10,10 +10,18 @@ import type { Database } from '@/lib/db';
 import { bills, flats, occupancies } from '@/models';
 
 /**
- * Lists monthly bills with flat and household details.
+ * Creates the database-backed adapter for listing manager bills.
+ *
+ * @param db - Database connection.
+ * @returns The manager bill listing adapter.
  */
 export function databaseManagerBillStore(db: Database) {
   return {
+    /**
+     * Lists monthly bills with their flat and household details.
+     *
+     * @returns Monthly bills ordered by billing month and creation date, newest first.
+     */
     async listBills() {
       return db
         .select({
