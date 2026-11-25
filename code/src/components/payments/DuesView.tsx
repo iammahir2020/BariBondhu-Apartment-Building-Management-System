@@ -19,13 +19,16 @@ import { Card } from '@/components/ui/card';
 import { callApi } from '@/lib/apiClient';
 import { formatTaka } from '@/lib/money';
 import type { MyBillView } from '@/services/myBillsService';
-import { BILL_STATUS_BADGE, formatBillDay, formatBillMonth, lineLabel } from './billView';
+import {
+  BILL_STATUS_BADGE,
+  currentBill,
+  formatBillDay,
+  formatBillMonth,
+  lineLabel,
+} from './billView';
 
 /** How often Dues checks again while a payment is pending. */
 export const PENDING_REFRESH_MS = 10_000;
-
-/** Statuses a bill can't be paid from again. */
-const SETTLED: readonly MyBillView['status'][] = ['Paid', 'Carried forward'];
 
 /**
  * The receipt page of a bill.
@@ -71,7 +74,7 @@ export function DuesView() {
     void load();
   }, [load]);
 
-  const current = bills?.find((bill) => !SETTLED.includes(bill.status)) ?? null;
+  const current = bills ? currentBill(bills) : null;
   const earlier = bills?.filter((bill) => bill !== current) ?? [];
   const pending = current?.status === 'Payment pending';
 

@@ -5,7 +5,7 @@
  * @author Mahir Al Kamal
  */
 import type { BillStatus } from '@/services/billStateMachine';
-import type { BillLineView } from '@/services/myBillsService';
+import type { BillLineView, MyBillView } from '@/services/myBillsService';
 
 /** The name of each kind of line. */
 export const LINE_LABELS: Readonly<Record<BillLineView['type'], string>> = {
@@ -84,4 +84,36 @@ export function formatBillMoment(at: Date | string): string {
     .toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: DHAKA })
     .toLowerCase();
   return `${day}, ${time}`;
+}
+
+/** Statuses a bill can't be paid from again. */
+const SETTLED: readonly BillStatus[] = ['Paid', 'Carried forward'];
+
+/**
+ * The bill to pay now, as Dues and Resident home both show it.
+ * @param bills - My household's bills, newest first, as `/api/bills/mine` sends them.
+ * @returns The newest bill that isn't Paid or Carried forward, or null when everything is settled.
+ */
+export function currentBill(bills: readonly MyBillView[]): MyBillView | null {
+  return bills.find((bill) => !SETTLED.includes(bill.status)) ?? null;
+}
+
+/** One day in milliseconds. */
+const DAY_MS = 86_400_000;
+
+/**
+ * How long until a bill is due, counted in whole Dhaka days.
+ * @param dueDate - `YYYY-MM-DD`.
+ * @param now - The moment to count from.
+ * @returns Like `5 days left`, `1 day left`, `due today`, `1 day late` or `3 days late`.
+ */
+export function dueCountdown(dueDate: string, now: Date): string {
+  const today = now.toLocaleDateString('en-CA', { timeZone: DHAKA });
+  const days = Math.round(
+    (Date.parse(`${dueDate}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / DAY_MS,
+  );
+  if (days === 0) return 'due today';
+  const count = Math.abs(days);
+  const unit = count === 1 ? 'day' : 'days';
+  return days > 0 ? `${count} ${unit} left` : `${count} ${unit} late`;
 }
