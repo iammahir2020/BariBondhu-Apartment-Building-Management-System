@@ -232,13 +232,12 @@ export async function generateMonthlyBills(
   const created = await deps.store.createMissing(drafts);
 
   // NFR-27: Record the manager's generation action.
-  // NFR-27: Record the manager's generation action.
 
   // NFR-27: Record one audit entry for bill generation.
   if (created.length > 0) {
     await deps.audit({
       actorId,
-      action: 'bills.generate',
+      action: 'bill.generate',
       entityType: 'bills',
       entityId: created[0]!.id,
       oldValues: null,

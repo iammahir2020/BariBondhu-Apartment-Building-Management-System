@@ -288,7 +288,7 @@ describe('generateMonthlyBills (BB-0505)', () => {
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({
         actorId: MANAGER_ID,
-        action: 'bills.generate',
+        action: 'bill.generate',
         entityType: 'bills',
         newValues: expect.objectContaining({
           billingMonth: MONTH,
