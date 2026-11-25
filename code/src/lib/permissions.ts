@@ -88,6 +88,11 @@ export const PERMISSIONS = {
   },
   /** See a resident's phone number: residents their own, the manager everyone's (NFR-10). */
   viewResidentPhone: { resident: 'own', manager: 'all' },
+  /**
+   * See the counts on the manager's home (`GET /api/dashboards/manager`, BM-01). Not a table row: every count comes
+   * from data the manager may already see (bills, tickets, expenses, overpayments).
+   */
+  viewManagerDashboard: { manager: 'all' },
   /** See one's own account (`GET /api/me`). Not a table row: every signed-in user may see who they are. */
   viewOwnAccount: {
     resident: 'own',

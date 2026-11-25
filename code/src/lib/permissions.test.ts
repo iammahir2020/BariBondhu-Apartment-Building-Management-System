@@ -59,6 +59,7 @@ const TABLE: Record<Action, Partial<Record<Role, Scope>>> = {
     maintenance: 'all',
   },
   viewResidentPhone: { resident: 'own', manager: 'all' },
+  viewManagerDashboard: { manager: 'all' },
   viewOwnAccount: {
     resident: 'own',
     guard: 'own',
