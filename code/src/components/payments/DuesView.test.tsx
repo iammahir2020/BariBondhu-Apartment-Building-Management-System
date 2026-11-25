@@ -29,6 +29,7 @@ const NOVEMBER: MyBillView = {
   canPay: true,
   paymentProblem: null,
   receiptNumber: null,
+  overpayments: [],
 };
 const OCTOBER: MyBillView = {
   ...NOVEMBER,
@@ -60,6 +61,27 @@ afterEach(() => {
 });
 
 describe('DuesView', () => {
+  it('tells the household an overpayment will be returned (BR-04, BB-0614)', async () => {
+    answers([
+      200,
+      {
+        bills: [
+          {
+            ...OCTOBER,
+            overpayments: [{ amountPoisha: 485000, status: 'Flagged', refundedAt: null }],
+          },
+        ],
+      },
+    ]);
+
+    render(<DuesView />);
+
+    expect(
+      await screen.findByText('You paid ৳4,850.00 again for October 2026'),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/The manager will return the money to you/)).toBeInTheDocument();
+  });
+
   it('shows each charge, the total and the due date of the bill to pay (TC-R01-01)', async () => {
     answers([200, { bills: [NOVEMBER, OCTOBER] }]);
 

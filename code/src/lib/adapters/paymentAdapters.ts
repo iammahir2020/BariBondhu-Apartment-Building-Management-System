@@ -10,6 +10,7 @@ import 'server-only';
 import { and, desc, eq, inArray, isNull, lte } from 'drizzle-orm';
 import { databaseSimulatedGateway } from '@/lib/adapters/gatewayAdapters';
 import type { Database } from '@/lib/db';
+import { flatLabel } from '@/lib/flatLabel';
 import { gatewaySecret } from '@/lib/gatewaySecret';
 import {
   billLineItems,
@@ -173,7 +174,7 @@ async function withDetails(
 ): Promise<(MyBillRow & Pick<ReceiptRow, 'paidBy'>)[]> {
   if (bills.length === 0) return [];
   const ids = bills.map((bill) => bill.id);
-  const [lines, paymentRows, receiptRows] = await Promise.all([
+  const [lines, paymentRows, receiptRows, overpaymentRows] = await Promise.all([
     db
       .select()
       .from(billLineItems)
@@ -185,6 +186,16 @@ async function withDetails(
       .where(inArray(payments.billId, ids))
       .orderBy(desc(payments.startedAt)),
     db.select().from(receipts).where(inArray(receipts.billId, ids)),
+    db
+      .select({
+        billId: overpayments.billId,
+        amountPoisha: overpayments.amountPoisha,
+        status: overpayments.status,
+        refundedAt: overpayments.refundedAt,
+      })
+      .from(overpayments)
+      .where(inArray(overpayments.billId, ids))
+      .orderBy(overpayments.flaggedAt),
   ]);
 
   return bills.map((bill) => {
@@ -204,6 +215,9 @@ async function withDetails(
           }
         : null,
       receipt: receipt ? { number: receipt.number, paidAt: receipt.paidAt } : null,
+      overpayments: overpaymentRows
+        .filter((overpayment) => overpayment.billId === bill.id)
+        .map(({ amountPoisha, status, refundedAt }) => ({ amountPoisha, status, refundedAt })),
       paidBy: paying
         ? { gatewayTransactionId: paying.gatewayTransactionId, amountPoisha: paying.amountPoisha }
         : null,
@@ -246,7 +260,7 @@ export function databaseMyBillStore(db: Database): MyBillStore {
       const { blockName, flatNumber, ...bill } = row;
       const [detailed] = await withDetails(db, [bill]);
       if (!detailed) return null;
-      return { ...detailed, flatLabel: `${blockName}, Flat ${flatNumber}` };
+      return { ...detailed, flatLabel: flatLabel(blockName, flatNumber) };
     },
   };
 }

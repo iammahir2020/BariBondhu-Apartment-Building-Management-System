@@ -34,15 +34,18 @@ describe('ManagerHome', () => {
     expect(screen.getByText('Open tickets').parentElement).toHaveTextContent('5');
   });
 
-  it('links the expenses total to Expenses, and leaves cards for unbuilt pages unlinked', async () => {
+  it('links overpayments and expenses to their pages, and leaves cards for unbuilt pages unlinked', async () => {
     answerFetch(200, BUSY);
     render(<ManagerHome />);
     await screen.findByText('Open tickets');
 
     const links = screen.getAllByRole('link');
-    expect(links).toHaveLength(1);
-    expect(links[0]).toHaveAttribute('href', '/manager/expenses');
-    expect(links[0]).toHaveTextContent('Expenses waiting for committee');
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/manager/overpayments',
+      '/manager/expenses',
+    ]);
+    expect(links[0]).toHaveTextContent('1 overpayment to refund');
+    expect(links[1]).toHaveTextContent('Expenses waiting for committee');
   });
 
   it('says nothing needs the manager when all is quiet (boundary)', async () => {

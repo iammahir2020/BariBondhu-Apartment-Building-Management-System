@@ -6,7 +6,7 @@
  * @author Mahir Al Kamal
  */
 import { AppError } from '@/lib/errors';
-import type { BillLineItem, Profile } from '@/models';
+import type { BillLineItem, OverpaymentStatus, Profile } from '@/models';
 import type { BillStatus } from '@/services/billStateMachine';
 
 /** Error text, worded as the SRS asks (NFR-25). */
@@ -42,6 +42,16 @@ export interface MyBillRow {
   } | null;
   /** The receipt, once the bill is Paid. */
   receipt: { number: number; paidAt: Date } | null;
+  /** Money paid again after the bill was settled (BR-04), and whether the manager has refunded it. */
+  overpayments: OverpaymentNotice[];
+}
+
+/** An overpayment on one of my bills, as Dues tells the household about it. */
+export interface OverpaymentNotice {
+  amountPoisha: number;
+  status: OverpaymentStatus;
+  /** When the manager marked it Refunded, or null while Flagged. */
+  refundedAt: Date | null;
 }
 
 /** A bill with what its receipt prints. */
@@ -74,6 +84,8 @@ export interface MyBillView {
   paymentProblem: string | null;
   /** The receipt number of a Paid bill, like `R-2611-0101`. */
   receiptNumber: string | null;
+  /** Money paid again for this bill after it was settled, so Dues can say it will be, or was, returned. */
+  overpayments: OverpaymentNotice[];
 }
 
 /** A receipt, as UC-R08 lists it. */
@@ -115,6 +127,7 @@ function toView(row: MyBillRow): MyBillView {
       row.status === 'Paid' && row.receipt
         ? formatReceiptNumber(row.receipt.number, row.billingMonth)
         : null,
+    overpayments: row.overpayments,
   };
 }
 

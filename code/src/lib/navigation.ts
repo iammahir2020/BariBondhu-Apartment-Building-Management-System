@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   ListChecks,
   Receipt,
+  Repeat,
   ScanLine,
   UserPlus,
   Wallet,
@@ -67,6 +68,7 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
       items: [
         { label: 'Dashboard', href: '/manager', icon: LayoutDashboard, onPhone: true },
         { label: 'Expenses', href: '/manager/expenses', icon: Wallet, onPhone: true },
+        { label: 'Overpayments', href: '/manager/overpayments', icon: Repeat },
       ],
     },
   ],

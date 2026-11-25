@@ -10,7 +10,7 @@
 import { render, screen } from '@testing-library/react';
 import { answerFetch } from '@/components/auth/testFetch';
 import type { BuildingSetup } from '@/services/buildingSetupService';
-import { AdminHome, blockLabel } from './AdminHome';
+import { AdminHome } from './AdminHome';
 
 const SETUP: BuildingSetup = {
   building: { name: 'Lakeview Residence', address: 'Road 7, Dhanmondi, Dhaka' },
@@ -58,14 +58,5 @@ describe('AdminHome', () => {
     expect(
       await screen.findByText('Something went wrong. Try again in a minute.'),
     ).toBeInTheDocument();
-  });
-});
-
-describe('blockLabel', () => {
-  it('puts "Block" in front of a bare name, and leaves a full name alone (normal, boundary)', () => {
-    expect(blockLabel('A')).toBe('Block A');
-    expect(blockLabel('Block B')).toBe('Block B');
-    expect(blockLabel('block c')).toBe('block c');
-    expect(blockLabel('Blockade')).toBe('Block Blockade');
   });
 });
