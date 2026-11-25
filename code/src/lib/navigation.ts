@@ -15,6 +15,8 @@ import {
   ListChecks,
   Receipt,
   ScanLine,
+  UserPlus,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react';
 import type { Role } from '@/lib/roles';
@@ -44,7 +46,19 @@ export const PHONE_NAV_LIMIT = 4;
 
 /** Navigation sections per role, in screen order. */
 export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
-  resident: [{ items: [{ label: 'Home', href: '/resident', icon: House, onPhone: true }] }],
+  resident: [
+    {
+      items: [
+        { label: 'Home', href: '/resident', icon: House, onPhone: true },
+        { label: 'Guests', href: '/resident/guest-passes', icon: UserPlus, onPhone: true },
+        { label: 'Tickets', href: '/resident/tickets', icon: Wrench, onPhone: true },
+      ],
+    },
+    {
+      title: 'More',
+      items: [{ label: 'Report a fault', href: '/resident/report-fault', icon: Wrench }],
+    },
+  ],
   guard: [{ items: [{ label: 'Check a pass', href: '/guard', icon: ScanLine, onPhone: true }] }],
   manager: [
     { items: [{ label: 'Dashboard', href: '/manager', icon: LayoutDashboard, onPhone: true }] },

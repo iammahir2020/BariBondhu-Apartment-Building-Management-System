@@ -1,6 +1,6 @@
 /**
- * How pages call the API: sends JSON and reads back either the data or the error body that every route returns
- * (see `errors.ts`), so each form only has to show `error.message`.
+ * How pages call the API: sends JSON (or a form with a file, as `FormData`) and reads back either the data or the
+ * error body that every route returns (see `errors.ts`), so each form only has to show `error.message`.
  *
  * @author Mahir Al Kamal
  */
@@ -14,7 +14,7 @@ export type ApiResult<T> =
  * Sends a request to one of our API routes.
  * @param url - Route path, like `/api/sessions`.
  * @param method - HTTP method.
- * @param body - Sent as JSON when given.
+ * @param body - Sent as JSON when given; a `FormData` is sent as it is, so the browser sets the multipart type.
  * @returns The parsed result; network failures come back as an error result, never thrown.
  */
 export async function callApi<T>(
@@ -23,12 +23,16 @@ export async function callApi<T>(
   body?: unknown,
 ): Promise<ApiResult<T>> {
   let response: Response;
+  let payload: BodyInit | undefined;
+  let headers: HeadersInit | undefined;
+  if (body instanceof FormData) {
+    payload = body;
+  } else if (body !== undefined) {
+    payload = JSON.stringify(body);
+    headers = { 'Content-Type': 'application/json' };
+  }
   try {
-    response = await fetch(url, {
-      method,
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
+    response = await fetch(url, { method, headers, body: payload });
   } catch {
     return {
       ok: false,
