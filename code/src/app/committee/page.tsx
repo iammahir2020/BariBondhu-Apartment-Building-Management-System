@@ -1,13 +1,14 @@
 /**
- * Committee member home page (`/committee`). Empty until the committee member features are built.
+ * Committee member home page (`/committee`, BB-0011): where a committee member lands after logging in (CM-05).
  *
  * @author Mahir Al Kamal
  */
+import { CommitteeHome } from '@/components/home/CommitteeHome';
 
 /**
  * Committee member home.
- * @returns The page heading.
+ * @returns The waiting expenses and the current rates.
  */
 export default function CommitteeHomePage() {
-  return <h1 className="text-xl font-bold">Committee member home</h1>;
+  return <CommitteeHome />;
 }
