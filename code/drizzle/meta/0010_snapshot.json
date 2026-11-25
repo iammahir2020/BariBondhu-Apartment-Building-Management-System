@@ -1,6 +1,6 @@
 {
-  "id": "62a52dff-180a-43a6-96c7-6903140da42e",
-  "prevId": "69bebcf2-7e2c-424c-8b63-f94b0c6fb47b",
+  "id": "7a613b33-8d34-4a7f-bdb9-c9ce5dfaa591",
+  "prevId": "1137390b-610a-45ee-a0d2-d41e2d0ef58e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1517,6 +1517,91 @@
       },
       "isRLSEnabled": true
     },
+    "public.work_notes": {
+      "name": "work_notes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "ticket_id": {
+          "name": "ticket_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "author_id": {
+          "name": "author_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "work_notes_ticket_idx": {
+          "name": "work_notes_ticket_idx",
+          "columns": [
+            {
+              "expression": "ticket_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "work_notes_ticket_id_tickets_id_fk": {
+          "name": "work_notes_ticket_id_tickets_id_fk",
+          "tableFrom": "work_notes",
+          "tableTo": "tickets",
+          "columnsFrom": ["ticket_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "work_notes_author_id_profiles_id_fk": {
+          "name": "work_notes_author_id_profiles_id_fk",
+          "tableFrom": "work_notes",
+          "tableTo": "profiles",
+          "columnsFrom": ["author_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "work_notes_text_length": {
+          "name": "work_notes_text_length",
+          "value": "length(\"work_notes\".\"text\") between 1 and 1000"
+        }
+      },
+      "isRLSEnabled": true
+    },
     "public.shifts": {
       "name": "shifts",
       "schema": "",
@@ -1852,39 +1937,38 @@
       },
       "isRLSEnabled": true
     },
-    "public.gateway_transactions": {
-      "name": "gateway_transactions",
+    "public.notifications": {
+      "name": "notifications",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
-        },
-        "reference": {
-          "name": "reference",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "amount_poisha": {
-          "name": "amount_poisha",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "state": {
-          "name": "state",
-          "type": "gateway_payment_state",
-          "typeSchema": "public",
-          "primaryKey": false,
           "notNull": true,
-          "default": "'Pending'"
+          "default": "gen_random_uuid()"
         },
-        "reason": {
-          "name": "reason",
+        "recipient_id": {
+          "name": "recipient_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "text": {
+          "name": "text",
           "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "link": {
+          "name": "link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "read_at": {
+          "name": "read_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },
@@ -1894,387 +1978,46 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "decided_at": {
-          "name": "decided_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "notifications_recipient_id_idx": {
+          "name": "notifications_recipient_id_idx",
+          "columns": [
+            {
+              "expression": "recipient_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "notifications_recipient_id_profiles_id_fk": {
+          "name": "notifications_recipient_id_profiles_id_fk",
+          "tableFrom": "notifications",
+          "tableTo": "profiles",
+          "columnsFrom": ["recipient_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "gateway_transactions_amount_positive": {
-          "name": "gateway_transactions_amount_positive",
-          "value": "\"gateway_transactions\".\"amount_poisha\" > 0"
-        },
-        "gateway_transactions_decided_when_not_pending": {
-          "name": "gateway_transactions_decided_when_not_pending",
-          "value": "(\"gateway_transactions\".\"state\" = 'Pending') = (\"gateway_transactions\".\"decided_at\" is null)"
-        }
-      },
-      "isRLSEnabled": true
-    },
-    "public.payments": {
-      "name": "payments",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "bill_id": {
-          "name": "bill_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "gateway_transaction_id": {
-          "name": "gateway_transaction_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "amount_poisha": {
-          "name": "amount_poisha",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "started_by_id": {
-          "name": "started_by_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "started_at": {
-          "name": "started_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "confirmed_at": {
-          "name": "confirmed_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "ended_at": {
-          "name": "ended_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "end_reason": {
-          "name": "end_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "payments_one_open_per_bill": {
-          "name": "payments_one_open_per_bill",
-          "columns": [
-            {
-              "expression": "bill_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"payments\".\"confirmed_at\" is null and \"payments\".\"ended_at\" is null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "payments_bill_idx": {
-          "name": "payments_bill_idx",
-          "columns": [
-            {
-              "expression": "bill_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "payments_bill_id_bills_id_fk": {
-          "name": "payments_bill_id_bills_id_fk",
-          "tableFrom": "payments",
-          "tableTo": "bills",
-          "columnsFrom": ["bill_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "payments_started_by_id_profiles_id_fk": {
-          "name": "payments_started_by_id_profiles_id_fk",
-          "tableFrom": "payments",
-          "tableTo": "profiles",
-          "columnsFrom": ["started_by_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "payments_gatewayTransactionId_unique": {
-          "name": "payments_gatewayTransactionId_unique",
-          "nullsNotDistinct": false,
-          "columns": ["gateway_transaction_id"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "payments_amount_positive": {
-          "name": "payments_amount_positive",
-          "value": "\"payments\".\"amount_poisha\" > 0"
-        },
-        "payments_confirmed_or_ended": {
-          "name": "payments_confirmed_or_ended",
-          "value": "\"payments\".\"confirmed_at\" is null or \"payments\".\"ended_at\" is null"
-        },
-        "payments_end_reason": {
-          "name": "payments_end_reason",
-          "value": "(\"payments\".\"ended_at\" is null) = (\"payments\".\"end_reason\" is null)"
-        }
-      },
-      "isRLSEnabled": true
-    },
-    "public.receipts": {
-      "name": "receipts",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "number": {
-          "name": "number",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "receipts_number_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "bill_id": {
-          "name": "bill_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "payment_id": {
-          "name": "payment_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "amount_poisha": {
-          "name": "amount_poisha",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "paid_at": {
-          "name": "paid_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "receipts_bill_id_bills_id_fk": {
-          "name": "receipts_bill_id_bills_id_fk",
-          "tableFrom": "receipts",
-          "tableTo": "bills",
-          "columnsFrom": ["bill_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "receipts_payment_id_payments_id_fk": {
-          "name": "receipts_payment_id_payments_id_fk",
-          "tableFrom": "receipts",
-          "tableTo": "payments",
-          "columnsFrom": ["payment_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "receipts_number_unique": {
-          "name": "receipts_number_unique",
-          "nullsNotDistinct": false,
-          "columns": ["number"]
-        },
-        "receipts_billId_unique": {
-          "name": "receipts_billId_unique",
-          "nullsNotDistinct": false,
-          "columns": ["bill_id"]
-        },
-        "receipts_paymentId_unique": {
-          "name": "receipts_paymentId_unique",
-          "nullsNotDistinct": false,
-          "columns": ["payment_id"]
-        }
-      },
-      "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": true
-    },
-    "public.overpayments": {
-      "name": "overpayments",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "bill_id": {
-          "name": "bill_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "payment_id": {
-          "name": "payment_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "amount_poisha": {
-          "name": "amount_poisha",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "overpayment_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'Flagged'"
-        },
-        "flagged_at": {
-          "name": "flagged_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "refunded_at": {
-          "name": "refunded_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "refunded_by_id": {
-          "name": "refunded_by_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "overpayments_status_idx": {
-          "name": "overpayments_status_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "overpayments_bill_id_bills_id_fk": {
-          "name": "overpayments_bill_id_bills_id_fk",
-          "tableFrom": "overpayments",
-          "tableTo": "bills",
-          "columnsFrom": ["bill_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "overpayments_payment_id_payments_id_fk": {
-          "name": "overpayments_payment_id_payments_id_fk",
-          "tableFrom": "overpayments",
-          "tableTo": "payments",
-          "columnsFrom": ["payment_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "overpayments_refunded_by_id_profiles_id_fk": {
-          "name": "overpayments_refunded_by_id_profiles_id_fk",
-          "tableFrom": "overpayments",
-          "tableTo": "profiles",
-          "columnsFrom": ["refunded_by_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "overpayments_paymentId_unique": {
-          "name": "overpayments_paymentId_unique",
-          "nullsNotDistinct": false,
-          "columns": ["payment_id"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "overpayments_amount_positive": {
-          "name": "overpayments_amount_positive",
-          "value": "\"overpayments\".\"amount_poisha\" > 0"
-        },
-        "overpayments_refunded_fields": {
-          "name": "overpayments_refunded_fields",
-          "value": "(\"overpayments\".\"status\" = 'Refunded') = (\"overpayments\".\"refunded_at\" is not null and \"overpayments\".\"refunded_by_id\" is not null)"
-        }
-      },
       "isRLSEnabled": true
     }
   },
@@ -2358,16 +2101,6 @@
       "name": "bill_line_item_type",
       "schema": "public",
       "values": ["service", "generator", "water", "carried_forward", "adjustment", "credit"]
-    },
-    "public.gateway_payment_state": {
-      "name": "gateway_payment_state",
-      "schema": "public",
-      "values": ["Pending", "Succeeded", "Failed", "Cancelled"]
-    },
-    "public.overpayment_status": {
-      "name": "overpayment_status",
-      "schema": "public",
-      "values": ["Flagged", "Refunded"]
     }
   },
   "schemas": {},

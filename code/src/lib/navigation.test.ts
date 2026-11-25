@@ -23,11 +23,18 @@ function links(count: number, onPhone: number): NavItem[] {
 }
 
 describe('phoneNavItems', () => {
-  it.each(ROLES)('gives %s at most four places, all its phone links today', (role) => {
-    const items = phoneNavItems(role);
-    expect(items.length).toBeLessThanOrEqual(PHONE_NAV_LIMIT);
-    expect(items).toEqual(allNavItems(role).filter((item) => item.onPhone));
-  });
+  it.each(ROLES)(
+    'gives %s at most four places: its phone links, and More if some links are not on the phone',
+    (role) => {
+      const all = allNavItems(role);
+      const phone = all.filter((item) => item.onPhone);
+      const more = phone.length < all.length ? [`/${role}/more`] : [];
+      const shown = more.length > 0 ? phone.slice(0, PHONE_NAV_LIMIT - 1) : phone;
+      const items = phoneNavItems(role);
+      expect(items.length).toBeLessThanOrEqual(PHONE_NAV_LIMIT);
+      expect(items.map((item) => item.href)).toEqual([...shown.map((item) => item.href), ...more]);
+    },
+  );
 
   it('keeps four phone links when every link is on the phone (boundary, no More)', () => {
     const items = phoneNavItems('manager', links(4, 4));

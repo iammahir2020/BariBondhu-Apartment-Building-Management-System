@@ -45,7 +45,7 @@ describe('Bill state machine', () => {
 
     expect(() =>
       checkBillTransition('Payment pending', 'Paid', 'resident', 'confirm_online_payment'),
-    ).toThrow('Only the gateway');
+    ).toThrow('Only the gateway or system');
   });
 
   it('requires a reason to reject a payment claim', () => {
@@ -116,5 +116,28 @@ describe('Bill state machine', () => {
     expect(() =>
       checkBillTransition('Payment pending', 'Paid', 'manager', 'record_direct_payment'),
     ).toThrow();
+  });
+
+  it('allows system payment confirmation after a gateway re-check', () => {
+    const result = checkBillTransition(
+      'Payment pending',
+      'Paid',
+      'system',
+      'confirm_online_payment',
+    );
+
+    expect(result.from).toBe('Payment pending');
+    expect(result.to).toBe('Paid');
+    expect(result.actor).toBe('system');
+    expect(result.action).toBe('confirm_online_payment');
+  });
+
+  it('allows manager to settle a zero-balance bill after correction', () => {
+    const result = checkBillTransition('Unpaid', 'Paid', 'manager', 'settle_zero_balance');
+
+    expect(result.from).toBe('Unpaid');
+    expect(result.to).toBe('Paid');
+    expect(result.actor).toBe('manager');
+    expect(result.action).toBe('settle_zero_balance');
   });
 });
