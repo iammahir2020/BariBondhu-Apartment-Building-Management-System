@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CircleAlert, Clock, FileText } from 'lucide-react';
+import { CircleAlert, Clock, FileText, Repeat } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ import {
   formatBillDay,
   formatBillMonth,
   lineLabel,
+  overpaymentMessages,
 } from './billView';
 
 /** How often Dues checks again while a payment is pending. */
@@ -109,6 +110,15 @@ export function DuesView() {
           </Alert>
         )}
       </div>
+
+      {bills &&
+        overpaymentMessages(bills).map((message) => (
+          <Alert key={message.key} variant={message.refunded ? 'ok' : 'info'}>
+            <Repeat aria-hidden="true" />
+            <AlertTitle>{message.title}</AlertTitle>
+            <AlertDescription>{message.detail}</AlertDescription>
+          </Alert>
+        ))}
 
       {bills === null && !error && <p className="text-sm text-muted-foreground">Loading…</p>}
       {bills?.length === 0 && (

@@ -16,7 +16,7 @@ export const MANAGER_PAGES = {
   tickets: null,
   bills: null,
   expenses: '/manager/expenses',
-  overpayments: null,
+  overpayments: '/manager/overpayments',
 } as const satisfies Record<string, string | null>;
 
 /** How loud a "Needs you now" item is. */

@@ -7,6 +7,7 @@
 import { and, eq } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@/lib/db';
+import { flatLabel } from '@/lib/flatLabel';
 import { bills, blocks, flats, overpayments, payments, profiles } from '@/models';
 import type { OverpaymentStore } from '@/services/overpaymentService';
 
@@ -40,7 +41,7 @@ export function databaseOverpaymentStore(db: Database): OverpaymentStore {
         .leftJoin(refunder, eq(overpayments.refundedById, refunder.id));
       return rows.map(({ blockName, flatNumber, ...row }) => ({
         ...row,
-        flatLabel: `${blockName}, Flat ${flatNumber}`,
+        flatLabel: flatLabel(blockName, flatNumber),
       }));
     },
     async findStatus(id) {

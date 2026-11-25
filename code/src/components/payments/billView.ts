@@ -4,6 +4,7 @@
  *
  * @author Mahir Al Kamal
  */
+import { formatTaka } from '@/lib/money';
 import type { BillStatus } from '@/services/billStateMachine';
 import type { BillLineView, MyBillView } from '@/services/myBillsService';
 
@@ -116,4 +117,48 @@ export function dueCountdown(dueDate: string, now: Date): string {
   const count = Math.abs(days);
   const unit = count === 1 ? 'day' : 'days';
   return days > 0 ? `${count} ${unit} left` : `${count} ${unit} late`;
+}
+
+/** One overpayment message on Dues. */
+export interface OverpaymentMessage {
+  /** Stable key for the list. */
+  key: string;
+  title: string;
+  detail: string;
+  /** True once the manager has marked it Refunded. */
+  refunded: boolean;
+}
+
+/**
+ * What Dues tells the household about money paid again for a settled bill (BR-04): that the manager will return it,
+ * or that it was refunded. Still-Flagged ones come first.
+ * @param bills - My bills.
+ * @returns One message per overpayment.
+ */
+export function overpaymentMessages(bills: readonly MyBillView[]): OverpaymentMessage[] {
+  const messages = bills.flatMap((bill) =>
+    bill.overpayments.map((overpayment, index): OverpaymentMessage => {
+      const amount = formatTaka(overpayment.amountPoisha);
+      const month = formatBillMonth(bill.billingMonth);
+      if (overpayment.status === 'Refunded' && overpayment.refundedAt) {
+        const day = new Date(overpayment.refundedAt).toLocaleDateString('en-CA', {
+          timeZone: DHAKA,
+        });
+        return {
+          key: `${bill.id}-${index}`,
+          title: `Your extra ${amount} for ${month} was refunded`,
+          detail: `The manager marked it refunded on ${formatBillDay(day)}.`,
+          refunded: true,
+        };
+      }
+      return {
+        key: `${bill.id}-${index}`,
+        title: `You paid ${amount} again for ${month}`,
+        detail:
+          'This bill was already settled, so nothing more is owed. The manager will return the money to you and mark it refunded.',
+        refunded: false,
+      };
+    }),
+  );
+  return [...messages.filter((m) => !m.refunded), ...messages.filter((m) => m.refunded)];
 }

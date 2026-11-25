@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { callApi } from '@/lib/apiClient';
+import { blockLabel } from '@/lib/flatLabel';
 import type { BuildingSetup } from '@/services/buildingSetupService';
 import { plural } from './managerHomeView';
 
@@ -21,15 +22,6 @@ type Loaded =
   | { state: 'loading' }
   | { state: 'ready'; setup: BuildingSetup }
   | { state: 'error'; message: string };
-
-/**
- * A block's name as people say it: the seed names blocks "A" and "B", shown as "Block A".
- * @param name - The stored name.
- * @returns The name with "Block" in front, unless it already starts with it.
- */
-export function blockLabel(name: string): string {
-  return /^block\b/i.test(name) ? name : `Block ${name}`;
-}
 
 /** A card with an icon and a heading. */
 function Section({

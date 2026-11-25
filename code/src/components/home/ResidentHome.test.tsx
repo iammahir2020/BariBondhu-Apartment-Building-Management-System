@@ -27,6 +27,7 @@ const BILL: MyBillView = {
   canPay: true,
   paymentProblem: null,
   receiptNumber: null,
+  overpayments: [],
 };
 
 const PASS: GuestPassView = {

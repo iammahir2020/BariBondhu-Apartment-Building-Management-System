@@ -12,6 +12,7 @@ import {
   formatBillMoment,
   formatBillMonth,
   lineLabel,
+  overpaymentMessages,
 } from './billView';
 
 describe('lineLabel', () => {
@@ -80,6 +81,7 @@ const BILL: MyBillView = {
   canPay: true,
   paymentProblem: null,
   receiptNumber: null,
+  overpayments: [],
 };
 
 describe('currentBill', () => {
@@ -122,5 +124,39 @@ describe('dueCountdown', () => {
   it('counts the days late once the due date has passed', () => {
     expect(dueCountdown('2026-11-20', new Date('2026-11-21T06:00:00Z'))).toBe('1 day late');
     expect(dueCountdown('2026-11-20', new Date('2026-11-25T06:00:00Z'))).toBe('5 days late');
+  });
+});
+
+describe('overpaymentMessages (BR-04)', () => {
+  const bill = (overrides: Partial<MyBillView>): MyBillView => ({ ...BILL, ...overrides });
+
+  it('says a Flagged overpayment will be returned, and a Refunded one was (normal)', () => {
+    const messages = overpaymentMessages([
+      bill({
+        id: 'nov',
+        billingMonth: '2026-11-01',
+        status: 'Paid',
+        overpayments: [
+          {
+            amountPoisha: 485000,
+            status: 'Refunded',
+            refundedAt: new Date('2026-11-25T20:00:00Z'),
+          },
+          { amountPoisha: 485000, status: 'Flagged', refundedAt: null },
+        ],
+      }),
+    ]);
+    expect(messages.map((m) => m.title)).toEqual([
+      'You paid ৳4,850.00 again for November 2026',
+      'Your extra ৳4,850.00 for November 2026 was refunded',
+    ]);
+    // 25 Nov 20:00 UTC is 26 Nov in Dhaka.
+    expect(messages[1]?.detail).toBe('The manager marked it refunded on 26 Nov 2026.');
+    expect(messages[0]?.refunded).toBe(false);
+  });
+
+  it('has no messages when no bill was paid twice (boundary)', () => {
+    expect(overpaymentMessages([bill({})])).toEqual([]);
+    expect(overpaymentMessages([])).toEqual([]);
   });
 });

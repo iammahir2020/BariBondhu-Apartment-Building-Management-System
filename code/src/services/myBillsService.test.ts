@@ -36,6 +36,7 @@ function row(overrides: Partial<ReceiptRow> = {}): ReceiptRow {
     lines: LINES,
     latestPayment: null,
     receipt: null,
+    overpayments: [],
     flatLabel: 'Block A, Flat 3B',
     paidBy: null,
     ...overrides,
@@ -103,6 +104,7 @@ describe('listMyBills', () => {
       canPay: true,
       paymentProblem: null,
       receiptNumber: null,
+      overpayments: [],
     });
   });
 
