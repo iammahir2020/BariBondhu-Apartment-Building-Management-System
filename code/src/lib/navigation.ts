@@ -63,13 +63,19 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
   ],
   guard: [{ items: [{ label: 'Check a pass', href: '/guard', icon: ScanLine, onPhone: true }] }],
   manager: [
-    { items: [{ label: 'Dashboard', href: '/manager', icon: LayoutDashboard, onPhone: true }] },
+    {
+      items: [
+        { label: 'Dashboard', href: '/manager', icon: LayoutDashboard, onPhone: true },
+        { label: 'Expenses', href: '/manager/expenses', icon: Wallet, onPhone: true },
+      ],
+    },
   ],
   committee: [
     {
       items: [
         { label: 'Home', href: '/committee', icon: House, onPhone: true },
         { label: 'Rates', href: '/committee/rates', icon: Receipt, onPhone: true },
+        { label: 'Expenses', href: '/committee/expenses', icon: Wallet, onPhone: true },
       ],
     },
   ],
