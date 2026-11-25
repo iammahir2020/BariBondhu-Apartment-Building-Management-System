@@ -1,30 +1,27 @@
 /**
- * Database adapter for unpaid bill carry-forward operations.
+ * Database adapter for carrying forward unpaid bills.
+ * BB-0506, BR-05, NFR-26, NFR-27.
  *
- * BB-0506, BR-05, NFR-26.
- *
- * All writes are performed inside a single transaction.
+ * The service selects eligible bills and validates business rules.
+ * This adapter locks affected rows, rechecks mutable state,
+ * and writes bill changes and audit entries atomically.
  *
  * @author Jannatul Ferdus Nishi
  */
 
 import { and, eq, gt, inArray, lt, sql } from 'drizzle-orm';
 
-import { AppError } from '@/lib/errors';
 import type { Database } from '@/lib/db';
-import { bills, billLineItems } from '@/models';
+import { AppError } from '@/lib/errors';
+import { auditLogs, bills, billLineItems } from '@/models';
 
 import type { CarryForwardOperation, CarryForwardStore } from '@/services/carryForwardBills';
 
-import { checkBillTransition } from '@/services/billStateMachine';
-
-const MAX_POISHA = 2147483647;
-
 /**
- * Create the database implementation of CarryForwardStore.
+ * Create the database implementation of the carry-forward store.
  *
  * @param db - Application database connection.
- * @returns Store implementing atomic carry-forward operations.
+ * @returns Database-backed carry-forward store.
  */
 export function databaseCarryForwardStore(db: Database): CarryForwardStore {
   return {
@@ -54,28 +51,24 @@ export function databaseCarryForwardStore(db: Database): CarryForwardStore {
         throw new AppError('CONFLICT', 'Duplicate or invalid source bill');
       }
 
-      // Both source and target changes are committed
-      // together or rolled back together.
       return db.transaction(async (tx) => {
+        // Lock affected bills in a consistent order.
         const affectedIds = [targetBillId, ...sourceIds].sort((a, b) => a.localeCompare(b));
-        // Lock all affected bills in a consistent order.
-        // Concurrent payment and carry-forward writers
-        // must use compatible row-locking discipline.
-        await tx.execute(
-          sql`
-            SELECT id
-            FROM bills
-            WHERE id IN (
-              ${sql.join(
-                affectedIds.map((id) => sql`${id}::uuid`),
-                sql`, `,
-              )}
-            )
-            ORDER BY id
-            FOR UPDATE
-          `,
-        );
 
+        await tx.execute(sql`
+          SELECT id
+          FROM bills
+          WHERE id IN (
+            ${sql.join(
+              affectedIds.map((id) => sql`${id}::uuid`),
+              sql`, `,
+            )}
+          )
+          ORDER BY id
+          FOR UPDATE
+        `);
+
+        // Re-read the target after locking.
         const [target] = await tx.select().from(bills).where(eq(bills.id, targetBillId)).limit(1);
 
         if (!target) {
@@ -86,7 +79,7 @@ export function databaseCarryForwardStore(db: Database): CarryForwardStore {
           throw new AppError('CONFLICT', 'Target bill is not available for carry forward');
         }
 
-        // BR-05: Transfer to the newest bill only.
+        // Recheck that the target is still the newest bill.
         const [newerBill] = await tx
           .select({ id: bills.id })
           .from(bills)
@@ -102,6 +95,7 @@ export function databaseCarryForwardStore(db: Database): CarryForwardStore {
           throw new AppError('CONFLICT', 'Carry forward requires the newest bill');
         }
 
+        // Re-read source bills after locking.
         const previousBills = await tx.select().from(bills).where(inArray(bills.id, sourceIds));
 
         if (previousBills.length !== sources.length) {
@@ -112,45 +106,17 @@ export function databaseCarryForwardStore(db: Database): CarryForwardStore {
           sources.map((source) => [source.sourceBillId, source.amountPoisha]),
         );
 
-        let carriedAmountPoisha = 0;
-
         for (const source of previousBills) {
-          if (
-            source.status !== 'Unpaid' ||
-            source.occupancyId !== target.occupancyId ||
-            source.flatId !== target.flatId ||
-            source.billingMonth >= target.billingMonth
-          ) {
+          if (source.status !== 'Unpaid') {
             throw new AppError('CONFLICT', 'Source bill is no longer eligible');
           }
 
-          const expectedAmount = amountById.get(source.id);
-
-          if (
-            expectedAmount === undefined ||
-            !Number.isSafeInteger(expectedAmount) ||
-            expectedAmount <= 0 ||
-            expectedAmount !== source.totalPoisha
-          ) {
+          if (source.totalPoisha !== amountById.get(source.id)) {
             throw new AppError('CONFLICT', 'Source bill amount has changed');
           }
-
-          checkBillTransition(source.status, 'Carried forward', 'system', 'carry_forward');
-
-          carriedAmountPoisha += expectedAmount;
         }
 
-        if (
-          !Number.isSafeInteger(carriedAmountPoisha) ||
-          !Number.isSafeInteger(target.totalPoisha) ||
-          target.totalPoisha < 0 ||
-          target.totalPoisha + carriedAmountPoisha > MAX_POISHA
-        ) {
-          throw new AppError('BAD_REQUEST', 'The carried-forward amount is too large');
-        }
-
-        // NFR-26: A source bill must never be
-        // carried forward more than once.
+        // Prevent reusing an already carried source.
         const existingLines = await tx
           .select({
             sourceBillId: billLineItems.sourceBillId,
@@ -167,8 +133,13 @@ export function databaseCarryForwardStore(db: Database): CarryForwardStore {
           throw new AppError('CONFLICT', 'Bill was already carried forward');
         }
 
-        // One line for each earlier unpaid bill,
-        // retaining its original source bill ID.
+        const carriedAmountPoisha = sources.reduce((sum, source) => sum + source.amountPoisha, 0);
+
+        const newTargetTotalPoisha = target.totalPoisha + carriedAmountPoisha;
+
+        const now = new Date();
+
+        // Save the carried-forward line items.
         await tx.insert(billLineItems).values(
           sources.map((source) => ({
             billId: targetBillId,
@@ -179,21 +150,62 @@ export function databaseCarryForwardStore(db: Database): CarryForwardStore {
           })),
         );
 
+        // Update the receiving bill.
         await tx
           .update(bills)
           .set({
-            totalPoisha: target.totalPoisha + carriedAmountPoisha,
-            updatedAt: new Date(),
+            totalPoisha: newTargetTotalPoisha,
+            updatedAt: now,
           })
           .where(eq(bills.id, targetBillId));
 
+        // Close the source bills.
         await tx
           .update(bills)
           .set({
             status: 'Carried forward',
-            updatedAt: new Date(),
+            updatedAt: now,
           })
           .where(inArray(bills.id, sourceIds));
+
+        // NFR-27:
+        // Audit every changed source and target bill.
+        // System-triggered carry forward uses actorId null.
+        // BB-0508 will integrate the initiating manager.
+        await tx.insert(auditLogs).values([
+          ...previousBills.map((source) => ({
+            actorId: null,
+            action: 'bill.carry_forward',
+            entityType: 'bills',
+            entityId: source.id,
+            oldValues: {
+              status: source.status,
+              totalPoisha: source.totalPoisha,
+            },
+            newValues: {
+              status: 'Carried forward',
+              totalPoisha: source.totalPoisha,
+              targetBillId,
+              amountPoisha: source.totalPoisha,
+            },
+          })),
+          {
+            actorId: null,
+            action: 'bill.carry_forward',
+            entityType: 'bills',
+            entityId: targetBillId,
+            oldValues: {
+              status: target.status,
+              totalPoisha: target.totalPoisha,
+            },
+            newValues: {
+              status: target.status,
+              totalPoisha: newTargetTotalPoisha,
+              carriedAmountPoisha,
+              sourceBillIds: sourceIds,
+            },
+          },
+        ]);
 
         return sources.length;
       });

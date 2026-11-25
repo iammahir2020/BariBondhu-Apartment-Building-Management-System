@@ -1,18 +1,19 @@
 /**
- * Database adapter tests for carrying forward unpaid bills.
+ * Tests for the carry-forward database adapter.
+ * BB-0506, BR-05, NFR-26, NFR-27.
  *
- * BB-0506, BR-05, NFR-26.
- *
- * These tests use a mocked Drizzle transaction.
- * PostgreSQL concurrency and rollback require integration tests.
+ * Uses a mocked Drizzle transaction.
+ * Actual PostgreSQL rollback and concurrency
+ * require integration testing.
  *
  * @author Jannatul Ferdus Nishi
  */
 
 import type { Database } from '@/lib/db';
-import type { Bill } from '@/models';
+import { auditLogs, billLineItems, type Bill } from '@/models';
 
-import { databaseCarryForwardStore } from '@/lib/adapters/carryForwardAdapters';
+import { databaseCarryForwardStore } from './carryForwardAdapters';
+
 import type { CarryForwardOperation } from '@/services/carryForwardBills';
 
 function makeBill(changes: Partial<Bill> = {}): Bill {
@@ -44,7 +45,10 @@ interface HarnessOptions {
   target?: Bill | null;
   sources?: Bill[];
   newerBills?: { id: string }[];
-  existingLines?: { sourceBillId: string | null }[];
+  existingLines?: {
+    sourceBillId: string | null;
+  }[];
+  failAudit?: boolean;
 }
 
 function setup(options: HarnessOptions = {}) {
@@ -58,19 +62,19 @@ function setup(options: HarnessOptions = {}) {
         })
       : options.target;
 
-  const previousBills = options.sources ?? [makeBill()];
-
-  // Query order inside applyCarryForward:
-  // 1. Target bill
-  // 2. Newer bill check
-  // 3. Source bills
-  // 4. Existing carried-forward references
   const selectResults: unknown[][] = [
     target ? [target] : [],
     options.newerBills ?? [],
-    previousBills,
+    options.sources ?? [makeBill()],
     options.existingLines ?? [],
   ];
+
+  const writes: Array<{
+    table: unknown;
+    values: unknown;
+  }> = [];
+
+  const updates: unknown[] = [];
 
   const execute = jest.fn().mockResolvedValue([]);
 
@@ -88,17 +92,24 @@ function setup(options: HarnessOptions = {}) {
     };
   });
 
-  const insertValues = jest.fn().mockResolvedValue([]);
-  const insert = jest.fn(() => ({
-    values: insertValues,
+  const insert = jest.fn((table: unknown) => ({
+    values: jest.fn(async (values: unknown) => {
+      writes.push({ table, values });
+
+      if (table === auditLogs && options.failAudit) {
+        throw new Error('Audit write failed');
+      }
+    }),
   }));
 
-  const updateWhere = jest.fn().mockResolvedValue([]);
-  const updateSet = jest.fn(() => ({
-    where: updateWhere,
-  }));
   const update = jest.fn(() => ({
-    set: updateSet,
+    set: jest.fn((values: unknown) => {
+      updates.push(values);
+
+      return {
+        where: jest.fn().mockResolvedValue([]),
+      };
+    }),
   }));
 
   const tx = {
@@ -120,51 +131,122 @@ function setup(options: HarnessOptions = {}) {
     store: databaseCarryForwardStore(db),
     transaction,
     execute,
-    select,
-    insert,
-    insertValues,
-    update,
-    updateSet,
+    writes,
+    updates,
   };
 }
 
 describe('databaseCarryForwardStore (BB-0506)', () => {
-  it('transfers an eligible unpaid bill in a transaction', async () => {
-    const { store, transaction, execute, insertValues, updateSet } = setup();
+  it('locks rows and saves line items and bill updates', async () => {
+    const { store, transaction, execute, writes, updates } = setup();
 
     const result = await store.applyCarryForward(operation);
 
     expect(result).toBe(1);
+
     expect(transaction).toHaveBeenCalledTimes(1);
+
     expect(execute).toHaveBeenCalledTimes(1);
 
-    expect(insertValues).toHaveBeenCalledWith([
-      expect.objectContaining({
-        billId: 'new-bill',
-        type: 'carried_forward',
-        amountPoisha: 200000,
-        sourceBillId: 'old-bill-1',
-      }),
-    ]);
+    expect(writes[0]).toEqual({
+      table: billLineItems,
+      values: [
+        expect.objectContaining({
+          billId: 'new-bill',
+          type: 'carried_forward',
+          amountPoisha: 200000,
+          sourceBillId: 'old-bill-1',
+        }),
+      ],
+    });
 
-    expect(updateSet).toHaveBeenCalledTimes(2);
+    expect(updates).toHaveLength(2);
 
-    expect(updateSet).toHaveBeenNthCalledWith(
-      1,
+    expect(updates[0]).toEqual(
       expect.objectContaining({
         totalPoisha: 500000,
       }),
     );
 
-    expect(updateSet).toHaveBeenNthCalledWith(
-      2,
+    expect(updates[1]).toEqual(
       expect.objectContaining({
         status: 'Carried forward',
       }),
     );
   });
 
-  it('does nothing when no source bills are supplied', async () => {
+  it('writes audit entries for source and target', async () => {
+    const { store, writes, transaction } = setup();
+
+    await store.applyCarryForward(operation);
+
+    expect(transaction).toHaveBeenCalledTimes(1);
+
+    expect(writes).toHaveLength(2);
+
+    expect(writes[1]?.table).toBe(auditLogs);
+
+    expect(writes[1]?.values).toEqual([
+      expect.objectContaining({
+        actorId: null,
+        action: 'bill.carry_forward',
+        entityId: 'old-bill-1',
+        oldValues: {
+          status: 'Unpaid',
+          totalPoisha: 200000,
+        },
+        newValues: expect.objectContaining({
+          status: 'Carried forward',
+          targetBillId: 'new-bill',
+          amountPoisha: 200000,
+        }),
+      }),
+      expect.objectContaining({
+        actorId: null,
+        action: 'bill.carry_forward',
+        entityId: 'new-bill',
+        oldValues: {
+          status: 'Unpaid',
+          totalPoisha: 300000,
+        },
+        newValues: expect.objectContaining({
+          totalPoisha: 500000,
+        }),
+      }),
+    ]);
+  });
+
+  it('writes audit entries for multiple sources', async () => {
+    const { store, writes } = setup({
+      sources: [
+        makeBill(),
+        makeBill({
+          id: 'old-bill-2',
+          totalPoisha: 150000,
+        }),
+      ],
+    });
+
+    const result = await store.applyCarryForward({
+      targetBillId: 'new-bill',
+      sources: [
+        {
+          sourceBillId: 'old-bill-1',
+          amountPoisha: 200000,
+        },
+        {
+          sourceBillId: 'old-bill-2',
+          amountPoisha: 150000,
+        },
+      ],
+    });
+
+    expect(result).toBe(2);
+
+    expect(writes[1]?.values as unknown[]).toHaveLength(3);
+  });
+
+  it('does nothing when there are no sources', async () => {
     const { store, transaction } = setup();
 
     const result = await store.applyCarryForward({
@@ -181,7 +263,7 @@ describe('databaseCarryForwardStore (BB-0506)', () => {
 
     await expect(
       store.applyCarryForward({
-        targetBillId: 'new-bill',
+        ...operation,
         sources: [operation.sources[0]!, operation.sources[0]!],
       }),
     ).rejects.toThrow('Duplicate or invalid source bill');
@@ -189,7 +271,7 @@ describe('databaseCarryForwardStore (BB-0506)', () => {
     expect(transaction).not.toHaveBeenCalled();
   });
 
-  it('rejects using the target as a source', async () => {
+  it('rejects the target as a source', async () => {
     const { store, transaction } = setup();
 
     await expect(
@@ -208,23 +290,20 @@ describe('databaseCarryForwardStore (BB-0506)', () => {
   });
 
   it('rejects a missing target bill', async () => {
-    const { store, insertValues, updateSet } = setup({
-      target: null,
-    });
+    const { store, writes, updates } = setup({ target: null });
 
     await expect(store.applyCarryForward(operation)).rejects.toThrow('Bill not found');
 
-    expect(insertValues).not.toHaveBeenCalled();
-    expect(updateSet).not.toHaveBeenCalled();
+    expect(writes).toHaveLength(0);
+    expect(updates).toHaveLength(0);
   });
 
   it.each(['Paid', 'Payment pending', 'Awaiting verification', 'Carried forward'] as const)(
-    'refuses a target with status %s',
+    'rejects a target that changed to %s',
     async (status) => {
-      const { store, insertValues, updateSet } = setup({
+      const { store, writes } = setup({
         target: makeBill({
           id: 'new-bill',
-          billingMonth: '2026-11-01',
           status,
         }),
       });
@@ -233,16 +312,14 @@ describe('databaseCarryForwardStore (BB-0506)', () => {
         'Target bill is not available for carry forward',
       );
 
-      expect(insertValues).not.toHaveBeenCalled();
-      expect(updateSet).not.toHaveBeenCalled();
+      expect(writes).toHaveLength(0);
     },
   );
 
-  it('rejects a vacant target bill', async () => {
-    const { store, insertValues } = setup({
+  it('rejects a vacant target', async () => {
+    const { store, writes } = setup({
       target: makeBill({
         id: 'new-bill',
-        billingMonth: '2026-11-01',
         occupancyId: null,
       }),
     });
@@ -251,11 +328,11 @@ describe('databaseCarryForwardStore (BB-0506)', () => {
       'Target bill is not available for carry forward',
     );
 
-    expect(insertValues).not.toHaveBeenCalled();
+    expect(writes).toHaveLength(0);
   });
 
-  it('refuses carrying debt into a bill that is not newest', async () => {
-    const { store, insertValues, updateSet } = setup({
+  it('rejects a target that is no longer newest', async () => {
+    const { store, writes } = setup({
       newerBills: [{ id: 'december-bill' }],
     });
 
@@ -263,43 +340,13 @@ describe('databaseCarryForwardStore (BB-0506)', () => {
       'Carry forward requires the newest bill',
     );
 
-    expect(insertValues).not.toHaveBeenCalled();
-    expect(updateSet).not.toHaveBeenCalled();
-  });
-
-  it('rejects a previous household debt', async () => {
-    const { store, insertValues, updateSet } = setup({
-      sources: [
-        makeBill({
-          occupancyId: 'previous-household',
-        }),
-      ],
-    });
-
-    await expect(store.applyCarryForward(operation)).rejects.toThrow(
-      'Source bill is no longer eligible',
-    );
-
-    expect(insertValues).not.toHaveBeenCalled();
-    expect(updateSet).not.toHaveBeenCalled();
-  });
-
-  it('rejects a source belonging to another flat', async () => {
-    const { store, insertValues } = setup({
-      sources: [makeBill({ flatId: 'another-flat' })],
-    });
-
-    await expect(store.applyCarryForward(operation)).rejects.toThrow(
-      'Source bill is no longer eligible',
-    );
-
-    expect(insertValues).not.toHaveBeenCalled();
+    expect(writes).toHaveLength(0);
   });
 
   it.each(['Paid', 'Payment pending', 'Awaiting verification', 'Carried forward'] as const)(
-    'rejects a source that changed to %s',
+    'rejects a source changed to %s',
     async (status) => {
-      const { store, insertValues } = setup({
+      const { store, writes } = setup({
         sources: [makeBill({ status })],
       });
 
@@ -307,15 +354,15 @@ describe('databaseCarryForwardStore (BB-0506)', () => {
         'Source bill is no longer eligible',
       );
 
-      expect(insertValues).not.toHaveBeenCalled();
+      expect(writes).toHaveLength(0);
     },
   );
 
-  it('rejects a source bill whose amount changed', async () => {
-    const { store, insertValues, updateSet } = setup({
+  it('rejects a changed source balance', async () => {
+    const { store, writes } = setup({
       sources: [
         makeBill({
-          totalPoisha: 150000,
+          totalPoisha: 100000,
         }),
       ],
     });
@@ -324,12 +371,11 @@ describe('databaseCarryForwardStore (BB-0506)', () => {
       'Source bill amount has changed',
     );
 
-    expect(insertValues).not.toHaveBeenCalled();
-    expect(updateSet).not.toHaveBeenCalled();
+    expect(writes).toHaveLength(0);
   });
 
-  it('rejects a previously carried source reference', async () => {
-    const { store, insertValues, updateSet } = setup({
+  it('rejects a previously carried source', async () => {
+    const { store, writes } = setup({
       existingLines: [
         {
           sourceBillId: 'old-bill-1',
@@ -341,29 +387,11 @@ describe('databaseCarryForwardStore (BB-0506)', () => {
       'Bill was already carried forward',
     );
 
-    expect(insertValues).not.toHaveBeenCalled();
-    expect(updateSet).not.toHaveBeenCalled();
+    expect(writes).toHaveLength(0);
   });
 
-  it('rejects totals exceeding PostgreSQL integer bounds', async () => {
-    const { store, insertValues, updateSet } = setup({
-      target: makeBill({
-        id: 'new-bill',
-        billingMonth: '2026-11-01',
-        totalPoisha: 2147483640,
-      }),
-    });
-
-    await expect(store.applyCarryForward(operation)).rejects.toThrow(
-      'The carried-forward amount is too large',
-    );
-
-    expect(insertValues).not.toHaveBeenCalled();
-    expect(updateSet).not.toHaveBeenCalled();
-  });
-
-  it('rejects missing source bill records', async () => {
-    const { store, insertValues } = setup({
+  it('rejects missing source bills', async () => {
+    const { store, writes } = setup({
       sources: [],
     });
 
@@ -371,6 +399,16 @@ describe('databaseCarryForwardStore (BB-0506)', () => {
       'One or more source bills are missing',
     );
 
-    expect(insertValues).not.toHaveBeenCalled();
+    expect(writes).toHaveLength(0);
+  });
+
+  it('propagates audit failure', async () => {
+    const { store, writes } = setup({
+      failAudit: true,
+    });
+
+    await expect(store.applyCarryForward(operation)).rejects.toThrow('Audit write failed');
+
+    expect(writes[1]?.table).toBe(auditLogs);
   });
 });
