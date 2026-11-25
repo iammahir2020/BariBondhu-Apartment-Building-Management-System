@@ -16,6 +16,7 @@ import {
   Receipt,
   ScanLine,
   type LucideIcon,
+  Wallet,
 } from 'lucide-react';
 import type { Role } from '@/lib/roles';
 
@@ -47,7 +48,12 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
   resident: [{ items: [{ label: 'Home', href: '/resident', icon: House, onPhone: true }] }],
   guard: [{ items: [{ label: 'Check a pass', href: '/guard', icon: ScanLine, onPhone: true }] }],
   manager: [
-    { items: [{ label: 'Dashboard', href: '/manager', icon: LayoutDashboard, onPhone: true }] },
+    {
+      items: [
+        { label: 'Dashboard', href: '/manager', icon: LayoutDashboard, onPhone: true },
+        { label: 'Expenses', href: '/manager/expenses', icon: Wallet, onPhone: true },
+      ],
+    },
   ],
   committee: [
     {
