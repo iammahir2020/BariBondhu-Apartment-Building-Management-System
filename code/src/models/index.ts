@@ -19,6 +19,7 @@ export * from './Announcement';
 export * from './ChargeRate';
 export * from './Expense';
 export * from './GuestPass';
+export * from './WorkNote';
 export * from './Shift';
 export * from './Bill';
 export * from './BillLineItem';
