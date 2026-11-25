@@ -79,7 +79,7 @@ The ★ tables that unblock everyone, in the order they merge:
 | BB-0010 | Page: Manager home (M-Dashboard, short version): bills collected this month, open and late tickets, expenses waiting for the committee, overpayments to refund; a card shows only once its page exists | 2 | Thu 26 | Fri 27 | — | Added 26 Nov. BM-01 lands here. Owners add their card when their page merges |
 | BB-0011 | Page: Committee home (C-Home, short version): expenses waiting for a decision and the current rates | 2 | Thu 26 | Fri 27 | — | Added 26 Nov. CM-05 lands here. Ayesha adds the fund card with BB-1008; the full dashboard is CM-04 (feature 11, not in Release 1) |
 | BB-0012 | Page: Admin home (A-Setup, read only): the building, blocks, flat count and the manager account | 2 | Thu 26 | Fri 27 | — | Added 26 Nov. Setup itself (ADM-01, feature 2) stays seeded for Release 1 |
-| BB-0013 | The বাং button opens a "Bangla is coming soon" dialog, in the app shell and on the login screens | 2 | Thu 26 | Fri 27 | — | Added 26 Nov. Bangla itself (NFR-22) is not in anyone's tickets; team to decide |
+| BB-0013 | The বাং button opens a "Bangla is coming soon" dialog, in the app shell and on the login screens | 2 | Thu 26 | Fri 27 | — | Added 26 Nov. Bangla itself moved out of Release 1 in SRS v1.7 (1.4, NFR-22) |
 | BB-0014 | PR: open, fix review comments (reviewer: Nishi), merge | 2 | Fri 27 | Fri 27 | BB-0010 – BB-0013 | Added 26 Nov |
 
 ### 12 Report a fault, "Me too", cancel (RES-02)
