@@ -60,6 +60,7 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
       items: [
         { label: 'Home', href: '/committee', icon: House, onPhone: true },
         { label: 'Rates', href: '/committee/rates', icon: Receipt, onPhone: true },
+        { label: 'Expenses', href: '/committee/expenses', icon: Wallet, onPhone: true },
       ],
     },
   ],
