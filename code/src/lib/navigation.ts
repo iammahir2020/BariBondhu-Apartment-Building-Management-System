@@ -16,6 +16,7 @@ import {
   Receipt,
   ScanLine,
   UserPlus,
+  Wallet,
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
@@ -50,6 +51,7 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
     {
       items: [
         { label: 'Home', href: '/resident', icon: House, onPhone: true },
+        { label: 'Dues', href: '/resident/dues', icon: Wallet, onPhone: true },
         { label: 'Guests', href: '/resident/guest-passes', icon: UserPlus, onPhone: true },
         { label: 'Tickets', href: '/resident/tickets', icon: Wrench, onPhone: true },
       ],
@@ -61,13 +63,19 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
   ],
   guard: [{ items: [{ label: 'Check a pass', href: '/guard', icon: ScanLine, onPhone: true }] }],
   manager: [
-    { items: [{ label: 'Dashboard', href: '/manager', icon: LayoutDashboard, onPhone: true }] },
+    {
+      items: [
+        { label: 'Dashboard', href: '/manager', icon: LayoutDashboard, onPhone: true },
+        { label: 'Expenses', href: '/manager/expenses', icon: Wallet, onPhone: true },
+      ],
+    },
   ],
   committee: [
     {
       items: [
         { label: 'Home', href: '/committee', icon: House, onPhone: true },
         { label: 'Rates', href: '/committee/rates', icon: Receipt, onPhone: true },
+        { label: 'Expenses', href: '/committee/expenses', icon: Wallet, onPhone: true },
       ],
     },
   ],

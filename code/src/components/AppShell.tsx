@@ -35,7 +35,7 @@ export function AppShell({ role, children }: AppShellProps) {
   const roleLabel = ROLE_LABELS[role];
   return (
     <div className="min-h-screen bg-background lg:grid lg:grid-cols-[264px_minmax(0,1fr)]">
-      <aside className="sticky top-0 hidden h-screen flex-col gap-1 overflow-y-auto bg-sidebar px-3.5 py-5 text-sidebar-foreground lg:flex">
+      <aside className="sticky top-0 hidden h-screen print:hidden! flex-col gap-1 overflow-y-auto bg-sidebar px-3.5 py-5 text-sidebar-foreground lg:flex">
         <div className="px-2 pb-1">
           <Brand label="BariBondhu" inverted />
         </div>
@@ -44,7 +44,7 @@ export function AppShell({ role, children }: AppShellProps) {
       </aside>
 
       <div className="flex min-h-screen min-w-0 flex-col">
-        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-card pr-2 pl-4 lg:h-17 lg:gap-3 lg:px-7">
+        <header className="sticky top-0 z-10 flex h-16 print:hidden! shrink-0 items-center gap-2 border-b border-border bg-card pr-2 pl-4 lg:h-17 lg:gap-3 lg:px-7">
           <div className="min-w-0 flex-1 lg:hidden">
             <Brand label={roleLabel} />
           </div>
@@ -54,7 +54,7 @@ export function AppShell({ role, children }: AppShellProps) {
         <main className="flex w-full flex-1 flex-col gap-4 p-4 lg:max-w-295 lg:gap-5 lg:px-7 lg:py-6">
           {children}
         </main>
-        <BottomNav role={role} label="Main" className="lg:hidden" />
+        <BottomNav role={role} label="Main" className="lg:hidden print:hidden!" />
       </div>
     </div>
   );

@@ -29,9 +29,10 @@ describe('phoneNavItems', () => {
       const all = allNavItems(role);
       const phone = all.filter((item) => item.onPhone);
       const more = phone.length < all.length ? [`/${role}/more`] : [];
+      const shown = more.length > 0 ? phone.slice(0, PHONE_NAV_LIMIT - 1) : phone;
       const items = phoneNavItems(role);
       expect(items.length).toBeLessThanOrEqual(PHONE_NAV_LIMIT);
-      expect(items.map((item) => item.href)).toEqual([...phone.map((item) => item.href), ...more]);
+      expect(items.map((item) => item.href)).toEqual([...shown.map((item) => item.href), ...more]);
     },
   );
 

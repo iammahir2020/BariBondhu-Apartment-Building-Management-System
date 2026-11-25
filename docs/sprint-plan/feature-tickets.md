@@ -124,6 +124,7 @@ The ★ tables that unblock everyone, in the order they merge:
 | BB-0609 | Page: Dues (R-Dues), with Pay and the bill's status | 2 | Fri 27 | Fri 27 | BB-0607 | |
 | BB-0610 | Page: Receipt (R-Receipt) | 2 | Fri 27 | Fri 27 | BB-0607 | First to cut if late |
 | BB-0611 | PR: open, fix review comments (reviewer: Ayesha), merge | 2 | Fri 27 | Fri 27 | BB-0602 – BB-0610 | |
+| BB-0612 | Page: Resident home (R-Home): the current bill with Pay now and See bill, the New guest pass and Report a fault tiles, and my latest guest pass and ticket | 2 | Wed 25 | Fri 27 | BB-0607, BB-1208, BB-1607 | Added 25 Nov. Its own PR, opened after BB-0611 merges (reviewer: Ayesha). Nishi's Urgent pin (BB-2108) goes at the top of it |
 
 ---
 
@@ -174,7 +175,7 @@ The ★ tables that unblock everyone, in the order they merge:
 | BB-2105 | Service: a resident's announcements (their block or floor; Urgent pinned until it expires) + tests | 2 | Thu 26 | Thu 26 | BB-2102 | |
 | BB-2106 | Adapters and routes (`sendAnnouncements`, `readAnnouncements`) + role-check test | 2 | Fri 27 | Fri 27 | BB-2104, BB-2105 | |
 | BB-2107 | Page: Announcements for the manager (M-Announcements) | 2 | Fri 27 | Fri 27 | BB-2106 | |
-| BB-2108 | Page: Announcements for residents, and the Urgent pin on the resident home (R-Announcements, R-Home) | 2 | Fri 27 | Fri 27 | BB-2106 | |
+| BB-2108 | Page: Announcements for residents, and the Urgent pin on the resident home (R-Announcements, R-Home) | 2 | Fri 27 | Fri 27 | BB-2106 | The resident home page is BB-0612 |
 | BB-2109 | PR: open, fix review comments (reviewer: Ayesha), merge | 2 | Fri 27 | Fri 27 | BB-2104 – BB-2108 | |
 
 ---
@@ -372,13 +373,13 @@ The downstream member reviews, because they need the code to work.
 
 | Member | Sprint 1 | Sprint 2 | Total |
 |---|---|---|---|
-| Mahir | 21 | 16 | 37 |
+| Mahir | 21 | 17 | 38 |
 | Nishi | 15 | 13 | 28 |
 | Ayesha | 16 | 11 | 27 |
 | Tawhid | 16 | 8 | 24 |
 | Adika | 19 | 10 | 29 |
 | Everyone (buffer day) | | | 1 |
-| **All** | **87** | **58** | **146** |
+| **All** | **87** | **59** | **147** |
 
 Mahir carries the most, mostly in Sprint 2 (feature 6 on Thu 26 and Fri 27), while Tawhid has the lightest Sprint 2.
 
