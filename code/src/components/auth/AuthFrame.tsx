@@ -8,6 +8,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Building2, Phone } from 'lucide-react';
+import { LanguageButton } from '@/components/LanguageButton';
 import { Button } from '@/components/ui/button';
 
 /** Props for {@link AuthFrame}. */
@@ -30,17 +31,7 @@ export function AuthFrame({ heading, intro, children }: AuthFrameProps) {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border bg-card pr-2 pl-4">
         <span className="flex-1" />
-        <Button
-          variant="ghost"
-          size="icon"
-          className="shrink-0 rounded-full border border-border bg-card text-sm font-semibold text-foreground"
-          lang="bn"
-          aria-label="বাং: Switch to Bangla (coming soon)"
-          title="Bangla is coming soon"
-          disabled
-        >
-          বাং
-        </Button>
+        <LanguageButton />
         <Button asChild variant="destructive" size="sm" className="shrink-0 rounded-full">
           <Link href="/emergency" prefetch={false}>
             <Phone aria-hidden="true" />

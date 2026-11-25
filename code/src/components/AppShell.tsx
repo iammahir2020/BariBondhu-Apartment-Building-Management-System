@@ -5,14 +5,15 @@
  * - Phones and tablets (under 1024 px): top bar, the page, and a bottom menu with More when needed.
  * - Laptops (1024 px and up): dark side menu with every section, top bar, and a wider page.
  *
- * Both show the role's name, the Bangla/English switch, Emergency and Log out. The language switch is a placeholder
- * until the Bangla feature is built.
+ * Both show the role's name, the Bangla/English switch, Emergency and Log out. Bangla isn't built in Release 1, so the
+ * switch opens a "coming soon" notice.
  *
  * @author Mahir Al Kamal
  */
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Building2, Phone } from 'lucide-react';
+import { LanguageButton } from '@/components/LanguageButton';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { Button } from '@/components/ui/button';
 import { BottomNav, SideNav } from '@/components/RoleNav';
@@ -91,17 +92,7 @@ function Brand({ label, inverted = false }: { label: string; inverted?: boolean 
 function TopBarActions() {
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="shrink-0 rounded-full border border-border bg-card text-sm font-semibold text-foreground"
-        lang="bn"
-        aria-label="বাং: Switch to Bangla (coming soon)"
-        title="Bangla is coming soon"
-        disabled
-      >
-        বাং
-      </Button>
+      <LanguageButton />
       {/* On phones (under 640 px) the button is round with only the phone icon, like the prototype's `.sos.round`, so the
           role's name keeps its room; the text stays for screen readers. */}
       <Button
