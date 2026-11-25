@@ -16,9 +16,9 @@ import {
   Receipt,
   ScanLine,
   UserPlus,
+  Wallet,
   Wrench,
   type LucideIcon,
-  Wallet,
 } from 'lucide-react';
 import type { Role } from '@/lib/roles';
 
@@ -51,6 +51,7 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
     {
       items: [
         { label: 'Home', href: '/resident', icon: House, onPhone: true },
+        { label: 'Dues', href: '/resident/dues', icon: Wallet, onPhone: true },
         { label: 'Guests', href: '/resident/guest-passes', icon: UserPlus, onPhone: true },
         { label: 'Tickets', href: '/resident/tickets', icon: Wrench, onPhone: true },
       ],
