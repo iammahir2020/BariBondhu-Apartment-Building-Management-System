@@ -1,28 +1,38 @@
 /**
- * Database adapter for listing manager bills.
- * BB-0508, BM-03, NFR-06.
+ * Manager bill listing adapter.
+ * BB-0508, BB-0509, BM-03.
  *
  * @author Jannatul Ferdus Nishi
  */
 
-import { desc } from 'drizzle-orm';
-
+import { desc, eq } from 'drizzle-orm';
 import type { Database } from '@/lib/db';
-import { bills } from '@/models';
+import { bills, flats, occupancies } from '@/models';
 
 /**
- * Creates a database-backed store for manager bill listing.
- *
- * @param db - Shared database connection.
- * @returns A store for viewing all monthly bills.
+ * Lists monthly bills with flat and household details.
  */
 export function databaseManagerBillStore(db: Database) {
   return {
-    /**
-     * Return all bills, with the newest billing months first.
-     */
     async listBills() {
-      return db.select().from(bills).orderBy(desc(bills.billingMonth), desc(bills.createdAt));
+      return db
+        .select({
+          id: bills.id,
+          flatId: bills.flatId,
+          occupancyId: bills.occupancyId,
+          billingMonth: bills.billingMonth,
+          dueDate: bills.dueDate,
+          totalPoisha: bills.totalPoisha,
+          status: bills.status,
+          createdAt: bills.createdAt,
+          updatedAt: bills.updatedAt,
+          flatNumber: flats.number,
+          householdName: occupancies.householdName,
+        })
+        .from(bills)
+        .leftJoin(flats, eq(bills.flatId, flats.id))
+        .leftJoin(occupancies, eq(bills.occupancyId, occupancies.id))
+        .orderBy(desc(bills.billingMonth), desc(bills.createdAt));
     },
   };
 }
