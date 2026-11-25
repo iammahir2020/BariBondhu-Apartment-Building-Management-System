@@ -64,7 +64,7 @@ export async function applyExcessBillCredits(
   }
 
   const sourceIds = candidates.map((bill) => bill.id);
-  const lockIds = [targetBillId, ...sourceIds].sort();
+  const lockIds = [targetBillId, ...sourceIds].sort((a, b) => a.localeCompare(b));
 
   // Lock source and target bills in a stable order.
   await tx.execute(sql`

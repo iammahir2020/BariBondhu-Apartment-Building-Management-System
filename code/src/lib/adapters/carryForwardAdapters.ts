@@ -65,7 +65,7 @@ export function databaseCarryForwardStore(
       }
 
       const apply = async (tx: BillTransaction): Promise<number> => {
-        const ids = [targetBillId, ...sourceIds].sort();
+        const ids = [targetBillId, ...sourceIds].sort((a, b) => a.localeCompare(b));
 
         // Lock affected bills in a consistent order.
         await tx.execute(sql`
