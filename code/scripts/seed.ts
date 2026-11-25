@@ -2,7 +2,8 @@
  * Demo data in place of features 2 and 3 (ADM-01 building setup, BM-02 accounts): one building, two blocks, twelve
  * flats, occupancies for some of them, and one account per role with a known password. Run with `npm run db:seed`.
  * Feature data has its own file next to this one, called from `main` once the accounts exist: `seedTickets.ts` for
- * the common-area places and sample fault tickets, `seedGuestPasses.ts` for the sample guest passes.
+ * the common-area places and sample fault tickets, `seedGuestPasses.ts` for the sample guest passes, and
+ * `seedEmergencyContacts.ts` for the guard-desk and manager emergency contacts.
  *
  * Safe to run again: it finds what already exists by its natural key (building name, block name, flat number,
  * username) and only adds what is missing. Demo accounts get the demo password and first-login state back, so a
@@ -13,6 +14,7 @@
  *
  * @author Mahir Al Kamal
  */
+import { seedEmergencyContacts } from './seedEmergencyContacts';
 import { loadEnvConfig } from '@next/env';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, isNull } from 'drizzle-orm';
@@ -515,6 +517,8 @@ async function main(): Promise<void> {
 
     const passCount = await seedGuestPasses(db);
     console.log(`\nGuest passes: ${passCount} sample passes, one in each state, times from now.`);
+    const emergencyContactCount = await seedEmergencyContacts(db);
+    console.log(`Emergency contacts: ${emergencyContactCount} building contacts configured.`);
   } finally {
     await client.end();
   }
