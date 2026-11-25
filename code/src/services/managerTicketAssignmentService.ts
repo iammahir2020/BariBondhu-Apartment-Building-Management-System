@@ -1,4 +1,4 @@
-/**
+﻿/**
  * BB-1302: Manager assigns a reported fault ticket.
  *
  * Uses the shared ticket state machine.
@@ -12,6 +12,7 @@ import { AppError } from '@/lib/errors';
 import type { NewTicketStatusChange, Ticket } from '@/models';
 import { checkTicketTransition } from '@/services/ticketStateMachine';
 
+/** Input required to assign a ticket to a maintenance worker. */
 export interface AssignTicketInput {
   ticketId: string;
   managerId: string;
@@ -21,14 +22,18 @@ export interface AssignTicketInput {
   instructions?: string | null;
 }
 
+/** Current ticket details needed to validate assignment. */
 export interface AssignmentTicketSnapshot {
   id: string;
   status: Ticket['status'];
 }
 
+/** Database operations required for manager ticket assignment. */
 export interface ManagerTicketAssignmentStore {
+  /** Finds the current ticket and its status before assignment. */
   findTicketForAssignment(ticketId: string): Promise<AssignmentTicketSnapshot | undefined>;
 
+  /** Checks whether a profile belongs to an active maintenance worker. */
   isActiveMaintenanceStaff(staffId: string): Promise<boolean>;
 
   /**
@@ -48,10 +53,12 @@ export interface ManagerTicketAssignmentStore {
   }): Promise<boolean>;
 }
 
+/** Dependencies used by the manager ticket assignment service. */
 export interface ManagerTicketAssignmentDeps {
   tickets: ManagerTicketAssignmentStore;
 }
 
+/** Assignment details returned after a successful update. */
 export interface AssignmentResult {
   ticketId: string;
   status: 'Assigned';
