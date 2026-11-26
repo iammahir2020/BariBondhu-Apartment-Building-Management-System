@@ -9,6 +9,10 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
+/* The app has no dark theme. Tailwind's `dark:` would otherwise follow the device's dark mode and restyle only the
+   shadcn parts (a faded Emergency button, grey inputs), so it only applies under a `.dark` class nothing sets. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   /* Prototype tokens (bb.css) */
   --brand-900: #0b3b39;
@@ -138,6 +142,7 @@
   }
   html {
     @apply font-sans;
+    color-scheme: light;
   }
   body {
     @apply bg-background text-foreground;
