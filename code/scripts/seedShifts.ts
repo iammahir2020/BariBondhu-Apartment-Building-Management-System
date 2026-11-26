@@ -1,7 +1,7 @@
 /**
  * Seeds the next seven days of guard shifts, including one four-hour coverage gap.
  *
- * @author Tawhid Bin Moslim Tawhid
+ * @author Tawhid Bin Moslim
  */
 import { and, eq, gte, inArray, lt } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
@@ -62,144 +62,143 @@ function getBangladeshDayStart(now: Date): Date {
 /**
  * Creates the seven-day demo guard roster.
  *
+ * Existing active shifts that overlap a planned slot are preserved.
+ * Removed shifts are never restored.
+ *
  * @param db - The seed script's database client.
  * @returns The number of new shifts inserted.
  */
 export async function seedShifts(db: PostgresJsDatabase<typeof schema>): Promise<number> {
-  const now = new Date();
-  const windowStart = getBangladeshDayStart(now);
-  const windowEnd = addHours(windowStart, 7 * 24);
+  return db.transaction(async (tx) => {
+    const now = new Date();
+    const windowStart = getBangladeshDayStart(now);
+    const windowEnd = addHours(windowStart, 7 * 24);
 
-  const usernames = Object.values(GUARD_USERNAMES);
+    const usernames = Object.values(GUARD_USERNAMES);
 
-  const guardRows = await db
-    .select({
-      id: profiles.id,
-      username: profiles.username,
-      role: profiles.role,
-      active: profiles.active,
-    })
-    .from(profiles)
-    .where(inArray(profiles.username, usernames));
+    const guardRows = await tx
+      .select({
+        id: profiles.id,
+        username: profiles.username,
+        role: profiles.role,
+        active: profiles.active,
+      })
+      .from(profiles)
+      .where(inArray(profiles.username, usernames));
 
-  const guardIds = {} as Record<GuardKey, string>;
+    const guardIds = {} as Record<GuardKey, string>;
 
-  for (const key of Object.keys(GUARD_USERNAMES) as GuardKey[]) {
-    const username = GUARD_USERNAMES[key];
-    const guard = guardRows.find((row) => row.username === username);
+    for (const key of Object.keys(GUARD_USERNAMES) as GuardKey[]) {
+      const username = GUARD_USERNAMES[key];
+      const guard = guardRows.find((row) => row.username === username);
 
-    if (!guard || guard.role !== 'guard' || !guard.active) {
-      throw new Error(`Active demo guard account "${username}" is missing.`);
-    }
-
-    guardIds[key] = guard.id;
-  }
-
-  const plans = ROSTER.flatMap((assignment, day) => {
-    const dayStart = addHours(windowStart, day * 24);
-    const [morningGuard, eveningGuard, nightGuard] = assignment;
-
-    const nightEnd = addHours(dayStart, day === 2 ? 20 : 24);
-
-    return [
-      {
-        guardId: guardIds[morningGuard],
-        startsAt: dayStart,
-        endsAt: addHours(dayStart, 8),
-      },
-      {
-        guardId: guardIds[eveningGuard],
-        startsAt: addHours(dayStart, 8),
-        endsAt: addHours(dayStart, 16),
-      },
-      {
-        guardId: guardIds[nightGuard],
-        startsAt: addHours(dayStart, 16),
-        endsAt: nightEnd,
-      },
-    ];
-  });
-
-  // Include the previous 24 hours to detect shifts crossing into the first day.
-  const lookupStart = addHours(windowStart, -24);
-
-  const existingShifts = await db
-    .select({
-      id: shifts.id,
-      guardId: shifts.guardId,
-      startsAt: shifts.startsAt,
-      endsAt: shifts.endsAt,
-      status: shifts.status,
-    })
-    .from(shifts)
-    .where(
-      and(
-        inArray(shifts.guardId, Object.values(guardIds)),
-        gte(shifts.startsAt, lookupStart),
-        lt(shifts.startsAt, windowEnd),
-      ),
-    );
-
-  let added = 0;
-
-  for (const plan of plans) {
-    const exact = existingShifts.find(
-      (item) =>
-        item.guardId === plan.guardId && item.startsAt.getTime() === plan.startsAt.getTime(),
-    );
-
-    if (exact) {
-      // Do not restore a shift that was intentionally removed.
-      if (exact.status === 'Removed') {
-        continue;
+      if (!guard || guard.role !== 'guard' || !guard.active) {
+        throw new Error(`Active demo guard account "${username}" is missing.`);
       }
 
-      if (exact.endsAt.getTime() !== plan.endsAt.getTime()) {
-        throw new Error(
-          `A demo guard shift conflicts with an existing shift starting at ${plan.startsAt.toISOString()}.`,
-        );
-      }
-
-      const status =
-        exact.endsAt <= now ? 'Finished' : exact.startsAt <= now ? 'On duty' : 'Planned';
-
-      if (exact.status !== status) {
-        await db.update(shifts).set({ status }).where(eq(shifts.id, exact.id));
-      }
-
-      continue;
+      guardIds[key] = guard.id;
     }
 
-    const overlap = existingShifts.find(
-      (item) =>
-        item.guardId === plan.guardId &&
-        item.status !== 'Removed' &&
-        item.startsAt < plan.endsAt &&
-        item.endsAt > plan.startsAt,
-    );
+    const plans = ROSTER.flatMap((assignment, day) => {
+      const dayStart = addHours(windowStart, day * 24);
+      const [morningGuard, eveningGuard, nightGuard] = assignment;
 
-    if (overlap) {
-      throw new Error(`A demo guard shift overlaps an existing shift for guard ${plan.guardId}.`);
-    }
+      const nightEnd = addHours(dayStart, day === 2 ? 20 : 24);
 
-    const status = plan.endsAt <= now ? 'Finished' : plan.startsAt <= now ? 'On duty' : 'Planned';
+      return [
+        {
+          guardId: guardIds[morningGuard],
+          startsAt: dayStart,
+          endsAt: addHours(dayStart, 8),
+        },
+        {
+          guardId: guardIds[eveningGuard],
+          startsAt: addHours(dayStart, 8),
+          endsAt: addHours(dayStart, 16),
+        },
+        {
+          guardId: guardIds[nightGuard],
+          startsAt: addHours(dayStart, 16),
+          endsAt: nightEnd,
+        },
+      ];
+    });
 
-    const [created] = await db
-      .insert(shifts)
-      .values({ ...plan, status })
-      .returning({
+    // Include the previous 24 hours to detect shifts crossing into the first day.
+    const lookupStart = addHours(windowStart, -24);
+
+    const existingShifts = await tx
+      .select({
         id: shifts.id,
         guardId: shifts.guardId,
         startsAt: shifts.startsAt,
         endsAt: shifts.endsAt,
         status: shifts.status,
-      });
+      })
+      .from(shifts)
+      .where(
+        and(
+          inArray(shifts.guardId, Object.values(guardIds)),
+          gte(shifts.startsAt, lookupStart),
+          lt(shifts.startsAt, windowEnd),
+        ),
+      );
 
-    if (!created) throw new Error('Could not create a demo guard shift.');
+    let added = 0;
 
-    existingShifts.push(created);
-    added += 1;
-  }
+    for (const plan of plans) {
+      const exact = existingShifts.find(
+        (item) =>
+          item.guardId === plan.guardId && item.startsAt.getTime() === plan.startsAt.getTime(),
+      );
 
-  return added;
+      if (exact?.status === 'Removed') {
+        // Do not restore a shift that was intentionally removed.
+        continue;
+      }
+
+      if (exact && exact.endsAt.getTime() === plan.endsAt.getTime()) {
+        const status =
+          exact.endsAt <= now ? 'Finished' : exact.startsAt <= now ? 'On duty' : 'Planned';
+
+        if (exact.status !== status) {
+          await tx.update(shifts).set({ status }).where(eq(shifts.id, exact.id));
+          exact.status = status;
+        }
+
+        continue;
+      }
+
+      // A slot is already covered if any demo guard has an active overlapping shift.
+      // This also prevents two different guards from being assigned to the same slot.
+      const overlap = existingShifts.find(
+        (item) =>
+          item.status !== 'Removed' && item.startsAt < plan.endsAt && item.endsAt > plan.startsAt,
+      );
+
+      if (overlap) {
+        continue;
+      }
+
+      const status = plan.endsAt <= now ? 'Finished' : plan.startsAt <= now ? 'On duty' : 'Planned';
+
+      const [created] = await tx
+        .insert(shifts)
+        .values({ ...plan, status })
+        .returning({
+          id: shifts.id,
+          guardId: shifts.guardId,
+          startsAt: shifts.startsAt,
+          endsAt: shifts.endsAt,
+          status: shifts.status,
+        });
+
+      if (!created) throw new Error('Could not create a demo guard shift.');
+
+      existingShifts.push(created);
+      added += 1;
+    }
+
+    return added;
+  });
 }
