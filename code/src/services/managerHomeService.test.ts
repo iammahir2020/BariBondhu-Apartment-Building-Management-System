@@ -66,14 +66,20 @@ describe('summarizeBills', () => {
 });
 
 describe('isLateUnassigned (BM-06)', () => {
-  it('is late after 24 hours with nobody assigned (boundary)', () => {
-    expect(isLateUnassigned(ticket({ createdAt: new Date(NOW.getTime() - 24 * HOUR) }), NOW)).toBe(
-      false,
-    );
-    expect(
-      isLateUnassigned(ticket({ createdAt: new Date(NOW.getTime() - 24 * HOUR - 1) }), NOW),
-    ).toBe(true);
-  });
+  it.each(['Normal', 'High'] as const)(
+    'uses the 24-hour threshold for %s priority, not at the boundary but after it',
+    (priority) => {
+      expect(
+        isLateUnassigned(ticket({ priority, createdAt: new Date(NOW.getTime() - 24 * HOUR) }), NOW),
+      ).toBe(false);
+      expect(
+        isLateUnassigned(
+          ticket({ priority, createdAt: new Date(NOW.getTime() - 24 * HOUR - 1) }),
+          NOW,
+        ),
+      ).toBe(true);
+    },
+  );
 
   it('is late after 1 hour when Urgent (boundary)', () => {
     const urgent = { priority: 'Urgent' as const };
@@ -92,12 +98,30 @@ describe('isLateUnassigned (BM-06)', () => {
       isLateUnassigned(ticket({ status: 'Assigned', assigneeId: 'worker-1', createdAt: old }), NOW),
     ).toBe(false);
   });
+
+  it.each([
+    'Assigned',
+    'In progress',
+    'On hold',
+    'Fixed',
+    'Closed',
+    'Cancelled',
+    'Duplicate',
+    "Won't fix",
+  ] as const)('does not flag a %s ticket as late', (status) => {
+    expect(
+      isLateUnassigned(ticket({ status, createdAt: new Date(NOW.getTime() - 72 * HOUR) }), NOW),
+    ).toBe(false);
+  });
 });
 
 describe('isOverdue', () => {
-  it('is overdue when the due date was before today in Dhaka and work is not done (normal)', () => {
-    expect(isOverdue(ticket({ status: 'In progress', dueDate: '2026-11-25' }), NOW)).toBe(true);
-  });
+  it.each(['Assigned', 'In progress', 'On hold'] as const)(
+    'flags a %s ticket when its due date is before today in Dhaka',
+    (status) => {
+      expect(isOverdue(ticket({ status, dueDate: '2026-11-25' }), NOW)).toBe(true);
+    },
+  );
 
   it('is not overdue on the due date itself (boundary)', () => {
     expect(isOverdue(ticket({ status: 'Assigned', dueDate: '2026-11-26' }), NOW)).toBe(false);
@@ -111,9 +135,26 @@ describe('isOverdue', () => {
     );
   });
 
-  it('is not overdue once Fixed, or with no due date', () => {
-    expect(isOverdue(ticket({ status: 'Fixed', dueDate: '2026-11-01' }), NOW)).toBe(false);
-    expect(isOverdue(ticket({ status: 'Assigned', dueDate: null }), NOW)).toBe(false);
+  it.each(['Reported', 'Fixed', 'Closed', 'Cancelled', 'Duplicate', "Won't fix"] as const)(
+    'does not flag a %s ticket as overdue, even with a past due date',
+    (status) => {
+      expect(isOverdue(ticket({ status, dueDate: '2026-11-01' }), NOW)).toBe(false);
+    },
+  );
+
+  it.each(['Assigned', 'In progress', 'On hold'] as const)(
+    'does not flag a %s ticket with no due date as overdue',
+    (status) => {
+      expect(isOverdue(ticket({ status, dueDate: null }), NOW)).toBe(false);
+    },
+  );
+
+  it('uses the supplied time for a deterministic Dhaka date boundary', () => {
+    const assigned = ticket({ status: 'Assigned', dueDate: '2026-11-26' });
+
+    expect(isOverdue(assigned, new Date('2026-11-26T17:59:59Z'))).toBe(false);
+    expect(isOverdue(assigned, new Date('2026-11-26T18:00:00Z'))).toBe(true);
+    expect(isOverdue(assigned, new Date('2026-11-26T18:00:01Z'))).toBe(true);
   });
 });
 
