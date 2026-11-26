@@ -155,6 +155,25 @@ describe('notifyTicketStatusChange', () => {
     expect(sent).toEqual([]);
   });
 
+  it('can notify a follower snapshot captured before a duplicate transfer', async () => {
+    const { notices, sent } = memoryNotices();
+    const followerAccountIds = jest.spyOn(notices.recipients, 'followerAccountIds');
+    await notifyTicketStatusChange(
+      notices,
+      ticket(),
+      { from: 'Reported', to: 'Duplicate', reason: 'Same fault', changedById: 'manager-1' },
+      ['resident-1A', 'resident-1A', 'manager-1'],
+    );
+    expect(followerAccountIds).not.toHaveBeenCalled();
+    expect(sent).toEqual([
+      {
+        recipientId: 'resident-1A',
+        text: '"Water pump leaking" was marked as a duplicate of another ticket. Reason: Same fault',
+        link: RESIDENT_TICKETS_LINK,
+      },
+    ]);
+  });
+
   it('logs a failed send and still tells the other followers', async () => {
     const { notices, followers } = memoryNotices();
     followers.set('ticket-1', ['resident-1A', 'resident-2B']);
