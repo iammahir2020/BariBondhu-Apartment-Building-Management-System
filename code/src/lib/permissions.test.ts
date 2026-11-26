@@ -46,6 +46,14 @@ const TABLE: Record<Action, Partial<Record<Role, Scope>>> = {
   viewFundSummary: { resident: 'all', manager: 'all', committee: 'all' },
   sendAnnouncements: { manager: 'all' },
   readAnnouncements: { resident: 'all', manager: 'all', committee: 'all' },
+  readNotifications: {
+    resident: 'own',
+    guard: 'own',
+    manager: 'own',
+    committee: 'own',
+    maintenance: 'own',
+    admin: 'own',
+  },
   giveFeedback: { resident: 'all' },
   readFeedback: { committee: 'all' },
   planShifts: { manager: 'all' },
@@ -109,6 +117,10 @@ describe('PERMISSIONS', () => {
   it('lists the allowed roles in the SRS order', () => {
     expect(rolesFor('readAnnouncements')).toEqual(['resident', 'manager', 'committee']);
     expect(rolesFor('setUpBuilding')).toEqual(['admin']);
+    expect(rolesFor('readNotifications')).toEqual(ROLES);
+    for (const role of ROLES) {
+      expect(scopeFor(role, 'readNotifications')).toBe('own');
+    }
   });
 
   it('keeps the administrator out of bills, payments, tickets and feedback (ADM-01)', () => {
