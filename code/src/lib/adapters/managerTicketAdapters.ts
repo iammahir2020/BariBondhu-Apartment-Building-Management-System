@@ -41,6 +41,7 @@ import type {
   ManagerTicketSnapshot,
   ManagerTicketWorkNote,
 } from '@/services/managerTicketQueryService';
+import type { ManagerTicketReassignmentStore } from '@/services/managerTicketReassignmentService';
 import type { TicketNoticeDeps } from '@/services/ticketNotifications';
 import { isFinalTicketStatus } from '@/services/ticketStateMachine';
 
@@ -50,6 +51,7 @@ export interface ManagerTicketDatabaseStore
     ManagerTicketAssignmentStore,
     ManagerTicketDecisionStore,
     ManagerTicketCloseReopenStore,
+    ManagerTicketReassignmentStore,
     ManagerTicketQueryStore {
   /** One method returns the additional assignee field required by BM-07 as well. */
   findTicket(
@@ -178,6 +180,10 @@ export function databaseManagerTicketStore(
 
     findTicket,
 
+    async findTicketForReassignment(ticketId) {
+      return findTicket(ticketId);
+    },
+
     async isActiveMaintenanceStaff(staffId) {
       const [profile] = await db
         .select({ id: profiles.id })
@@ -191,6 +197,37 @@ export function databaseManagerTicketStore(
         )
         .limit(1);
       return profile !== undefined;
+    },
+
+    async saveReassignmentIfUnchanged(input) {
+      return db.transaction(async (tx) => {
+        const [activeStaff] = await tx
+          .select({ id: profiles.id })
+          .from(profiles)
+          .where(
+            and(
+              eq(profiles.id, input.staffId),
+              eq(profiles.role, 'maintenance'),
+              eq(profiles.active, true),
+            ),
+          )
+          .for('update');
+        if (!activeStaff) return false;
+
+        const [updated] = await tx
+          .update(tickets)
+          .set({ assigneeId: input.staffId, updatedAt: input.updatedAt })
+          .where(
+            and(
+              eq(tickets.id, input.ticketId),
+              eq(tickets.status, input.status),
+              eq(tickets.assigneeId, input.previousAssigneeId),
+              ticketInBuilding,
+            ),
+          )
+          .returning({ id: tickets.id });
+        return updated !== undefined;
+      });
     },
 
     async saveAssignmentIfReported(input) {

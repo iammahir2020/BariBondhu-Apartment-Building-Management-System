@@ -7,7 +7,14 @@ import { PgDialect } from 'drizzle-orm/pg-core';
 import type { SQL } from 'drizzle-orm';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/db';
-import { buildings, notifications, ticketFollowers, ticketStatusChanges, tickets } from '@/models';
+import {
+  buildings,
+  notifications,
+  profiles,
+  ticketFollowers,
+  ticketStatusChanges,
+  tickets,
+} from '@/models';
 import {
   databaseManagerBuildingId,
   databaseManagerTicketContext,
@@ -63,7 +70,10 @@ function setupDatabase(
   const writes: Array<{ table: unknown; values: unknown }> = [];
   const events: string[] = [];
   const returning = jest.fn(async () => updatedRows.shift() ?? []);
-  const updateWhere = jest.fn(() => ({ returning }));
+  const updateWhere = jest.fn((condition?: SQL) => {
+    if (condition) scopes.push(condition);
+    return { returning };
+  });
   const set = jest.fn(() => ({ where: updateWhere }));
   const update = jest.fn(() => ({ set }));
 
@@ -102,6 +112,7 @@ function setupDatabase(
     select,
     scopes,
     update,
+    set,
     updateWhere,
     returning,
     insert,
@@ -339,6 +350,66 @@ describe('databaseManagerTicketStore', () => {
     ).resolves.toBe(false);
 
     expect(mocks.insert).not.toHaveBeenCalled();
+  });
+
+  it('locks an active target and changes only the assignee within building scope', async () => {
+    const newStaffId = '523e4567-e89b-42d3-a456-426614174000';
+    const mocks = setupDatabase({ selectResults: [[{ id: newStaffId }]] });
+    const store = databaseManagerTicketStore(mocks.db, BUILDING_ID);
+
+    await expect(
+      store.saveReassignmentIfUnchanged({
+        ticketId: TICKET_ID,
+        status: 'In progress',
+        previousAssigneeId: STAFF_ID,
+        staffId: newStaffId,
+        updatedAt: NOW,
+      }),
+    ).resolves.toBe(true);
+
+    expect(mocks.transaction).toHaveBeenCalledTimes(1);
+    expect(mocks.select).toHaveBeenCalledWith({ id: profiles.id });
+    expect(mocks.update).toHaveBeenCalledWith(tickets);
+    expect(mocks.set).toHaveBeenCalledWith({ assigneeId: newStaffId, updatedAt: NOW });
+    expect(mocks.insert).not.toHaveBeenCalled();
+    const updateScope = new PgDialect().sqlToQuery(mocks.scopes[1]!);
+    expect(updateScope.sql).toContain('"buildingId"');
+    expect(updateScope.params).toContain(BUILDING_ID);
+    expect(updateScope.params).toContain(STAFF_ID);
+  });
+
+  it('refuses an inactive target or a ticket that changed before reassignment', async () => {
+    const newStaffId = '523e4567-e89b-42d3-a456-426614174000';
+    const inactive = setupDatabase({ selectResults: [[]] });
+    const inactiveStore = databaseManagerTicketStore(inactive.db, BUILDING_ID);
+
+    await expect(
+      inactiveStore.saveReassignmentIfUnchanged({
+        ticketId: TICKET_ID,
+        status: 'Assigned',
+        previousAssigneeId: STAFF_ID,
+        staffId: newStaffId,
+        updatedAt: NOW,
+      }),
+    ).resolves.toBe(false);
+    expect(inactive.update).not.toHaveBeenCalled();
+
+    const changed = setupDatabase({
+      selectResults: [[{ id: newStaffId }]],
+      updatedRows: [[]],
+    });
+    const changedStore = databaseManagerTicketStore(changed.db, BUILDING_ID);
+
+    await expect(
+      changedStore.saveReassignmentIfUnchanged({
+        ticketId: TICKET_ID,
+        status: 'On hold',
+        previousAssigneeId: STAFF_ID,
+        staffId: newStaffId,
+        updatedAt: NOW,
+      }),
+    ).resolves.toBe(false);
+    expect(changed.update).toHaveBeenCalledWith(tickets);
   });
 
   it('propagates history-write failures so the database transaction can roll back', async () => {
