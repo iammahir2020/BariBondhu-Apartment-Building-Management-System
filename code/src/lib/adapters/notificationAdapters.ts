@@ -1,5 +1,5 @@
 /**
- * Database adapter for notificationService.ts. Reads and updates only the recipient's notifications.
+ * Database adapters for notificationService.ts and the shared Notifier. They read, update and create notifications.
  *
  * @author Adika Rahman
  */
@@ -7,6 +7,7 @@ import { and, desc, eq, isNull } from 'drizzle-orm';
 import type { Database } from '@/lib/db';
 import { notifications } from '@/models/Notification';
 import type { NotificationStore } from '@/services/notificationService';
+import type { Notifier } from '@/services/notifier';
 
 /**
  * Creates a notification store backed by the notifications table.
@@ -49,5 +50,21 @@ export function databaseNotificationStore(db: Database): NotificationStore {
 
       return rows[0];
     },
+  };
+}
+
+/**
+ * Saves an in-app notification for its recipient.
+ * @param db - Database connection.
+ * @returns A notifier that writes to the notifications table.
+ * @author Jannatul Ferdus Nishi
+ */
+export function databaseNotifier(db: Database): Notifier {
+  return async ({ recipientId, text, link }) => {
+    await db.insert(notifications).values({
+      recipientId,
+      text,
+      link: link ?? null,
+    });
   };
 }
