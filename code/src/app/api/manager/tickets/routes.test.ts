@@ -9,6 +9,7 @@ import { POST as decideTicket } from './[id]/decision/route';
 import { GET as getTicketPhoto } from './[id]/photo/route';
 import { GET as getTicket } from './[id]/route';
 import { POST as reopenTicket } from './[id]/reopen/route';
+import { POST as reassignTicket } from './[id]/reassign/route';
 import { GET as listTickets } from './route';
 
 import { FORBIDDEN_MESSAGE } from '@/lib/permissions';
@@ -84,6 +85,13 @@ function makeContext() {
     }),
     isActiveMaintenanceStaff: jest.fn().mockResolvedValue(true),
     saveAssignmentIfReported: jest.fn().mockResolvedValue(true),
+    findTicketForReassignment: jest.fn().mockResolvedValue({
+      id: TICKET_ID,
+      status: 'In progress',
+      title: 'Water leak',
+      assigneeId: STAFF_ID,
+    }),
+    saveReassignmentIfUnchanged: jest.fn().mockResolvedValue(true),
     findTicket: jest.fn().mockImplementation(async (id: string) => ({
       id,
       status: 'Reported',
@@ -149,6 +157,7 @@ const protectedRoutes: Array<[string, () => Promise<Response>]> = [
     'reopen',
     () => reopenTicket(request('POST', { reason: 'The repair did not last.' }), routeContext()),
   ],
+  ['reassignment', () => reassignTicket(request('POST', { staffId: ORIGINAL_ID }), routeContext())],
 ];
 
 describe('BB-1306 manager ticket API routes', () => {
@@ -303,6 +312,69 @@ describe('BB-1306 manager ticket API routes', () => {
     );
     expect(invalidId.status).toBe(400);
     expect(store.findTicketForAssignment).toHaveBeenCalledTimes(1);
+  });
+
+  it('reassigns an open ticket while preserving its status and auditing the old and new worker', async () => {
+    mockSignedIn = makeProfile({ role: 'manager', occupancyId: null });
+
+    const response = await reassignTicket(
+      request('POST', { staffId: ORIGINAL_ID }),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      ticketId: TICKET_ID,
+      status: 'In progress',
+      assigneeId: ORIGINAL_ID,
+    });
+    expect(store.saveReassignmentIfUnchanged).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ticketId: TICKET_ID,
+        status: 'In progress',
+        previousAssigneeId: STAFF_ID,
+        staffId: ORIGINAL_ID,
+      }),
+    );
+    expect(context.audit).toHaveBeenCalledWith(
+      expect.objectContaining({ actorId: mockSignedIn.id, action: 'ticket.reassign' }),
+    );
+  });
+
+  it('rejects invalid, inactive, missing and non-open reassignment requests', async () => {
+    mockSignedIn = makeProfile({ role: 'manager', occupancyId: null });
+
+    const invalidId = await reassignTicket(
+      request('POST', { staffId: 'not-a-uuid' }),
+      routeContext(),
+    );
+    expect(invalidId.status).toBe(400);
+    expect(store.findTicketForReassignment).not.toHaveBeenCalled();
+
+    store.isActiveMaintenanceStaff.mockResolvedValueOnce(false);
+    const inactive = await reassignTicket(
+      request('POST', { staffId: ORIGINAL_ID }),
+      routeContext(),
+    );
+    expect(inactive.status).toBe(400);
+    expect(store.saveReassignmentIfUnchanged).not.toHaveBeenCalled();
+
+    store.findTicketForReassignment.mockResolvedValueOnce(undefined);
+    const missing = await reassignTicket(request('POST', { staffId: ORIGINAL_ID }), routeContext());
+    expect(missing.status).toBe(404);
+
+    store.findTicketForReassignment.mockResolvedValueOnce({
+      id: TICKET_ID,
+      status: 'Reported',
+      title: 'Water leak',
+      assigneeId: null,
+    });
+    const reported = await reassignTicket(
+      request('POST', { staffId: ORIGINAL_ID }),
+      routeContext(),
+    );
+    expect(reported.status).toBe(409);
+    expect(store.saveReassignmentIfUnchanged).not.toHaveBeenCalled();
   });
 
   it('atomically records a duplicate decision through the service dependency', async () => {

@@ -62,7 +62,8 @@ interface ManagerTicketDetailsResponse {
 }
 
 type TicketFilter = 'Open' | 'Reported' | 'Fixed, to close' | 'Closed' | 'All';
-type TicketDialogAction = 'close' | 'reopen' | 'duplicate' | 'wont-fix';
+type TicketDialogAction = 'close' | 'reopen' | 'duplicate' | 'wont-fix' | 'reassign';
+type ReassignableTicketStatus = Extract<TicketStatus, 'Assigned' | 'In progress' | 'On hold'>;
 
 const TICKET_FILTERS: readonly TicketFilter[] = [
   'Open',
@@ -151,6 +152,7 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
   const [dialogAction, setDialogAction] = useState<TicketDialogAction | null>(null);
   const [reason, setReason] = useState('');
   const [originalTicketId, setOriginalTicketId] = useState('');
+  const [reassignmentStaffId, setReassignmentStaffId] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
   const [savingAction, setSavingAction] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -283,6 +285,7 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
     setDialogAction(action);
     setReason('');
     setOriginalTicketId('');
+    setReassignmentStaffId('');
     setActionError(null);
     setSuccess(null);
   }
@@ -294,7 +297,10 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
     setSuccess(null);
 
     const cleanReason = reason.trim();
-    if (dialogAction !== 'close' && !cleanReason) {
+    if (
+      (dialogAction === 'reopen' || dialogAction === 'duplicate' || dialogAction === 'wont-fix') &&
+      !cleanReason
+    ) {
       setActionError('Give a reason.');
       return;
     }
@@ -302,12 +308,20 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
       setActionError('Choose the original ticket.');
       return;
     }
+    if (dialogAction === 'reassign' && !reassignmentStaffId) {
+      setActionError('Choose a different maintenance staff member.');
+      return;
+    }
 
     const ticketId = details.ticket.id;
     let url = `/api/manager/tickets/${ticketId}/close`;
     let body: unknown;
     let successMessage = 'Ticket closed.';
-    if (dialogAction === 'reopen') {
+    if (dialogAction === 'reassign') {
+      url = `/api/manager/tickets/${ticketId}/reassign`;
+      body = { staffId: reassignmentStaffId };
+      successMessage = 'Ticket reassigned. Its status was kept.';
+    } else if (dialogAction === 'reopen') {
       url = `/api/manager/tickets/${ticketId}/reopen`;
       body = { reason: cleanReason };
       successMessage = 'Ticket reopened and assigned.';
@@ -332,6 +346,7 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
     setDialogAction(null);
     setReason('');
     setOriginalTicketId('');
+    setReassignmentStaffId('');
     setSuccess(successMessage);
     await loadTickets();
     setDetailRefresh((value) => value + 1);
@@ -343,6 +358,7 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
       ? 'Nobody'
       : (maintenanceStaff.find((person) => person.id === ticket.assigneeId)?.displayName ??
         'Assigned maintenance staff');
+  const reassignmentStaff = maintenanceStaff.filter((person) => person.id !== ticket?.assigneeId);
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-4">
@@ -582,6 +598,17 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
                           </p>
                         )}
                       </div>
+
+                      {ticket.assigneeId && isReassignableTicketStatus(ticket.status) && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="min-h-12 w-full sm:w-auto"
+                          onClick={() => openAction('reassign')}
+                        >
+                          Reassign staff
+                        </Button>
+                      )}
 
                       {ticket.photoPath && (
                         <div>
@@ -854,6 +881,31 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
               </div>
             )}
 
+            {dialogAction === 'reassign' && (
+              <div className="space-y-2">
+                <Label htmlFor="ticket-reassign-staff">New maintenance staff</Label>
+                <select
+                  id="ticket-reassign-staff"
+                  value={reassignmentStaffId}
+                  onChange={(event) => setReassignmentStaffId(event.target.value)}
+                  disabled={savingAction || reassignmentStaff.length === 0}
+                  className="h-13 w-full rounded-lg border-[1.5px] border-input bg-card px-3.5 text-base"
+                >
+                  <option value="">Choose a different staff member</option>
+                  {reassignmentStaff.map((person) => (
+                    <option key={person.id} value={person.id}>
+                      {person.displayName}
+                    </option>
+                  ))}
+                </select>
+                {reassignmentStaff.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No other active maintenance staff are available.
+                  </p>
+                )}
+              </div>
+            )}
+
             {(dialogAction === 'duplicate' ||
               dialogAction === 'wont-fix' ||
               dialogAction === 'reopen') && (
@@ -887,7 +939,13 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
                   Cancel
                 </Button>
               </DialogClose>
-              <Button type="submit" className="min-h-12" disabled={savingAction}>
+              <Button
+                type="submit"
+                className="min-h-12"
+                disabled={
+                  savingAction || (dialogAction === 'reassign' && reassignmentStaff.length === 0)
+                }
+              >
                 {savingAction ? 'Saving…' : dialogSubmitLabel(dialogAction)}
               </Button>
             </DialogFooter>
@@ -923,6 +981,15 @@ function staffNameFor(
 }
 
 /**
+ * Whether the ticket's current work state can be preserved while changing its assignee.
+ * @param status - Current ticket status.
+ * @returns True for the maintenance work states eligible for reassignment.
+ */
+function isReassignableTicketStatus(status: TicketStatus): status is ReassignableTicketStatus {
+  return status === 'Assigned' || status === 'In progress' || status === 'On hold';
+}
+
+/**
  * Returns the dialog heading for the selected action.
  * @param action - The pending ticket action.
  * @returns The heading text.
@@ -932,6 +999,7 @@ function dialogTitle(action: TicketDialogAction | null): string {
   if (action === 'reopen') return 'Reopen this ticket?';
   if (action === 'duplicate') return 'Mark this ticket Duplicate?';
   if (action === 'wont-fix') return "Mark this ticket Won't fix?";
+  if (action === 'reassign') return 'Reassign this ticket?';
   return 'Update ticket';
 }
 
@@ -948,6 +1016,8 @@ function dialogDescription(action: TicketDialogAction | null): string {
   if (action === 'duplicate')
     return 'Choose the original open ticket and explain why these reports are duplicates.';
   if (action === 'wont-fix') return 'Explain why this reported fault will not be fixed.';
+  if (action === 'reassign')
+    return 'Choose a different active maintenance worker. The ticket status will not change.';
   return '';
 }
 
@@ -961,5 +1031,6 @@ function dialogSubmitLabel(action: TicketDialogAction | null): string {
   if (action === 'reopen') return 'Reopen ticket';
   if (action === 'duplicate') return 'Mark Duplicate';
   if (action === 'wont-fix') return "Mark Won't fix";
+  if (action === 'reassign') return 'Reassign ticket';
   return 'Save';
 }

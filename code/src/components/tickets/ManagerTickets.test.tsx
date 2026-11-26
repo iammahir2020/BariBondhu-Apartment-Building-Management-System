@@ -13,6 +13,7 @@ import { answerFetchByRoute } from '@/components/auth/testFetch';
 import { ManagerTickets } from './ManagerTickets';
 
 const STAFF = [{ id: 'staff-1', displayName: 'Karim Rahman' }];
+const OTHER_STAFF = { id: 'staff-2', displayName: 'Ayesha Rahman' };
 
 const REPORTED = {
   id: 'ticket-reported',
@@ -77,8 +78,11 @@ const DUPLICATE = {
 
 const WITH_PHOTO = { ...REPORTED, photoPath: 'tickets/lift-photo.jpg' };
 
-function listResponse(tickets: object[] = [REPORTED, ASSIGNED, FIXED, CLOSED]) {
-  return { tickets, maintenanceStaff: STAFF };
+function listResponse(
+  tickets: object[] = [REPORTED, ASSIGNED, FIXED, CLOSED],
+  maintenanceStaff = STAFF,
+) {
+  return { tickets, maintenanceStaff };
 }
 
 function detailsResponse(ticket: Record<string, unknown> = REPORTED) {
@@ -241,6 +245,85 @@ describe('ManagerTickets', () => {
       );
     });
     expect(await screen.findByRole('status')).toHaveTextContent('Ticket assigned successfully.');
+  });
+
+  it('reassigns an open ticket without changing its status', async () => {
+    const staff = [...STAFF, OTHER_STAFF];
+    const fetch = answerFetchByRoute([
+      {
+        method: 'GET',
+        url: '/api/manager/tickets',
+        status: 200,
+        body: listResponse([ASSIGNED], staff),
+      },
+      {
+        method: 'GET',
+        url: `/api/manager/tickets/${ASSIGNED.id}`,
+        status: 200,
+        body: detailsResponse(ASSIGNED),
+      },
+      {
+        method: 'POST',
+        url: `/api/manager/tickets/${ASSIGNED.id}/reassign`,
+        status: 200,
+        body: { ticketId: ASSIGNED.id, status: 'In progress', assigneeId: OTHER_STAFF.id },
+      },
+    ]);
+    const user = userEvent.setup();
+    render(<ManagerTickets selectedTicketId={ASSIGNED.id} />);
+
+    await screen.findAllByText('Water pump not starting');
+    await user.click(screen.getByRole('button', { name: 'Reassign staff' }));
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveTextContent('The ticket status will not change.');
+    await user.click(within(dialog).getByRole('button', { name: 'Reassign ticket' }));
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(
+      'Choose a different maintenance staff member.',
+    );
+
+    await user.selectOptions(
+      within(dialog).getByLabelText('New maintenance staff'),
+      OTHER_STAFF.id,
+    );
+    await user.click(within(dialog).getByRole('button', { name: 'Reassign ticket' }));
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        `/api/manager/tickets/${ASSIGNED.id}/reassign`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ staffId: OTHER_STAFF.id }),
+        }),
+      );
+    });
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Ticket reassigned. Its status was kept.',
+    );
+    expect(await screen.findAllByText('In progress')).not.toHaveLength(0);
+  });
+
+  it('explains when no other active maintenance staff can receive the ticket', async () => {
+    answerFetchByRoute([
+      {
+        method: 'GET',
+        url: '/api/manager/tickets',
+        status: 200,
+        body: listResponse([ASSIGNED]),
+      },
+      {
+        method: 'GET',
+        url: `/api/manager/tickets/${ASSIGNED.id}`,
+        status: 200,
+        body: detailsResponse(ASSIGNED),
+      },
+    ]);
+    const user = userEvent.setup();
+    render(<ManagerTickets selectedTicketId={ASSIGNED.id} />);
+
+    await user.click(await screen.findByRole('button', { name: 'Reassign staff' }));
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveTextContent('No other active maintenance staff are available.');
+    expect(within(dialog).getByRole('button', { name: 'Reassign ticket' })).toBeDisabled();
   });
 
   it('shows status history, work notes and closes a Fixed ticket after confirmation', async () => {
