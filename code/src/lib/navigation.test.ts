@@ -54,6 +54,15 @@ describe('phoneNavItems', () => {
     expect(items[2]?.href).toBe('/resident/more');
   });
 
+  it('keeps Tickets on the manager phone menu before More', () => {
+    expect(phoneNavItems('manager').map((item) => item.label)).toEqual([
+      'Dashboard',
+      'Bills',
+      'Tickets',
+      'More',
+    ]);
+  });
+
   it('returns no links for a role with none (exception)', () => {
     expect(phoneNavItems('admin', [])).toEqual([]);
   });
