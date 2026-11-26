@@ -68,6 +68,15 @@ export const PERMISSIONS = {
   sendAnnouncements: { manager: 'all' },
   /** Read announcements (RES-08). */
   readAnnouncements: { resident: 'all', manager: 'all', committee: 'all' },
+  /** Read and mark as read one's own in-app notifications (BB-2304). */
+  readNotifications: {
+    resident: 'own',
+    guard: 'own',
+    manager: 'own',
+    committee: 'own',
+    maintenance: 'own',
+    admin: 'own',
+  },
   /** Give service feedback (RES-07). */
   giveFeedback: { resident: 'all' },
   /** Read feedback; anonymous entries show no flat (CM-03, NFR-11). */
