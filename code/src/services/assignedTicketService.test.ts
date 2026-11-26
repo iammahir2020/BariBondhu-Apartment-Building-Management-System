@@ -43,7 +43,6 @@ function makeDetails(
     instructions: 'Check the kitchen pipe.',
   };
 }
-
 /** Creates a fake store with configurable ticket results. */
 function makeStore(
   list: AssignedTicketSummary[] = [],
@@ -52,6 +51,9 @@ function makeStore(
   changes: Parameters<AssignedTicketStore['updateStatusForAssignee']>[3][] = [],
 ): AssignedTicketStore {
   return {
+    async assigneeIdFor() {
+      return detail?.id ? 'worker-1' : null;
+    },
     async listForAssignee() {
       return list;
     },
@@ -64,7 +66,6 @@ function makeStore(
     },
   };
 }
-
 describe('listMyAssignedTickets', () => {
   it('puts urgent tickets first, then sorts by due date', async () => {
     const store = makeStore([

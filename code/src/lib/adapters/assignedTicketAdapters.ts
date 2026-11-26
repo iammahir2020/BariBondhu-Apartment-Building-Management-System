@@ -16,6 +16,15 @@ import type { AssignedTicketStore } from '@/services/assignedTicketService';
  */
 export function databaseAssignedTicketStore(db: Database): AssignedTicketStore {
   return {
+    async assigneeIdFor(ticketId) {
+      const rows = await db
+        .select({ assigneeId: tickets.assigneeId })
+        .from(tickets)
+        .where(eq(tickets.id, ticketId))
+        .limit(1);
+
+      return rows[0]?.assigneeId ?? null;
+    },
     async listForAssignee(assigneeId) {
       return db
         .select({

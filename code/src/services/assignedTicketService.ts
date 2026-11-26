@@ -39,6 +39,13 @@ export interface AssignedTicketStore {
    * @returns The worker's assigned ticket summaries.
    */
   listForAssignee(assigneeId: string): Promise<AssignedTicketSummary[]>;
+  /**
+   * Finds the current assignee of a ticket.
+   *
+   * @param ticketId - The ticket ID.
+   * @returns The assignee's profile ID, or null when unassigned or not found.
+   */
+  assigneeIdFor(ticketId: string): Promise<string | null>;
 
   /**
    * Finds a ticket only when it is assigned to the given worker.
