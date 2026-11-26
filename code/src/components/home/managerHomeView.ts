@@ -14,7 +14,7 @@ import type { ManagerHomeSummary } from '@/services/managerHomeService';
  */
 export const MANAGER_PAGES = {
   tickets: null,
-  bills: null,
+  bills: '/manager/bills',
   expenses: '/manager/expenses',
   overpayments: '/manager/overpayments',
 } as const satisfies Record<string, string | null>;

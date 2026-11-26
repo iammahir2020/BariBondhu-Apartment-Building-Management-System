@@ -1,41 +1,66 @@
 /**
- * Database adapter for monthly bill generation (BB-0505).
- * Database operations are separated from business rules.
+ * Database adapter for monthly bill generation.
+ *
+ * BB-0505, BB-0508, BM-03.
+ * Supports shared database transactions.
  *
  * @author Jannatul Ferdus Nishi
  */
 
 import { eq, isNull } from 'drizzle-orm';
 import type { Database } from '@/lib/db';
+
 import { bills, billLineItems, chargeRates, flats, occupancies } from '@/models';
+
 import type { MonthlyBillStore } from '@/services/generateMonthlyBills';
 
+type BillTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
+
 /**
- * Creates a database-backed monthly bill store.
- *
- * @param db - Shared Drizzle database client.
- * @returns Monthly bill database operations.
+ * Creates a monthly bill store.
+ * Reuses an existing transaction when provided.
  */
-export function databaseMonthlyBillStore(db: Database): MonthlyBillStore {
+export function databaseMonthlyBillStore(
+  db: Database,
+  existingTx?: BillTransaction,
+): MonthlyBillStore {
   return {
     async listFlats() {
+      if (existingTx) {
+        return existingTx.select().from(flats);
+      }
+
       return db.select().from(flats);
     },
 
     async listActiveOccupancies() {
+      if (existingTx) {
+        return existingTx.select().from(occupancies).where(isNull(occupancies.endDate));
+      }
+
       return db.select().from(occupancies).where(isNull(occupancies.endDate));
     },
 
     async listCurrentRates() {
+      if (existingTx) {
+        return existingTx.select().from(chargeRates).where(eq(chargeRates.status, 'Current'));
+      }
+
       return db.select().from(chargeRates).where(eq(chargeRates.status, 'Current'));
     },
 
     async monthHasBills(billingMonth) {
-      const existing = await db
-        .select({ id: bills.id })
-        .from(bills)
-        .where(eq(bills.billingMonth, billingMonth))
-        .limit(1);
+      const existing = existingTx
+        ? await existingTx
+            .select({ id: bills.id })
+            .from(bills)
+            .where(eq(bills.billingMonth, billingMonth))
+            .limit(1)
+        : await db
+            .select({ id: bills.id })
+            .from(bills)
+            .where(eq(bills.billingMonth, billingMonth))
+            .limit(1);
 
       return existing.length > 0;
     },
@@ -45,7 +70,7 @@ export function databaseMonthlyBillStore(db: Database): MonthlyBillStore {
         return [];
       }
 
-      return db.transaction(async (tx) => {
+      const createBills = async (tx: BillTransaction) => {
         const createdBills = [];
 
         for (const draft of drafts) {
@@ -76,7 +101,15 @@ export function databaseMonthlyBillStore(db: Database): MonthlyBillStore {
         }
 
         return createdBills;
-      });
+      };
+
+      // BB-0508: Reuse the shared transaction.
+      if (existingTx) {
+        return createBills(existingTx);
+      }
+
+      // BB-0505: Preserve standalone behaviour.
+      return db.transaction(createBills);
     },
   };
 }

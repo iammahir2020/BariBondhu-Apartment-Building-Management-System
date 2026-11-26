@@ -42,10 +42,12 @@ describe('ManagerHome', () => {
     const links = screen.getAllByRole('link');
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       '/manager/overpayments',
+      '/manager/bills',
       '/manager/expenses',
     ]);
     expect(links[0]).toHaveTextContent('1 overpayment to refund');
-    expect(links[1]).toHaveTextContent('Expenses waiting for committee');
+    expect(links[1]).toHaveTextContent('Paid for November');
+    expect(links[2]).toHaveTextContent('Expenses waiting for committee');
   });
 
   it('says nothing needs the manager when all is quiet (boundary)', async () => {
