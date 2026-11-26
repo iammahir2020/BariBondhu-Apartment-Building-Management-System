@@ -108,7 +108,7 @@ export async function notifyTicketCancelled(deps: TicketNoticeDeps, ticket: Tick
  */
 export async function notifyTicketStatusChange(
   deps: TicketNoticeDeps,
-  ticket: Ticket,
+  ticket: Pick<Ticket, 'id' | 'title'>,
   change: SavedStatusChange,
 ): Promise<void> {
   const followers = await deps.recipients.followerAccountIds(ticket.id);
