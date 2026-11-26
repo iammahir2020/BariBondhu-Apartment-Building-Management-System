@@ -46,13 +46,14 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   const isApi = path.startsWith('/api/');
   const now = new Date();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  let profile = user ? await databaseProfileFinder(db).findById(user.id) : undefined;
+  // getClaims() refreshes an expired session and verifies the token locally with the cached signing keys, so this
+  // costs no Auth server call per request (getUser() made one every time).
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims.sub;
+  let profile = userId ? await databaseProfileFinder(db).findById(userId) : undefined;
   let endedForIdle = false;
 
-  if (user && profile) {
+  if (userId && profile) {
     const lastActive = Number(request.cookies.get(LAST_ACTIVE_COOKIE)?.value ?? Number.NaN);
     const loggingIn = path === '/api/sessions' && request.method === 'POST';
     const idle = isIdleExpired(profile.role, lastActive, now);
