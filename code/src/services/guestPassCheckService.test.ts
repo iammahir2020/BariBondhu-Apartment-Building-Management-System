@@ -9,6 +9,7 @@ const NOW = new Date('2026-11-23T19:00:00+06:00');
 
 function makePass(overrides: Partial<GuestPassCheckRecord> = {}): GuestPassCheckRecord {
   return {
+    id: 'pass-1',
     guestName: 'Rahim',
     blockName: 'A',
     flatNumber: '101',
@@ -37,6 +38,7 @@ describe('checkGuestPass', () => {
     const result = await checkGuestPass(deps([makePass()]), '123456', NOW);
 
     expect(result).toEqual({
+      passId: 'pass-1',
       guestName: 'Rahim',
       flat: 'A-101',
       approvedGuestCount: 4,
@@ -108,11 +110,13 @@ describe('checkGuestPass', () => {
 
   it('prefers a live pass when an old pass has reused its code', async () => {
     const oldPass = makePass({
+      id: 'old-pass',
       guestName: 'Old guest',
       endsAt: new Date('2026-11-23T18:00:00+06:00'),
       createdAt: new Date('2026-11-22T10:00:00+06:00'),
     });
     const newPass = makePass({
+      id: 'new-pass',
       guestName: 'New guest',
       createdAt: new Date('2026-11-23T10:00:00+06:00'),
     });
@@ -120,6 +124,7 @@ describe('checkGuestPass', () => {
     const result = await checkGuestPass(deps([oldPass, newPass]), '123456', NOW);
 
     expect(result.guestName).toBe('New guest');
+    expect(result.passId).toBe('new-pass');
     expect(result.status).toBe('Partly used');
   });
 });
