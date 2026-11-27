@@ -31,3 +31,5 @@ export * from './GatewayTransaction';
 export * from './Payment';
 export * from './Receipt';
 export * from './Overpayment';
+export * from './Visit';
+export * from './VisitExit';
