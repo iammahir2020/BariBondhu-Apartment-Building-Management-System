@@ -2,13 +2,13 @@
 
 /**
  * Guard-side guest pass checking and check-in UI.
- * BB-1706, SG-02, SG-03.
+ * BB-1706, BB-1707, SG-02, SG-03.
  *
  * @author Tawhid Bin Moslim
  */
 
 import { useState, type FormEvent } from 'react';
-import { callApi } from '@/lib/apiClient';
+import { callApi, type ApiResult } from '@/lib/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -31,6 +31,42 @@ interface GuestPassEntryResponse {
   remainingGuestCount: number;
 }
 
+const OFFLINE_MESSAGE = 'No connection: use the intercom and paper register';
+const REQUEST_TIMEOUT_MS = 5000;
+
+/**
+ * Prevents the guard screen from waiting longer than five seconds.
+ * A timed-out request is not presented as a successful operation.
+ */
+async function callApiWithTimeout<T>(
+  url: string,
+  method: string,
+  body: unknown,
+): Promise<ApiResult<T>> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  const timeout = new Promise<ApiResult<T>>((resolve) => {
+    timeoutId = setTimeout(() => {
+      resolve({
+        ok: false,
+        status: 0,
+        error: {
+          code: 'INTERNAL',
+          message: OFFLINE_MESSAGE,
+        },
+      });
+    }, REQUEST_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([callApi<T>(url, method, body), timeout]);
+  } finally {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 function formatValidFrom(value: string): string {
   return new Intl.DateTimeFormat('en-BD', {
     dateStyle: 'medium',
@@ -51,6 +87,12 @@ export function GuardPassCheck() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [guestsIn, setGuestsIn] = useState('1');
+  const [enteredLater, setEnteredLater] = useState(false);
+  const [actualArrival, setActualArrival] = useState('');
+
+  function displayApiError(response: Extract<ApiResult<unknown>, { ok: false }>) {
+    setError(response.status === 0 ? OFFLINE_MESSAGE : response.error.message);
+  }
 
   async function handleCheck(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,15 +107,17 @@ export function GuardPassCheck() {
     setSuccess('');
     setResult(null);
     setGuestsIn('1');
+    setEnteredLater(false);
+    setActualArrival('');
 
-    const response = await callApi<GuestPassCheckResponse>(
+    const response = await callApiWithTimeout<GuestPassCheckResponse>(
       '/api/guard/guest-passes/check',
       'POST',
       { code },
     );
 
     if (!response.ok) {
-      setError(response.error.message);
+      displayApiError(response);
       setCheckLoading(false);
       return;
     }
@@ -94,21 +138,40 @@ export function GuardPassCheck() {
       return;
     }
 
+    let enteredAt: string | undefined;
+
+    if (enteredLater) {
+      if (!actualArrival) {
+        setError('Enter the actual arrival date and time.');
+        return;
+      }
+
+      const actualArrivalDate = new Date(actualArrival);
+
+      if (Number.isNaN(actualArrivalDate.getTime())) {
+        setError('Enter a valid actual arrival date and time.');
+        return;
+      }
+
+      enteredAt = actualArrivalDate.toISOString();
+    }
+
     setEntryLoading(true);
     setError('');
     setSuccess('');
 
-    const response = await callApi<GuestPassEntryResponse>(
+    const response = await callApiWithTimeout<GuestPassEntryResponse>(
       '/api/guard/guest-passes/entry',
       'POST',
       {
         passId: result.passId,
         guestsIn: count,
+        ...(enteredLater && enteredAt ? { enteredLater: true, enteredAt } : {}),
       },
     );
 
     if (!response.ok) {
-      setError(response.error.message);
+      displayApiError(response);
       setEntryLoading(false);
       return;
     }
@@ -128,9 +191,14 @@ export function GuardPassCheck() {
     );
 
     setSuccess(
-      `${count} ${count === 1 ? 'guest has' : 'guests have'} been checked in successfully.`,
+      enteredLater
+        ? `${count} ${count === 1 ? 'guest has' : 'guests have'} been recorded as Entered later.`
+        : `${count} ${count === 1 ? 'guest has' : 'guests have'} been checked in successfully.`,
     );
+
     setGuestsIn('1');
+    setEnteredLater(false);
+    setActualArrival('');
     setEntryLoading(false);
   }
 
@@ -270,6 +338,44 @@ export function GuardPassCheck() {
                 </p>
               </div>
 
+              <div className="space-y-3 rounded-lg border p-3">
+                <label
+                  htmlFor="entered-later"
+                  className="flex items-center gap-2 text-sm font-medium"
+                >
+                  <input
+                    id="entered-later"
+                    type="checkbox"
+                    checked={enteredLater}
+                    onChange={(event) => setEnteredLater(event.target.checked)}
+                    disabled={entryLoading}
+                  />
+                  Entered later (paper register)
+                </label>
+
+                {enteredLater && (
+                  <div className="space-y-2">
+                    <label htmlFor="actual-arrival" className="text-sm font-semibold">
+                      Actual arrival date and time
+                    </label>
+
+                    <Input
+                      id="actual-arrival"
+                      type="datetime-local"
+                      value={actualArrival}
+                      onChange={(event) => setActualArrival(event.target.value)}
+                      disabled={entryLoading}
+                      required
+                    />
+
+                    <p className="text-xs text-muted-foreground">
+                      Enter the time recorded in the paper register, not the time you are submitting
+                      this form.
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <Button
                 type="submit"
                 className="w-full"
@@ -277,7 +383,8 @@ export function GuardPassCheck() {
                   entryLoading ||
                   !Number.isInteger(Number(guestsIn)) ||
                   Number(guestsIn) < 1 ||
-                  Number(guestsIn) > result.remainingGuestCount
+                  Number(guestsIn) > result.remainingGuestCount ||
+                  (enteredLater && !actualArrival)
                 }
               >
                 {entryLoading ? 'Recording entry...' : 'Confirm guest entry'}

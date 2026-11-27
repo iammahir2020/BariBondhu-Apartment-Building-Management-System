@@ -4,12 +4,12 @@
 
 /**
  * Tests for the guard guest pass checking screen.
- * BB-1706, SG-02 and SG-03.
+ * BB-1706, BB-1707, SG-02 and SG-03.
  *
  * @author Tawhid Bin Moslim
  */
 
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { GuardPassCheck } from './GuardPassCheck';
 
@@ -48,6 +48,13 @@ function answers(...list: Answer[]): jest.Mock {
     };
   });
 
+  global.fetch = mock as unknown as typeof fetch;
+  return mock;
+}
+
+/** Makes fetch reject to simulate a device with no server connection. */
+function networkFailure(): jest.Mock {
+  const mock = jest.fn().mockRejectedValue(new TypeError('Failed to fetch'));
   global.fetch = mock as unknown as typeof fetch;
   return mock;
 }
@@ -167,6 +174,51 @@ describe('GuardPassCheck', () => {
     expect(screen.queryByRole('heading', { name: 'Pass details' })).not.toBeInTheDocument();
   });
 
+  it('shows the offline message when pass checking takes longer than five seconds', async () => {
+    jest.useFakeTimers();
+
+    try {
+      const user = userEvent.setup({
+        advanceTimers: jest.advanceTimersByTime,
+      });
+
+      global.fetch = jest.fn(() => new Promise(() => undefined)) as unknown as typeof fetch;
+
+      render(<GuardPassCheck />);
+
+      await user.type(screen.getByLabelText('Guest pass code'), '123456');
+      await user.click(screen.getByRole('button', { name: 'Check pass' }));
+
+      await act(async () => {
+        jest.advanceTimersByTime(5000);
+      });
+
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'No connection: use the intercom and paper register',
+      );
+
+      expect(screen.queryByRole('heading', { name: 'Pass details' })).not.toBeInTheDocument();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+  it('shows the required offline message when pass checking cannot reach the server', async () => {
+    const user = userEvent.setup();
+    networkFailure();
+
+    render(<GuardPassCheck />);
+
+    await user.type(screen.getByLabelText('Guest pass code'), '123456');
+    await user.click(screen.getByRole('button', { name: 'Check pass' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No connection: use the intercom and paper register',
+    );
+
+    expect(screen.queryByRole('heading', { name: 'Pass details' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/successfully/)).not.toBeInTheDocument();
+  });
+
   it('records guest entry using the pass ID and updates the remaining allowance', async () => {
     const user = userEvent.setup();
 
@@ -215,6 +267,113 @@ describe('GuardPassCheck', () => {
 
     expect(screen.getByText('1', { selector: 'p.font-semibold' })).toBeInTheDocument();
     expect(screen.getByText('Partly used')).toBeInTheDocument();
+  });
+
+  it('submits a paper-register entry with the actual arrival time and Entered later flag', async () => {
+    const user = userEvent.setup();
+
+    const fetchMock = answers(
+      {
+        status: 200,
+        body: VALID_PASS,
+      },
+      {
+        status: 200,
+        body: {
+          visit: { id: 'visit-2' },
+          remainingGuestCount: 2,
+        },
+      },
+    );
+
+    render(<GuardPassCheck />);
+
+    await user.type(screen.getByLabelText('Guest pass code'), '123456');
+    await user.click(screen.getByRole('button', { name: 'Check pass' }));
+
+    expect(await screen.findByText('Rahim Hasan')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Entered later (paper register)'));
+
+    const actualArrivalInput = screen.getByLabelText('Actual arrival date and time');
+    await user.type(actualArrivalInput, '2026-11-27T20:15');
+
+    await user.click(screen.getByRole('button', { name: 'Confirm guest entry' }));
+
+    expect(
+      await screen.findByText('1 guest has been recorded as Entered later.'),
+    ).toBeInTheDocument();
+
+    const submittedBody = JSON.parse(
+      (fetchMock.mock.calls[1] as [string, RequestInit])[1].body as string,
+    );
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/guard/guest-passes/entry',
+      expect.objectContaining({
+        method: 'POST',
+      }),
+    );
+
+    expect(submittedBody).toEqual({
+      passId: 'pass-1',
+      guestsIn: 1,
+      enteredLater: true,
+      enteredAt: new Date('2026-11-27T20:15').toISOString(),
+    });
+
+    expect(screen.queryByLabelText('Actual arrival date and time')).not.toBeInTheDocument();
+  });
+
+  it('requires an actual arrival date and time for a paper-register entry', async () => {
+    const user = userEvent.setup();
+
+    answers({
+      status: 200,
+      body: VALID_PASS,
+    });
+
+    render(<GuardPassCheck />);
+
+    await user.type(screen.getByLabelText('Guest pass code'), '123456');
+    await user.click(screen.getByRole('button', { name: 'Check pass' }));
+
+    expect(await screen.findByText('Rahim Hasan')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Entered later (paper register)'));
+
+    expect(screen.getByRole('button', { name: 'Confirm guest entry' })).toBeDisabled();
+    expect(screen.getByLabelText('Actual arrival date and time')).toBeRequired();
+  });
+
+  it('shows the offline message after an entry request fails and does not show success', async () => {
+    const user = userEvent.setup();
+
+    answers({
+      status: 200,
+      body: VALID_PASS,
+    });
+
+    const fetchMock = global.fetch as jest.Mock;
+
+    render(<GuardPassCheck />);
+
+    await user.type(screen.getByLabelText('Guest pass code'), '123456');
+    await user.click(screen.getByRole('button', { name: 'Check pass' }));
+
+    expect(await screen.findByText('Rahim Hasan')).toBeInTheDocument();
+
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+    await user.click(screen.getByRole('button', { name: 'Confirm guest entry' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No connection: use the intercom and paper register',
+    );
+
+    expect(screen.queryByText(/checked in successfully/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/recorded as Entered later/)).not.toBeInTheDocument();
   });
 
   it('displays an entry error without showing a success message', async () => {
