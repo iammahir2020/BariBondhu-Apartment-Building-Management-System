@@ -80,8 +80,9 @@ export async function checkGuestPass(
   // A code can be reused after its previous pass is no longer live.
   const selected =
     checked.find(({ status }) => isLiveGuestPassStatus(status)) ??
-    checked.reduce((latest, current) =>
-      current.pass.createdAt > latest.pass.createdAt ? current : latest,
+    checked.reduce(
+      (latest, current) => (current.pass.createdAt > latest.pass.createdAt ? current : latest),
+      checked[0]!,
     );
 
   const { pass, status } = selected;
