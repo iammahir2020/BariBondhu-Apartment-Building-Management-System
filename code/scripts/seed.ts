@@ -1,9 +1,10 @@
 /**
  * Demo data in place of features 2 and 3 (ADM-01 building setup, BM-02 accounts): one building, two blocks, twelve
- * flats, occupancies for some of them, and one account per role with a known password. Run with `npm run db:seed`.
+ * flats, occupancies for some of them, and demo accounts with known passwords. Run with `npm run db:seed`.
  * Feature data has its own file next to this one, called from `main` once the accounts exist: `seedTickets.ts` for
- * the common-area places and sample fault tickets, `seedGuestPasses.ts` for the sample guest passes, and
- * `seedEmergencyContacts.ts` for the guard-desk and manager emergency contacts.
+ * the common-area places and sample fault tickets, `seedGuestPasses.ts` for the sample guest passes,
+ * `seedEmergencyContacts.ts` for the guard-desk and manager emergency contacts, and `seedShifts.ts` for the
+ * next seven days of guard shifts.
  *
  * Safe to run again: it finds what already exists by its natural key (building name, block name, flat number,
  * username) and only adds what is missing. Demo accounts get the demo password and first-login state back, so a
@@ -27,6 +28,7 @@ import { passwordProblem } from '../src/services/passwordRules';
 import { seedGuestPasses } from './seedGuestPasses';
 import { seedTickets } from './seedTickets';
 import { seedBills } from './seedBills';
+import { seedShifts } from './seedShifts';
 
 loadEnvConfig(process.cwd());
 
@@ -126,8 +128,22 @@ const ACCOUNTS: readonly DemoAccount[] = [
   {
     username: 'bb-guard',
     role: 'guard',
-    displayName: 'Karim (guard)',
+    displayName: 'Selim (guard)',
     phone: '01811000003',
+    mustChangePassword: false,
+  },
+  {
+    username: 'bb-guard-hanif',
+    role: 'guard',
+    displayName: 'Hanif (guard)',
+    phone: '01811000009',
+    mustChangePassword: false,
+  },
+  {
+    username: 'bb-guard-babul',
+    role: 'guard',
+    displayName: 'Babul (guard)',
+    phone: '01811000010',
     mustChangePassword: false,
   },
   {
@@ -170,6 +186,7 @@ const ACCOUNTS: readonly DemoAccount[] = [
 
 /**
  * Demo announcements for BM-11 and RES-08.
+ *
  * @author Jannatul Ferdus Nishi
  */
 const DEMO_ANNOUNCEMENTS = [
@@ -499,6 +516,11 @@ async function main(): Promise<void> {
         `  ${account.username.padEnd(15)} ${account.role.padEnd(12)} ${result}${where}${first}`,
       );
     }
+
+    // Seed guard shifts only after all three demo guard accounts exist.
+    const shiftCount = await seedShifts(db);
+    console.log(`\nGuard shifts: ${shiftCount} new shifts added.`);
+
     await seedAnnouncements(db);
 
     const ticketSeed = await seedTickets(db, occupancyIds, flatIds);
