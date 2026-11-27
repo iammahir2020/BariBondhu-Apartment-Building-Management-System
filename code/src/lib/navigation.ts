@@ -59,7 +59,10 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
     },
     {
       title: 'More',
-      items: [{ label: 'Report a fault', href: '/resident/report-fault', icon: Wrench }],
+      items: [
+        { label: 'Fund summary', href: '/resident/fund', icon: Wallet },
+        { label: 'Report a fault', href: '/resident/report-fault', icon: Wrench },
+      ],
     },
   ],
   guard: [{ items: [{ label: 'Check a pass', href: '/guard', icon: ScanLine, onPhone: true }] }],
@@ -82,6 +85,7 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
         { label: 'Rates', href: '/committee/rates', icon: Receipt, onPhone: true },
         { label: 'Expenses', href: '/committee/expenses', icon: Wallet, onPhone: true },
         { label: 'Opening balance', href: '/committee/opening-balance', icon: Wallet },
+        { label: 'Fund summary', href: '/committee/fund', icon: Wallet },
       ],
     },
   ],
