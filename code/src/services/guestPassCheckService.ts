@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Guard-side guest pass lookup (SG-02).
  * Checks a six-digit code and returns only the details needed at the gate.
  */
@@ -26,10 +26,15 @@ export interface GuestPassCheckStore {
   passesWithCode(code: string): Promise<GuestPassCheckRecord[]>;
 }
 
+/** Dependencies required to check a guest pass. */
 export interface GuestPassCheckDeps {
   passes: GuestPassCheckStore;
 }
 
+/**
+ * Result of checking a guest pass, including guest details,
+ * remaining allowance and whether check-in is permitted.
+ */
 export interface GuestPassCheckResult {
   guestName: string;
   flat: string;
