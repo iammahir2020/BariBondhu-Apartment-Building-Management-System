@@ -76,6 +76,11 @@ The ★ tables that unblock everyone, in the order they merge:
 | BB-0002 | Send each member the `.env.local` values in a private message | 1 | Sat 21 | Sat 21 | — | Never in a public channel |
 | BB-0003 | Invite the team to the Supabase project | 1 | Sat 21 | Sat 21 | — | |
 | BB-0004 | Post the plan (this file) and the Trello board link on Discord | 1 | Sat 21 | Sat 21 | — | |
+| BB-0010 | Page: Manager home (M-Dashboard, short version): bills collected this month, open and late tickets, expenses waiting for the committee, overpayments to refund; a card shows only once its page exists | 2 | Thu 26 | Fri 27 | — | Added 26 Nov. BM-01 lands here. Owners add their card when their page merges |
+| BB-0011 | Page: Committee home (C-Home, short version): expenses waiting for a decision and the current rates | 2 | Thu 26 | Fri 27 | — | Added 26 Nov. CM-05 lands here. Ayesha adds the fund card with BB-1008; the full dashboard is CM-04 (feature 11, not in Release 1) |
+| BB-0012 | Page: Admin home (A-Setup, read only): the building, blocks, flat count and the manager account | 2 | Thu 26 | Fri 27 | — | Added 26 Nov. Setup itself (ADM-01, feature 2) stays seeded for Release 1 |
+| BB-0013 | The বাং button opens a "Bangla is coming soon" dialog, in the app shell and on the login screens | 2 | Thu 26 | Fri 27 | — | Added 26 Nov. Bangla itself moved out of Release 1 in SRS v1.7 (1.4, NFR-22) |
+| BB-0014 | PR: open, fix review comments (reviewer: Nishi), merge | 2 | Fri 27 | Fri 27 | BB-0010 – BB-0013 | Added 26 Nov |
 
 ### 12 Report a fault, "Me too", cancel (RES-02)
 
@@ -124,6 +129,10 @@ The ★ tables that unblock everyone, in the order they merge:
 | BB-0609 | Page: Dues (R-Dues), with Pay and the bill's status | 2 | Fri 27 | Fri 27 | BB-0607 | |
 | BB-0610 | Page: Receipt (R-Receipt) | 2 | Fri 27 | Fri 27 | BB-0607 | First to cut if late |
 | BB-0611 | PR: open, fix review comments (reviewer: Ayesha), merge | 2 | Fri 27 | Fri 27 | BB-0602 – BB-0610 | |
+| BB-0612 | Page: Resident home (R-Home): the current bill with Pay now and See bill, the New guest pass and Report a fault tiles, and my latest guest pass and ticket | 2 | Wed 25 | Fri 27 | BB-0607, BB-1208, BB-1607 | Added 25 Nov. Its own PR, opened after BB-0611 merges (reviewer: Ayesha). Nishi's Urgent pin (BB-2108) goes at the top of it |
+| BB-0613 | Service and routes: list overpayments, mark one Refunded (who and when, audit log) (`decidePaymentClaims`; the overpayment part of BM-04, BR-04) + tests + role-check test | 2 | Thu 26 | Fri 27 | BB-0611 | Added 26 Nov. The rest of BM-04 (feature 7) stays out of Release 1 |
+| BB-0614 | Page: Overpayments for the manager (from M-Claims, overpayments only), and the overpayment notice on Dues | 2 | Thu 26 | Fri 27 | BB-0613 | Added 26 Nov |
+| BB-0615 | PR: open, fix review comments (reviewer: Ayesha), merge | 2 | Fri 27 | Fri 27 | BB-0613, BB-0614 | Added 26 Nov |
 
 ---
 
@@ -174,7 +183,7 @@ The ★ tables that unblock everyone, in the order they merge:
 | BB-2105 | Service: a resident's announcements (their block or floor; Urgent pinned until it expires) + tests | 2 | Thu 26 | Thu 26 | BB-2102 | |
 | BB-2106 | Adapters and routes (`sendAnnouncements`, `readAnnouncements`) + role-check test | 2 | Fri 27 | Fri 27 | BB-2104, BB-2105 | |
 | BB-2107 | Page: Announcements for the manager (M-Announcements) | 2 | Fri 27 | Fri 27 | BB-2106 | |
-| BB-2108 | Page: Announcements for residents, and the Urgent pin on the resident home (R-Announcements, R-Home) | 2 | Fri 27 | Fri 27 | BB-2106 | |
+| BB-2108 | Page: Announcements for residents, and the Urgent pin on the resident home (R-Announcements, R-Home) | 2 | Fri 27 | Fri 27 | BB-2106 | The resident home page is BB-0612 |
 | BB-2109 | PR: open, fix review comments (reviewer: Ayesha), merge | 2 | Fri 27 | Fri 27 | BB-2104 – BB-2108 | |
 
 ---
@@ -372,13 +381,13 @@ The downstream member reviews, because they need the code to work.
 
 | Member | Sprint 1 | Sprint 2 | Total |
 |---|---|---|---|
-| Mahir | 21 | 16 | 37 |
+| Mahir | 21 | 25 | 46 |
 | Nishi | 15 | 13 | 28 |
 | Ayesha | 16 | 11 | 27 |
 | Tawhid | 16 | 8 | 24 |
 | Adika | 19 | 10 | 29 |
 | Everyone (buffer day) | | | 1 |
-| **All** | **87** | **58** | **146** |
+| **All** | **87** | **67** | **155** |
 
 Mahir carries the most, mostly in Sprint 2 (feature 6 on Thu 26 and Fri 27), while Tawhid has the lightest Sprint 2.
 

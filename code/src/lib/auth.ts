@@ -26,16 +26,18 @@ export const NOT_LOGGED_IN_MESSAGE = 'Your session has ended. Log in again.';
 export type AuthorizedUser = Authorized<Profile>;
 
 /**
- * The active profile of whoever is signed in, if anyone.
+ * The active profile of whoever is signed in, if anyone. The session token is checked with `getClaims()`, which
+ * verifies its signature and expiry locally against the project's signing keys (cached), instead of asking the Auth
+ * server on every request as `getUser()` does. Deactivation is still caught, because `active` is read from the
+ * database each time.
  * @param supabase - A Supabase client with the request's session.
  * @returns The profile, or undefined when signed out, missing or deactivated.
  */
 async function activeProfile(supabase: SupabaseServerClient): Promise<Profile | undefined> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return undefined;
-  const profile = await databaseProfileFinder(db).findById(user.id);
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims.sub;
+  if (!userId) return undefined;
+  const profile = await databaseProfileFinder(db).findById(userId);
   return profile?.active ? profile : undefined;
 }
 

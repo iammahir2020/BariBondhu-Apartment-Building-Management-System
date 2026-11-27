@@ -124,6 +124,20 @@ The SRS leaves these open, so I settled them before the service tickets. The tes
    other households follow only stops following (TC-R02-18).
 7. The status of a guest pass is worked out from its times, guests used and cancellation time when it is read, not
    stored, so it never goes stale when the end time passes (BB-1604).
+8. RES-01: Pay on a bill that isn't Unpaid (TC-R01-04). Payment pending or Awaiting verification: "This bill
+   already has a payment in progress" (the SRS wording from BM-04). Paid: "This bill is already paid." Carried
+   forward: "This bill was carried forward to your newest bill. Pay that one instead." If the bill changes while the
+   payment starts: "This bill changed while you were paying. Open Dues again."
+9. RES-01: the reason shown on Dues after a payment ends without money (TC-R01-17) is the gateway's own reason. With
+   none: "The payment did not go through. You can pay again." After the 30-minute re-check: "No payment arrived
+   within 30 minutes. You can pay again."
+10. RES-01: a confirmation for an Unpaid bill whose total was corrected after the payment started is flagged as an
+    overpayment, like a late one on a settled bill, since a bill is never made Paid by a different amount (BR-06).
+11. RES-01: the receipt number is `R-`, the bill's year and month, and the receipt's number, like `R-2611-0101`, as on
+    the prototype's Dues screen. A receipt for a bill that isn't Paid: "This bill isn't paid yet, so it has no
+    receipt." "Download receipt" opens the browser's print dialog, which can save a PDF, so no PDF library is added.
+12. RES-01: the 30-minute re-check (BR-04) runs whenever a resident opens Dues, for every payment due in the building,
+    because the free Vercel plan has no cron that runs every few minutes.
 
 
 # Test cases: BM-09 and SG-05

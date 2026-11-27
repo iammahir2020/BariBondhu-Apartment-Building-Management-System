@@ -68,6 +68,15 @@ export const PERMISSIONS = {
   sendAnnouncements: { manager: 'all' },
   /** Read announcements (RES-08). */
   readAnnouncements: { resident: 'all', manager: 'all', committee: 'all' },
+  /** Read and mark as read one's own in-app notifications (BB-2304). */
+  readNotifications: {
+    resident: 'own',
+    guard: 'own',
+    manager: 'own',
+    committee: 'own',
+    maintenance: 'own',
+    admin: 'own',
+  },
   /** Give service feedback (RES-07). */
   giveFeedback: { resident: 'all' },
   /** Read feedback; anonymous entries show no flat (CM-03, NFR-11). */
@@ -88,6 +97,11 @@ export const PERMISSIONS = {
   },
   /** See a resident's phone number: residents their own, the manager everyone's (NFR-10). */
   viewResidentPhone: { resident: 'own', manager: 'all' },
+  /**
+   * See the counts on the manager's home (`GET /api/dashboards/manager`, BM-01). Not a table row: every count comes
+   * from data the manager may already see (bills, tickets, expenses, overpayments).
+   */
+  viewManagerDashboard: { manager: 'all' },
   /** See one's own account (`GET /api/me`). Not a table row: every signed-in user may see who they are. */
   viewOwnAccount: {
     resident: 'own',

@@ -29,9 +29,10 @@ describe('phoneNavItems', () => {
       const all = allNavItems(role);
       const phone = all.filter((item) => item.onPhone);
       const more = phone.length < all.length ? [`/${role}/more`] : [];
+      const shown = more.length > 0 ? phone.slice(0, PHONE_NAV_LIMIT - 1) : phone;
       const items = phoneNavItems(role);
       expect(items.length).toBeLessThanOrEqual(PHONE_NAV_LIMIT);
-      expect(items.map((item) => item.href)).toEqual([...phone.map((item) => item.href), ...more]);
+      expect(items.map((item) => item.href)).toEqual([...shown.map((item) => item.href), ...more]);
     },
   );
 
@@ -51,6 +52,15 @@ describe('phoneNavItems', () => {
     const items = phoneNavItems('resident', links(3, 2));
     expect(items.map((item) => item.label)).toEqual(['Link 1', 'Link 2', 'More']);
     expect(items[2]?.href).toBe('/resident/more');
+  });
+
+  it('keeps Tickets on the manager phone menu before More', () => {
+    expect(phoneNavItems('manager').map((item) => item.label)).toEqual([
+      'Dashboard',
+      'Bills',
+      'Tickets',
+      'More',
+    ]);
   });
 
   it('returns no links for a role with none (exception)', () => {

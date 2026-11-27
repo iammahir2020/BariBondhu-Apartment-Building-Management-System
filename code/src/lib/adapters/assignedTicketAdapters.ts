@@ -1,11 +1,11 @@
 /**
- * Database adapter for assignedTicketService.ts: reads tickets assigned to a maintenance worker.
+ * Database adapter for assignedTicketService.ts: reads assigned tickets and saves their status changes.
  *
  * @author Adika Rahman
  */
 import { and, eq, sql } from 'drizzle-orm';
 import type { Database } from '@/lib/db';
-import { blocks, commonAreaPlaces, flats, tickets } from '@/models';
+import { blocks, commonAreaPlaces, flats, ticketStatusChanges, tickets } from '@/models';
 import type { AssignedTicketStore } from '@/services/assignedTicketService';
 
 /**
@@ -16,6 +16,15 @@ import type { AssignedTicketStore } from '@/services/assignedTicketService';
  */
 export function databaseAssignedTicketStore(db: Database): AssignedTicketStore {
   return {
+    async assigneeIdFor(ticketId) {
+      const rows = await db
+        .select({ assigneeId: tickets.assigneeId })
+        .from(tickets)
+        .where(eq(tickets.id, ticketId))
+        .limit(1);
+
+      return rows[0]?.assigneeId ?? null;
+    },
     async listForAssignee(assigneeId) {
       return db
         .select({
@@ -63,6 +72,31 @@ export function databaseAssignedTicketStore(db: Database): AssignedTicketStore {
         .limit(1);
 
       return rows[0];
+    },
+
+    async updateStatusForAssignee(ticketId, assigneeId, expectedStatus, change) {
+      return db.transaction(async (tx) => {
+        const updated = await tx
+          .update(tickets)
+          .set({
+            status: change.toStatus,
+            updatedAt: change.createdAt ?? new Date(),
+          })
+          .where(
+            and(
+              eq(tickets.id, ticketId),
+              eq(tickets.assigneeId, assigneeId),
+              eq(tickets.status, expectedStatus),
+            ),
+          )
+          .returning({ id: tickets.id });
+
+        if (updated.length === 0) return false;
+
+        await tx.insert(ticketStatusChanges).values(change);
+
+        return true;
+      });
     },
   };
 }

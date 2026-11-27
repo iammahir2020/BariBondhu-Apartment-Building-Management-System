@@ -75,6 +75,8 @@ Moved here from SRS section 2.1.7 in SRS version 1.4. Every page and API route c
 | See the fund summary (totals only) | Yes |  | Yes | Yes |  |  |
 | Send announcements |  |  | Yes |  |  |  |
 | Read announcements | Yes |  | Yes | Yes |  |  |
+
+| Read and mark as read own in-app notifications | Own | Own | Own | Own | Own | Own |
 | Give service feedback | Yes |  |  |  |  |  |
 | Read feedback (anonymous entries show no flat) |  |  |  | Yes |  |  |
 | Plan guard shifts |  |  | Yes |  |  |  |

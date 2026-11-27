@@ -27,6 +27,7 @@ const config = {
     // the app. Keep this list the same as sonar.coverage.exclusions in ../sonar-project.properties.
     '!src/lib/db.ts',
     '!src/lib/env.ts',
+    '!src/lib/gatewaySecret.ts',
     '!src/lib/auth.ts',
     '!src/lib/session.ts',
     '!src/lib/mailer.ts',

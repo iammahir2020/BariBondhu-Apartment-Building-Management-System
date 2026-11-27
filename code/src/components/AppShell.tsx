@@ -5,14 +5,15 @@
  * - Phones and tablets (under 1024 px): top bar, the page, and a bottom menu with More when needed.
  * - Laptops (1024 px and up): dark side menu with every section, top bar, and a wider page.
  *
- * Both show the role's name, the Bangla/English switch, Emergency and Log out. The language switch is a placeholder
- * until the Bangla feature is built.
+ * Both show the role's name, the Bangla/English switch, Emergency and Log out. Bangla isn't built in Release 1, so the
+ * switch opens a "coming soon" notice.
  *
  * @author Mahir Al Kamal
  */
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Building2, Phone } from 'lucide-react';
+import { LanguageButton } from '@/components/LanguageButton';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { Button } from '@/components/ui/button';
 import { BottomNav, SideNav } from '@/components/RoleNav';
@@ -35,7 +36,7 @@ export function AppShell({ role, children }: AppShellProps) {
   const roleLabel = ROLE_LABELS[role];
   return (
     <div className="min-h-screen bg-background lg:grid lg:grid-cols-[264px_minmax(0,1fr)]">
-      <aside className="sticky top-0 hidden h-screen flex-col gap-1 overflow-y-auto bg-sidebar px-3.5 py-5 text-sidebar-foreground lg:flex">
+      <aside className="sticky top-0 hidden h-screen print:hidden! flex-col gap-1 overflow-y-auto bg-sidebar px-3.5 py-5 text-sidebar-foreground lg:flex">
         <div className="px-2 pb-1">
           <Brand label="BariBondhu" inverted />
         </div>
@@ -44,7 +45,7 @@ export function AppShell({ role, children }: AppShellProps) {
       </aside>
 
       <div className="flex min-h-screen min-w-0 flex-col">
-        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-card pr-2 pl-4 lg:h-17 lg:gap-3 lg:px-7">
+        <header className="sticky top-0 z-10 flex h-16 print:hidden! shrink-0 items-center gap-2 border-b border-border bg-card pr-2 pl-4 lg:h-17 lg:gap-3 lg:px-7">
           <div className="min-w-0 flex-1 lg:hidden">
             <Brand label={roleLabel} />
           </div>
@@ -54,7 +55,7 @@ export function AppShell({ role, children }: AppShellProps) {
         <main className="flex w-full flex-1 flex-col gap-4 p-4 lg:max-w-295 lg:gap-5 lg:px-7 lg:py-6">
           {children}
         </main>
-        <BottomNav role={role} label="Main" className="lg:hidden" />
+        <BottomNav role={role} label="Main" className="lg:hidden print:hidden!" />
       </div>
     </div>
   );
@@ -91,17 +92,7 @@ function Brand({ label, inverted = false }: { label: string; inverted?: boolean 
 function TopBarActions() {
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="shrink-0 rounded-full border border-border bg-card text-sm font-semibold text-foreground"
-        lang="bn"
-        aria-label="বাং: Switch to Bangla (coming soon)"
-        title="Bangla is coming soon"
-        disabled
-      >
-        বাং
-      </Button>
+      <LanguageButton />
       {/* On phones (under 640 px) the button is round with only the phone icon, like the prototype's `.sos.round`, so the
           role's name keeps its room; the text stays for screen readers. */}
       <Button

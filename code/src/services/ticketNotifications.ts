@@ -105,13 +105,15 @@ export async function notifyTicketCancelled(deps: TicketNoticeDeps, ticket: Tick
  * @param deps - Recipients and notifier.
  * @param ticket - The ticket, for its id and title.
  * @param change - The change that was saved.
+ * @param followerIds - Optional follower snapshot taken before the save, for changes that transfer followers.
  */
 export async function notifyTicketStatusChange(
   deps: TicketNoticeDeps,
-  ticket: Ticket,
+  ticket: Pick<Ticket, 'id' | 'title'>,
   change: SavedStatusChange,
+  followerIds?: readonly string[],
 ): Promise<void> {
-  const followers = await deps.recipients.followerAccountIds(ticket.id);
+  const followers = followerIds ?? (await deps.recipients.followerAccountIds(ticket.id));
   await sendToAll(
     deps.notify,
     followers.filter((id) => id !== change.changedById),
