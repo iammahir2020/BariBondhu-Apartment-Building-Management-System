@@ -99,6 +99,13 @@
       "when": 1795632117611,
       "tag": "0013_add_emergency_contact",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795759703706,
+      "tag": "0014_add-fund-summary",
+      "breakpoints": true
     }
   ]
 }
