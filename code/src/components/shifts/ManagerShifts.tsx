@@ -81,6 +81,10 @@ function dhakaDateTimeToISO(value: string): string {
   return new Date(timestamp).toISOString();
 }
 
+/**
+ * Displays the manager's seven-day guard duty list,
+ * highlights uncovered time gaps, and allows planning shifts.
+ */
 export function ManagerShifts() {
   const [duty, setDuty] = useState<ManagerDutyListResponse | null>(null);
   const [guards, setGuards] = useState<GuardOption[]>([]);

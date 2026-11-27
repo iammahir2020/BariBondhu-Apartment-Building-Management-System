@@ -33,6 +33,10 @@ function formatTime(value: string | Date): string {
   }).format(new Date(value));
 }
 
+/**
+ * Displays the guard's seven-day assigned duty schedule,
+ * including overnight shifts and the no-shift-today state.
+ */
 export function GuardDuty() {
   const [duty, setDuty] = useState<GuardDutyResponse | null>(null);
   const [loading, setLoading] = useState(true);
