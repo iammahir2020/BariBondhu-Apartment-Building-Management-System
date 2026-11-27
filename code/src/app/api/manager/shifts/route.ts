@@ -1,8 +1,8 @@
 /**
- * Plan a guard shift.
- * BB-1906, BM-09, NFR-06.
+ * Plan and view guard shifts.
+ * BB-1906, BB-1907, BM-09, NFR-06.
  *
- * Only an authorised manager may plan guard shifts.
+ * Only an authorised manager may plan shifts or view the duty list.
  *
  * @author Tawhid Bin Moslim
  */
@@ -12,7 +12,31 @@ import { requireRole } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { toErrorResponse } from '@/lib/errors';
 import { readJsonObject, requireString } from '@/lib/parse';
+import { getManagerDutyList } from '@/services/shiftDutyService';
 import { planShift } from '@/services/shiftService';
+
+/**
+ * Return the manager's shifts and uncovered intervals for the next seven days.
+ *
+ * @param request - Incoming authenticated request.
+ * @returns The manager's duty list or an error response.
+ */
+export async function GET(request: Request): Promise<Response> {
+  try {
+    await requireRole(request, 'planShifts');
+
+    const duty = await getManagerDutyList(
+      {
+        shifts: databaseShiftStore(db),
+      },
+      new Date(),
+    );
+
+    return Response.json(duty);
+  } catch (error) {
+    return toErrorResponse(error);
+  }
+}
 
 /**
  * Create a planned shift for a guard.
