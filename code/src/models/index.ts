@@ -24,3 +24,5 @@ export * from './Shift';
 export * from './Bill';
 export * from './BillLineItem';
 export * from './Notification';
+export * from './OpeningBalance';
+export * from './FundSummary';
