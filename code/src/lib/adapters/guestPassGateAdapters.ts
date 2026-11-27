@@ -30,6 +30,7 @@ export function databaseGuestPassGateStore(
       return db
         .select({
           guestName: guestPasses.guestName,
+          id: guestPasses.id,
           blockName: blocks.name,
           flatNumber: flats.number,
           startsAt: guestPasses.startsAt,

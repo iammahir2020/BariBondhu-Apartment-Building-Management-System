@@ -14,6 +14,7 @@ import {
 
 /** Pass information needed by the guard, including its flat location. */
 export interface GuestPassCheckRecord extends GuestPassTiming {
+  id: string;
   guestName: string;
   blockName: string;
   flatNumber: string;
@@ -36,6 +37,7 @@ export interface GuestPassCheckDeps {
  * remaining allowance and whether check-in is permitted.
  */
 export interface GuestPassCheckResult {
+  passId: string;
   guestName: string;
   flat: string;
   approvedGuestCount: number;
@@ -95,6 +97,7 @@ export async function checkGuestPass(
   else if (status === 'Fully used') reason = 'Fully used';
 
   return {
+    passId: pass.id,
     guestName: pass.guestName,
     flat: `${pass.blockName}-${pass.flatNumber}`,
     approvedGuestCount: pass.guestCount,
