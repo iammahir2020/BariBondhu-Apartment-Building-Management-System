@@ -64,7 +64,11 @@ describe('AssignedTicketsList', () => {
     expect(screen.getByText('Floor 5')).toBeInTheDocument();
     expect(screen.getByText('Electrical')).toBeInTheDocument();
     expect(screen.getByText('No due date')).toBeInTheDocument();
+    const detailLinks = screen.getAllByRole('link', { name: 'View details' });
 
+    expect(detailLinks).toHaveLength(2);
+    expect(detailLinks[0]).toHaveAttribute('href', '/maintenance/tickets/ticket-1');
+    expect(detailLinks[1]).toHaveAttribute('href', '/maintenance/tickets/ticket-2');
     expect(fetch).toHaveBeenCalledWith(
       '/api/maintenance/tickets',
       expect.objectContaining({ method: 'GET' }),
