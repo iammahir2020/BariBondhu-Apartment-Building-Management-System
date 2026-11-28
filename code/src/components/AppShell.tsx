@@ -5,7 +5,7 @@
  * - Phones and tablets (under 1024 px): top bar, the page, and a bottom menu with More when needed.
  * - Laptops (1024 px and up): dark side menu with every section, top bar, and a wider page.
  *
- * Both show the role's name, the Bangla/English switch, Emergency and Log out. Bangla isn't built in Release 1, so the
+ * Both show the role's name, the Bangla/English switch, the notifications bell, Emergency and Log out. Bangla isn't built in Release 1, so the
  * switch opens a "coming soon" notice.
  *
  * @author Mahir Al Kamal
@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { Building2, Phone } from 'lucide-react';
 import { LanguageButton } from '@/components/LanguageButton';
 import { LogoutButton } from '@/components/auth/LogoutButton';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { BottomNav, SideNav } from '@/components/RoleNav';
 import { ROLE_LABELS, type Role } from '@/lib/roles';
@@ -88,11 +89,12 @@ function Brand({ label, inverted = false }: { label: string; inverted?: boolean 
   );
 }
 
-/** Language switch, Emergency and Log out. Log out shows its text only on wide screens. */
+/** Language switch, notifications, Emergency and Log out. Log out shows its text only on wide screens. */
 function TopBarActions() {
   return (
     <>
       <LanguageButton />
+      <NotificationBell />
       {/* On phones (under 640 px) the button is round with only the phone icon, like the prototype's `.sos.round`, so the
           role's name keeps its room; the text stays for screen readers. */}
       <Button
