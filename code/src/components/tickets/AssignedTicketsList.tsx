@@ -1,110 +1,112 @@
+'use client';
+
 /**
- * The maintenance worker's assigned tickets list (MNT-01).
+ * Maintenance worker's assigned tickets list (MNT-01).
  *
  * @author Adika Rahman
  */
-'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { callApi } from '@/lib/apiClient';
 import type { AssignedTicketSummary } from '@/services/assignedTicketService';
 
-/** Displays a date in a readable format. */
-function formatDueDate(date: string | null): string {
-  if (!date) return 'No due date';
-
-  const parsedDate = new Date(`${date}T00:00:00`);
-
-  if (Number.isNaN(parsedDate.getTime())) return 'Invalid date';
-
-  return parsedDate.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
+type TicketsResponse = {
+  tickets: AssignedTicketSummary[];
+};
 
 /**
- * Shows tickets assigned to the signed-in maintenance worker.
+ * Displays the tickets assigned to the logged-in maintenance worker.
  *
  * @returns The assigned tickets list.
  */
 export function AssignedTicketsList() {
-  const [tickets, setTickets] = useState<AssignedTicketSummary[] | null>(null);
+  const [tickets, setTickets] = useState<AssignedTicketSummary[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadTickets = useCallback(async () => {
-    const result = await callApi<{ tickets: AssignedTicketSummary[] }>(
-      '/api/maintenance/tickets',
-      'GET',
-    );
-
-    if (result.ok) {
-      setTickets(result.data.tickets);
+  useEffect(() => {
+    async function loadTickets() {
+      setLoading(true);
       setError(null);
-    } else {
-      setError(result.error.message);
+
+      const result = await callApi<TicketsResponse>('/api/maintenance/tickets', 'GET');
+
+      if (!result.ok) {
+        setError(result.error.message || 'Could not reach the server.');
+        setLoading(false);
+        return;
+      }
+
+      setTickets(result.data.tickets);
+      setLoading(false);
     }
+
+    void loadTickets();
   }, []);
 
-  useEffect(() => {
-    void loadTickets();
-  }, [loadTickets]);
+  if (loading) {
+    return <p className="text-sm text-muted-foreground">Loading tickets...</p>;
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-      <h1 className="text-xl font-bold">My tickets</h1>
+    <section className="space-y-4">
+      <h1 className="text-2xl font-bold">My tickets</h1>
 
-      <div aria-live="polite">
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-      </div>
-
-      {tickets === null && !error && (
-        <p className="text-sm text-muted-foreground">Loading tickets...</p>
-      )}
-
-      {tickets?.length === 0 && (
+      {tickets.length === 0 ? (
         <p className="text-sm text-muted-foreground">You do not have any assigned tickets yet.</p>
-      )}
-
-      {tickets && tickets.length > 0 && (
-        <div className="flex flex-col gap-3">
+      ) : (
+        <div className="grid gap-4">
           {tickets.map((ticket) => (
-            <Card key={ticket.id} className="gap-3 p-4">
+            <Card key={ticket.id} className="gap-4 p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <h2 className="text-base font-semibold">{ticket.title ?? 'Untitled ticket'}</h2>
-
-                <Badge variant="outline">{ticket.status}</Badge>
+                <h2 className="text-lg font-semibold">{ticket.title}</h2>
+                <Badge>{ticket.status}</Badge>
               </div>
 
               <div className="grid gap-2 text-sm sm:grid-cols-2">
                 <p>
-                  <span className="font-semibold">Place:</span> {ticket.place}
+                  <span className="font-medium">Place:</span> {ticket.place}
                 </p>
-
                 <p>
-                  <span className="font-semibold">Category:</span> {ticket.category}
+                  <span className="font-medium">Category:</span> {ticket.category}
                 </p>
-
                 <p>
-                  <span className="font-semibold">Priority:</span> {ticket.priority}
+                  <span className="font-medium">Priority:</span> {ticket.priority}
                 </p>
-
                 <p>
-                  <span className="font-semibold">Due date:</span> {formatDueDate(ticket.dueDate)}
+                  <span className="font-medium">Due date:</span>{' '}
+                  {ticket.dueDate
+                    ? new Date(`${ticket.dueDate}T00:00:00`).toLocaleDateString('en-GB', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    : 'No due date'}
                 </p>
               </div>
+
+              <Link
+                href={`/maintenance/tickets/${ticket.id}`}
+                className="text-sm font-semibold text-primary underline underline-offset-4 hover:opacity-80"
+              >
+                View details
+              </Link>
             </Card>
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }
