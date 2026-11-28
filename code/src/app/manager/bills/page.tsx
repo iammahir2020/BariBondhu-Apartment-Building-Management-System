@@ -230,7 +230,7 @@ export default function ManagerBillsPage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-col gap-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6">
       <header>
         <h1 className="text-2xl font-bold">Monthly bills</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -464,6 +464,6 @@ export default function ManagerBillsPage() {
           </CardContent>
         </Card>
       )}
-    </main>
+    </div>
   );
 }

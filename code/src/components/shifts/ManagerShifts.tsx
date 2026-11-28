@@ -174,7 +174,7 @@ export function ManagerShifts() {
     guards.find((guard) => guard.id === id)?.displayName ?? 'Unknown guard';
 
   return (
-    <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Guard shifts</h1>
         <p className="text-sm text-muted-foreground">
@@ -355,6 +355,6 @@ export function ManagerShifts() {
           </button>
         </form>
       </section>
-    </main>
+    </div>
   );
 }

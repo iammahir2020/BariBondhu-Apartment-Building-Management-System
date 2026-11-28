@@ -361,7 +361,7 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
   const reassignmentStaff = maintenanceStaff.filter((person) => person.id !== ticket?.assigneeId);
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
       <header>
         <h1 className="text-[1.375rem] font-bold">Tickets</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -952,7 +952,7 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
           </form>
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   );
 }
 

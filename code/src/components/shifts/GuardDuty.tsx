@@ -82,7 +82,7 @@ export function GuardDuty() {
   if (!duty) return null;
 
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-5 p-4">
+    <div className="mx-auto w-full max-w-3xl space-y-5 p-4">
       <header>
         <h1 className="text-2xl font-bold">My shifts</h1>
         <p className="text-sm text-gray-500">Your duty schedule for the next 7 days</p>
@@ -140,6 +140,6 @@ export function GuardDuty() {
       <p className="text-sm text-gray-500">
         Only the manager can change shifts. Please ask your manager if you need a shift change.
       </p>
-    </main>
+    </div>
   );
 }
