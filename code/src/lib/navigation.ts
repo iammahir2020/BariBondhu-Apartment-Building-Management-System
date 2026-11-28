@@ -9,6 +9,7 @@
  */
 import {
   Building2,
+  CalendarClock,
   Ellipsis,
   House,
   LayoutDashboard,
@@ -65,7 +66,14 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
       ],
     },
   ],
-  guard: [{ items: [{ label: 'Check a pass', href: '/guard', icon: ScanLine, onPhone: true }] }],
+  guard: [
+    {
+      items: [
+        { label: 'Check a pass', href: '/guard', icon: ScanLine, onPhone: true },
+        { label: 'My shifts', href: '/guard/duty', icon: CalendarClock, onPhone: true },
+      ],
+    },
+  ],
   manager: [
     {
       items: [
@@ -73,6 +81,7 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
         { label: 'Bills', href: '/manager/bills', icon: Receipt, onPhone: true },
         { label: 'Tickets', href: '/manager/tickets', icon: Wrench, onPhone: true },
         { label: 'Expenses', href: '/manager/expenses', icon: Wallet },
+        { label: 'Shifts', href: '/manager/shifts', icon: CalendarClock },
         { label: 'Overpayments', href: '/manager/overpayments', icon: Repeat },
         { label: 'Fund summary', href: '/manager/fund', icon: Wallet },
       ],
@@ -90,7 +99,11 @@ export const NAV_SECTIONS: Readonly<Record<Role, readonly NavSection[]>> = {
     },
   ],
   maintenance: [
-    { items: [{ label: 'My tickets', href: '/maintenance', icon: ListChecks, onPhone: true }] },
+    {
+      items: [
+        { label: 'My tickets', href: '/maintenance/tickets', icon: ListChecks, onPhone: true },
+      ],
+    },
   ],
   admin: [{ items: [{ label: 'Building setup', href: '/admin', icon: Building2, onPhone: true }] }],
 };
