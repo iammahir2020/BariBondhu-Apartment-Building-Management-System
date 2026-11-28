@@ -20,6 +20,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { formatPassMoment } from '@/components/guestPasses/passView';
+import { LoadingRows } from '@/components/Loading';
 import { callApi } from '@/lib/apiClient';
 import { badgeText, bellLabel, unreadCount, type NotificationView } from './notificationView';
 
@@ -146,7 +147,9 @@ export function NotificationBell() {
           <DialogTitle className="text-lg">Notifications</DialogTitle>
           <DialogDescription>Newest first. Tap one to open it.</DialogDescription>
         </DialogHeader>
-        {loaded.state === 'loading' && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {loaded.state === 'loading' && (
+          <LoadingRows label="Loading notifications…" rows={3} card={false} />
+        )}
         {loaded.state === 'error' && (
           <p role="alert" className="text-sm text-destructive">
             {loaded.message}
