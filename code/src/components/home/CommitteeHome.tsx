@@ -31,6 +31,13 @@ import {
 type Loaded<T> =
   { state: 'loading' } | { state: 'ready'; items: T[] } | { state: 'error'; message: string };
 
+/** The fund summary fields the home shows. */
+interface HomeFund {
+  month: string;
+  closingBalancePoisha: number;
+  totalOutstandingPoisha: number;
+}
+
 const LOADING = { state: 'loading' } as const;
 
 /**
@@ -165,6 +172,38 @@ function RatesSection({ rates }: { rates: Loaded<HomeRate> }) {
   );
 }
 
+/** The newest published month of the fund summary, totals only (CM-04, NFR-12). */
+function FundSection({ funds }: { funds: Loaded<HomeFund> }) {
+  const latest = funds.state === 'ready' ? funds.items[0] : undefined;
+  return (
+    <section className="flex flex-col gap-2" aria-labelledby="fund-heading">
+      <SectionHead
+        id="fund-heading"
+        title="Fund summary"
+        href="/committee/fund"
+        link="Fund summary"
+      />
+      {funds.state === 'loading' && <p className="text-muted-foreground">Loading…</p>}
+      {funds.state === 'error' && <ErrorNote message={funds.message} />}
+      {funds.state === 'ready' && latest === undefined && (
+        <Card className="p-4 text-muted-foreground">Not ready yet. No month is published.</Card>
+      )}
+      {latest !== undefined && (
+        <Card className="gap-1 p-4">
+          <span className="text-sm font-semibold text-muted-foreground">
+            Closing balance, {latest.month.slice(0, 7)}
+          </span>
+          <span className="text-[1.375rem] font-bold">
+            {formatTaka(latest.closingBalancePoisha)}
+          </span>
+          <span className="text-sm text-muted-foreground">
+            Still owed by flats: {formatTaka(latest.totalOutstandingPoisha)} (total only)
+          </span>
+        </Card>
+      )}
+    </section>
+  );
+}
 /**
  * Committee member home.
  * @returns The page content.
@@ -172,10 +211,12 @@ function RatesSection({ rates }: { rates: Loaded<HomeRate> }) {
 export function CommitteeHome() {
   const [expenses, setExpenses] = useState<Loaded<HomeExpense>>(LOADING);
   const [rates, setRates] = useState<Loaded<HomeRate>>(LOADING);
+  const [funds, setFunds] = useState<Loaded<HomeFund>>(LOADING);
 
   useEffect(() => {
     void loadList<HomeExpense>('/api/expenses', 'expenses').then(setExpenses);
     void loadList<HomeRate>('/api/rates', 'current').then(setRates);
+    void loadList<HomeFund>('/api/fund-summary', 'summaries').then(setFunds);
   }, []);
 
   return (
@@ -183,6 +224,7 @@ export function CommitteeHome() {
       <h1 className="text-[1.375rem] font-bold lg:sr-only">Home</h1>
       <WaitingSection expenses={expenses} />
       <RatesSection rates={rates} />
+      <FundSection funds={funds} />
     </div>
   );
 }

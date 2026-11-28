@@ -85,6 +85,45 @@ describe('CommitteeHome', () => {
     expect(await screen.findByText('No rates set yet.')).toBeInTheDocument();
   });
 
+  it('shows the latest published closing balance, totals only (normal, CM-04)', async () => {
+    answerFetchByRoute([
+      { method: 'GET', url: '/api/expenses', status: 200, body: { expenses: [] } },
+      { method: 'GET', url: '/api/rates', status: 200, body: RATES },
+      {
+        method: 'GET',
+        url: '/api/fund-summary',
+        status: 200,
+        body: {
+          summaries: [
+            {
+              month: '2026-10-01',
+              closingBalancePoisha: 37415000,
+              totalOutstandingPoisha: 5820000,
+            },
+          ],
+        },
+      },
+    ]);
+    render(<CommitteeHome />);
+
+    expect(await screen.findByText('Closing balance, 2026-10')).toBeInTheDocument();
+    expect(screen.getByText('৳374,150.00')).toBeInTheDocument();
+    expect(screen.getByText(/Still owed by flats: ৳58,200.00/)).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /Fund summary/ })[0]).toHaveAttribute(
+      'href',
+      '/committee/fund',
+    );
+  });
+
+  it('says not ready yet when no month is published (boundary)', async () => {
+    answerFetchByRoute([
+      { method: 'GET', url: '/api/expenses', status: 200, body: { expenses: [] } },
+      { method: 'GET', url: '/api/rates', status: 200, body: RATES },
+      { method: 'GET', url: '/api/fund-summary', status: 200, body: { summaries: [] } },
+    ]);
+    render(<CommitteeHome />);
+    expect(await screen.findByText('Not ready yet. No month is published.')).toBeInTheDocument();
+  });
   it('shows one failure and still shows the other card (exception)', async () => {
     answerFetchByRoute([
       {
