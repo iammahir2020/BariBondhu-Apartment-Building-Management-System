@@ -33,7 +33,9 @@ function formatDueDate(date: string | null): string {
   });
 }
 
-type TicketDetailProps = {
+/** Props for {@link TicketDetail}. */
+export type TicketDetailProps = {
+  /** ID of the assigned ticket to show. */
   ticketId: string;
 };
 
