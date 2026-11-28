@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { LoadingRows } from '@/components/Loading';
 import { callApi } from '@/lib/apiClient';
 
 interface NotificationRow {
@@ -103,7 +104,7 @@ export default function NotificationsPage() {
       )}
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading notifications...</p>
+        <LoadingRows label="Loading notifications..." />
       ) : notifications.length === 0 ? (
         <Card>
           <CardContent>
