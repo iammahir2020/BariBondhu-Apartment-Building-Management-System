@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { LoadingBlock } from '@/components/Loading';
 import { callApi } from '@/lib/apiClient';
 
 type SummaryStatus = 'Draft' | 'Published' | 'Revised';
@@ -115,6 +116,8 @@ export function FundSummaryView() {
           {error}
         </div>
       )}
+
+      {summaries === null && error === null && <LoadingBlock label="Loading the fund summary…" />}
 
       {summaries !== null && latest === undefined && (
         <Card>

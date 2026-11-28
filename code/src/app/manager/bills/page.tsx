@@ -16,6 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { callApi } from '@/lib/apiClient';
+import { LoadingRows } from '@/components/Loading';
 
 type BillStatus =
   'Unpaid' | 'Payment pending' | 'Awaiting verification' | 'Paid' | 'Carried forward';
@@ -361,7 +362,7 @@ export default function ManagerBillsPage() {
               <h2 className="text-lg font-semibold">All bills</h2>
 
               {loading ? (
-                <p role="status">Loading bills...</p>
+                <LoadingRows label="Loading bills..." rows={5} card={false} />
               ) : filteredBills.length === 0 ? (
                 <p className="py-6 text-sm text-muted-foreground">No bills found.</p>
               ) : (

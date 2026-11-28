@@ -27,6 +27,7 @@ import {
   telHref,
   type SavedNumbers,
 } from './emergencyNumbers';
+import { LoadingInline } from '@/components/Loading';
 
 /** What the screen knows about the building numbers. */
 type Loaded =
@@ -136,7 +137,9 @@ export function EmergencyView() {
           ))}
         </ul>
         {loaded.state === 'loading' && (
-          <p className="pb-3.5 text-base text-muted-foreground">Loading the building numbers…</p>
+          <div className="pb-3.5">
+            <LoadingInline label="Loading the building numbers…" />
+          </div>
         )}
         {loaded.state === 'ready' && loaded.numbers.length === 0 && (
           <p className="pb-3.5 text-base text-muted-foreground">

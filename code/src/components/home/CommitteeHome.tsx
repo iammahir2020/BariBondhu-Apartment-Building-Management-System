@@ -26,6 +26,7 @@ import {
   type HomeRate,
   WAITING_SHOWN,
 } from './committeeHomeView';
+import { LoadingRows } from '@/components/Loading';
 
 /** One list from the API: still loading, loaded, or the error to show. */
 type Loaded<T> =
@@ -101,7 +102,9 @@ function WaitingSection({ expenses }: { expenses: Loaded<HomeExpense> }) {
         href="/committee/expenses"
         link={waiting && waiting.count > WAITING_SHOWN ? `See all ${waiting.count}` : 'Expenses'}
       />
-      {expenses.state === 'loading' && <p className="text-muted-foreground">Loading…</p>}
+      {expenses.state === 'loading' && (
+        <LoadingRows label="Loading expenses…" rows={1} card={false} />
+      )}
       {expenses.state === 'error' && <ErrorNote message={expenses.message} />}
       {waiting && waiting.count === 0 && (
         <Card className="p-4 text-muted-foreground">Nothing is waiting for your decision.</Card>
@@ -145,7 +148,7 @@ function RatesSection({ rates }: { rates: Loaded<HomeRate> }) {
         href="/committee/rates"
         link="Rates and history"
       />
-      {rates.state === 'loading' && <p className="text-muted-foreground">Loading…</p>}
+      {rates.state === 'loading' && <LoadingRows label="Loading rates…" card={false} />}
       {rates.state === 'error' && <ErrorNote message={rates.message} />}
       {rates.state === 'ready' && rates.items.length === 0 && (
         <Card className="p-4 text-muted-foreground">No rates set yet.</Card>
@@ -183,7 +186,7 @@ function FundSection({ funds }: { funds: Loaded<HomeFund> }) {
         href="/committee/fund"
         link="Fund summary"
       />
-      {funds.state === 'loading' && <p className="text-muted-foreground">Loading…</p>}
+      {funds.state === 'loading' && <LoadingRows label="Loading the fund…" rows={1} card={false} />}
       {funds.state === 'error' && <ErrorNote message={funds.message} />}
       {funds.state === 'ready' && latest === undefined && (
         <Card className="p-4 text-muted-foreground">Not ready yet. No month is published.</Card>

@@ -7,12 +7,13 @@
  *
  * @author Ayesha Siddiqa
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { callApi } from '@/lib/apiClient';
+import { LoadingLine, LoadingRows } from '@/components/Loading';
 
 type ChargeType = 'service' | 'generator' | 'water';
 
@@ -58,10 +59,10 @@ function formatMoney(poisha: number): string {
   return `৳${(poisha / 100).toLocaleString('en-US')}`;
 }
 
-/** The line under a charge's name: its current rate, "No rate set yet", or "Loading…" before the rates arrive. */
-function rateText(rate: { amountPoisha: number } | undefined, loaded: boolean): string {
+/** The line under a charge's name: its current rate, "No rate set yet", or a grey bar before the rates arrive. */
+function rateText(rate: { amountPoisha: number } | undefined, loaded: boolean): ReactNode {
   if (rate) return `Now ${formatMoney(rate.amountPoisha)} per flat`;
-  return loaded ? 'No rate set yet' : 'Loading…';
+  return loaded ? 'No rate set yet' : <LoadingLine label="Loading the rate…" />;
 }
 
 /** What the member typed to whole poisha; null when blank or not a number. */
@@ -222,11 +223,12 @@ export default function CommitteeRatesPage() {
       <h2 className="mt-2 text-lg font-semibold">Rate history</h2>
       <Card>
         <CardContent className="flex flex-col gap-3">
-          {history.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              {loaded ? 'No rate changes yet.' : 'Loading…'}
-            </p>
-          )}
+          {history.length === 0 &&
+            (loaded ? (
+              <p className="text-sm text-muted-foreground">No rate changes yet.</p>
+            ) : (
+              <LoadingRows label="Loading rate history…" card={false} />
+            ))}
           {history.map((entry) => (
             <div key={entry.id}>
               <div className="font-semibold">

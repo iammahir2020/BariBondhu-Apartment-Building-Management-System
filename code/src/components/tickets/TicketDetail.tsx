@@ -16,6 +16,7 @@ import type {
   MaintenanceTicketStatus,
 } from '@/services/assignedTicketService';
 import type { WorkNote } from '@/models/WorkNote';
+import { LoadingBlock } from '@/components/Loading';
 
 /** Displays a ticket due date. */
 function formatDueDate(date: string | null): string {
@@ -128,7 +129,7 @@ export function TicketDetail({ ticketId }: TicketDetailProps) {
   };
 
   if (loading && !ticket) {
-    return <p className="text-sm text-muted-foreground">Loading ticket details...</p>;
+    return <LoadingBlock label="Loading ticket details..." />;
   }
 
   if (!ticket) {

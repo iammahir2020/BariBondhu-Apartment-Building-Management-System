@@ -12,10 +12,10 @@ import CommitteeExpensesPage from '@/app/committee/expenses/page';
 import { answerFetch } from '@/components/auth/testFetch';
 
 describe('CommitteeExpensesPage', () => {
-  it('shows Loading… before the expenses arrive, not "No expenses are waiting"', () => {
+  it('shows a loading placeholder before the expenses arrive, not "No expenses are waiting"', () => {
     global.fetch = jest.fn(() => new Promise<never>(() => undefined)) as unknown as typeof fetch;
     render(<CommitteeExpensesPage />);
-    expect(screen.getByText('Loading…')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Loading expenses…');
     expect(screen.queryByText('No expenses are waiting.')).not.toBeInTheDocument();
     expect(screen.queryByText('No expenses decided yet.')).not.toBeInTheDocument();
   });
@@ -25,13 +25,13 @@ describe('CommitteeExpensesPage', () => {
     render(<CommitteeExpensesPage />);
     expect(await screen.findByText('No expenses are waiting.')).toBeInTheDocument();
     expect(screen.getByText('No expenses decided yet.')).toBeInTheDocument();
-    expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
   it('stops loading and shows the error when the list fails (exception)', async () => {
     answerFetch(500, { error: { code: 'INTERNAL', message: 'Something went wrong. Try again.' } });
     render(<CommitteeExpensesPage />);
     expect(await screen.findByText('Something went wrong. Try again.')).toBeInTheDocument();
-    expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });

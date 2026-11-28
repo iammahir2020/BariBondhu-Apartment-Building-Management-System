@@ -15,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { callApi } from '@/lib/apiClient';
+import { LoadingRows } from '@/components/Loading';
 
 type BalanceStatus = 'Waiting for approval' | 'Approved' | 'Rejected';
 
@@ -211,11 +212,12 @@ export default function ManagerFundPage() {
       </p>
       <Card>
         <CardContent className="flex flex-col gap-4">
-          {balances.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              {loaded ? 'No opening balance entered yet.' : 'Loading…'}
-            </p>
-          )}
+          {balances.length === 0 &&
+            (loaded ? (
+              <p className="text-sm text-muted-foreground">No opening balance entered yet.</p>
+            ) : (
+              <LoadingRows label="Loading the fund…" rows={1} card={false} />
+            ))}
           {balances.map((row) => (
             <div key={row.id} className="flex flex-col gap-1">
               <div className="flex items-start justify-between gap-3">

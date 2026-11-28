@@ -30,6 +30,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { callApi } from '@/lib/apiClient';
+import { LoadingRows } from '@/components/Loading';
 
 type Category = 'repair' | 'salary' | 'utility' | 'other';
 
@@ -234,7 +235,11 @@ export default function ManagerExpensesPage() {
                   {expenses.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-muted-foreground">
-                        {loaded ? 'No expenses yet.' : 'Loading…'}
+                        {loaded ? (
+                          'No expenses yet.'
+                        ) : (
+                          <LoadingRows label="Loading expenses…" card={false} />
+                        )}
                       </TableCell>
                     </TableRow>
                   )}

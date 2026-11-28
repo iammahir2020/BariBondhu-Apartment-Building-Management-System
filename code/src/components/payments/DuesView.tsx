@@ -27,6 +27,7 @@ import {
   lineLabel,
   overpaymentMessages,
 } from './billView';
+import { LoadingRows } from '@/components/Loading';
 
 /** How often Dues checks again while a payment is pending. */
 export const PENDING_REFRESH_MS = 10_000;
@@ -120,7 +121,7 @@ export function DuesView() {
           </Alert>
         ))}
 
-      {bills === null && !error && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {bills === null && !error && <LoadingRows label="Loading your bills…" rows={2} />}
       {bills?.length === 0 && (
         <p className="text-sm text-muted-foreground">
           No bills yet. Your monthly bill shows here once the manager makes it.

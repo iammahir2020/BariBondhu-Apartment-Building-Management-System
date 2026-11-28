@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 import { callApi } from '@/lib/apiClient';
 import type { ShiftStatus } from '@/models/Shift';
+import { LoadingRows } from '@/components/Loading';
 
 interface ShiftJson {
   id: string;
@@ -182,11 +183,7 @@ export function ManagerShifts() {
         </p>
       </header>
 
-      {loading && (
-        <p role="status" className="text-sm text-muted-foreground">
-          Loading guard shifts...
-        </p>
-      )}
+      {loading && <LoadingRows label="Loading guard shifts..." />}
 
       {listError && (
         <div

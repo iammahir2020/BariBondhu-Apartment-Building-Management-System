@@ -16,6 +16,7 @@ import { callApi } from '@/lib/apiClient';
 import { blockLabel } from '@/lib/flatLabel';
 import type { BuildingSetup } from '@/services/buildingSetupService';
 import { plural } from './managerHomeView';
+import { LoadingBlock } from '@/components/Loading';
 
 /** The setup: still loading, loaded, or the error to show. */
 type Loaded =
@@ -75,7 +76,7 @@ export function AdminHome() {
         </AlertDescription>
       </Alert>
 
-      {loaded.state === 'loading' && <p className="text-muted-foreground">Loading…</p>}
+      {loaded.state === 'loading' && <LoadingBlock label="Loading the building…" />}
       {loaded.state === 'error' && (
         <Alert variant="destructive">
           <CircleAlert aria-hidden="true" />

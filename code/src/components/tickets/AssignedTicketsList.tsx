@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { callApi } from '@/lib/apiClient';
 import type { AssignedTicketSummary } from '@/services/assignedTicketService';
+import { LoadingRows } from '@/components/Loading';
 
 type TicketsResponse = {
   tickets: AssignedTicketSummary[];
@@ -49,7 +50,7 @@ export function AssignedTicketsList() {
   }, []);
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Loading tickets...</p>;
+    return <LoadingRows label="Loading tickets..." />;
   }
 
   if (error) {

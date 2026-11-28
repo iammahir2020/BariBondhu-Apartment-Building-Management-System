@@ -36,6 +36,7 @@ import { callApi } from '@/lib/apiClient';
 import { formatTaka } from '@/lib/money';
 import type { OverpaymentRow } from '@/services/overpaymentService';
 import { formatBillMonth, formatBillMoment } from './billView';
+import { LoadingRows } from '@/components/Loading';
 
 /** An overpayment as the API sends it: dates are text. */
 export type OverpaymentJson = Omit<OverpaymentRow, 'flaggedAt' | 'refundedAt'> & {
@@ -119,7 +120,7 @@ export function ManagerOverpayments() {
         )}
       </div>
 
-      {rows === null && !error && <p className="text-muted-foreground">Loading…</p>}
+      {rows === null && !error && <LoadingRows label="Loading overpayments…" />}
       {rows?.length === 0 && (
         <Card className="p-4 text-muted-foreground">No overpayments. Nobody has paid twice.</Card>
       )}

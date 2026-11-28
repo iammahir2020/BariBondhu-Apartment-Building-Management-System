@@ -14,6 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { callApi } from '@/lib/apiClient';
+import { LoadingRows } from '@/components/Loading';
 
 type BalanceStatus = 'Waiting for approval' | 'Approved' | 'Rejected';
 
@@ -145,11 +146,12 @@ export default function CommitteeOpeningBalancePage() {
       )}
 
       <h2 className="text-lg font-semibold">Waiting for your decision</h2>
-      {waiting.length === 0 && (
-        <p className="text-sm text-muted-foreground">
-          {loaded ? 'No opening balance is waiting.' : 'Loading…'}
-        </p>
-      )}
+      {waiting.length === 0 &&
+        (loaded ? (
+          <p className="text-sm text-muted-foreground">No opening balance is waiting.</p>
+        ) : (
+          <LoadingRows label="Loading opening balances…" rows={1} />
+        ))}
       {waiting.map((row) => (
         <Card key={row.id}>
           <CardContent className="flex flex-col gap-3">

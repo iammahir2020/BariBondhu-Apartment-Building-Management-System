@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Shift } from '@/models';
 import { callApi } from '@/lib/apiClient';
+import { LoadingRows } from '@/components/Loading';
 
 interface GuardDutyResponse {
   shifts: Shift[];
@@ -63,7 +64,11 @@ export function GuardDuty() {
   }, [loadDuty]);
 
   if (loading) {
-    return <p className="p-4">Loading your duty schedule...</p>;
+    return (
+      <div className="p-4">
+        <LoadingRows label="Loading your duty schedule..." rows={2} />
+      </div>
+    );
   }
 
   if (error) {
