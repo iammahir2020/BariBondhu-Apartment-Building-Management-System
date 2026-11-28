@@ -66,10 +66,10 @@ describe('MyGuestPassList', () => {
     expect(screen.queryByRole('region', { name: 'Open and coming up' })).not.toBeInTheDocument();
   });
 
-  it('says Loading… until the passes arrive', () => {
+  it('shows a loading placeholder until the passes arrive', () => {
     global.fetch = jest.fn(() => new Promise<never>(() => undefined)) as unknown as typeof fetch;
     render(<MyGuestPassList />);
-    expect(screen.getByText('Loading…')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Loading your passes…');
   });
 
   it('says there are no passes yet when the list is empty (boundary)', async () => {

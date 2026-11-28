@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { passLine, passTitle } from '@/components/home/homeView';
 import { canCancelPass, PASS_STATUS_BADGE } from '@/components/guestPasses/passView';
+import { LoadingRows } from '@/components/Loading';
 import { callApi } from '@/lib/apiClient';
 import type { GuestPassView } from '@/lib/guestPassResponse';
 
@@ -88,7 +89,7 @@ export function MyGuestPassList() {
       <h2 id="my-passes-heading" className="text-lg font-semibold">
         Your passes
       </h2>
-      {loaded.state === 'loading' && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {loaded.state === 'loading' && <LoadingRows label="Loading your passes…" rows={2} />}
       {loaded.state === 'error' && (
         <p role="alert" className="text-sm text-destructive">
           {loaded.message}
