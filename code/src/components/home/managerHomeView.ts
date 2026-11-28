@@ -13,7 +13,7 @@ import type { ManagerHomeSummary } from '@/services/managerHomeService';
  * a dead link. When your page merges, set its path here.
  */
 export const MANAGER_PAGES = {
-  tickets: null,
+  tickets: '/manager/tickets',
   bills: '/manager/bills',
   expenses: '/manager/expenses',
   overpayments: '/manager/overpayments',

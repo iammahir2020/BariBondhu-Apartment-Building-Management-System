@@ -203,7 +203,7 @@ export function GuardPassCheck() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl space-y-6 p-4">
+    <div className="mx-auto w-full max-w-2xl space-y-6 p-4">
       <header className="space-y-2">
         <h1 className="text-2xl font-bold">Check a guest pass</h1>
         <p className="text-sm text-muted-foreground">
@@ -393,6 +393,6 @@ export function GuardPassCheck() {
           )}
         </section>
       )}
-    </main>
+    </div>
   );
 }

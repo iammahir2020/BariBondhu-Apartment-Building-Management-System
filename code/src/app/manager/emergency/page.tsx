@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LoadingRows } from '@/components/Loading';
 import { callApi } from '@/lib/apiClient';
 
 type ContactLabel = 'Guard desk' | 'Manager';
@@ -132,7 +133,7 @@ export default function ManagerEmergencyPage() {
         <CardContent className="flex flex-col gap-4">
           <h2 className="font-semibold">Building emergency contacts</h2>
 
-          {loading && <p className="text-sm text-muted-foreground">Loading emergency numbers...</p>}
+          {loading && <LoadingRows label="Loading emergency numbers..." rows={2} card={false} />}
 
           {!loading &&
             CONTACT_LABELS.map((label) => {

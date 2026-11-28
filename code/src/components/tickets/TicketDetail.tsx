@@ -16,6 +16,7 @@ import type {
   MaintenanceTicketStatus,
 } from '@/services/assignedTicketService';
 import type { WorkNote } from '@/models/WorkNote';
+import { LoadingBlock } from '@/components/Loading';
 
 /** Displays a ticket due date. */
 function formatDueDate(date: string | null): string {
@@ -32,7 +33,9 @@ function formatDueDate(date: string | null): string {
   });
 }
 
-type TicketDetailProps = {
+/** Props for {@link TicketDetail}. */
+export type TicketDetailProps = {
+  /** ID of the assigned ticket to show. */
   ticketId: string;
 };
 
@@ -128,7 +131,7 @@ export function TicketDetail({ ticketId }: TicketDetailProps) {
   };
 
   if (loading && !ticket) {
-    return <p className="text-sm text-muted-foreground">Loading ticket details...</p>;
+    return <LoadingBlock label="Loading ticket details..." />;
   }
 
   if (!ticket) {

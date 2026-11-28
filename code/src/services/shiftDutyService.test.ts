@@ -8,6 +8,7 @@ import {
   findDutyGaps,
   getManagerDutyList,
   getMyDutyList,
+  shiftStatusAt,
   type ShiftDutyDeps,
   type ShiftDutyStore,
 } from './shiftDutyService';
@@ -129,7 +130,7 @@ describe('getManagerDutyList', () => {
     expect(deps.shifts.listOverlapping).toHaveBeenCalledWith(TODAY_START, WINDOW_END);
     expect(result.startsAt).toEqual(TODAY_START);
     expect(result.endsAt).toEqual(WINDOW_END);
-    expect(result.shifts).toEqual([earlier, later]);
+    expect(result.shifts).toEqual([{ ...earlier, status: 'Finished' }, later]);
     expect(result.shifts).not.toContain(removed);
   });
 
@@ -163,7 +164,7 @@ describe('getMyDutyList', () => {
       TODAY_START,
       WINDOW_END,
     );
-    expect(result.shifts).toEqual([earlier, later]);
+    expect(result.shifts).toEqual([{ ...earlier, status: 'Finished' }, later]);
     expect(result.noShiftToday).toBe(false);
   });
 
@@ -210,5 +211,42 @@ describe('getMyDutyList', () => {
     await expect(getMyDutyList(store(), 'guard-1', new Date('invalid'))).rejects.toThrow(
       RangeError,
     );
+  });
+});
+
+describe('shiftStatusAt', () => {
+  const tonight = shift('1', '2026-11-26T12:00:00Z', '2026-11-27T00:00:00Z');
+
+  it('is Planned before the start time', () => {
+    expect(shiftStatusAt(tonight, new Date('2026-11-26T11:59:59Z'))).toBe('Planned');
+  });
+
+  it('is On duty from the exact start time (boundary)', () => {
+    expect(shiftStatusAt(tonight, new Date('2026-11-26T12:00:00Z'))).toBe('On duty');
+  });
+
+  it('is On duty past midnight for an overnight shift', () => {
+    expect(shiftStatusAt(tonight, new Date('2026-11-26T19:00:00Z'))).toBe('On duty');
+  });
+
+  it('is Finished from the exact end time (boundary)', () => {
+    expect(shiftStatusAt(tonight, new Date('2026-11-27T00:00:00Z'))).toBe('Finished');
+  });
+
+  it('keeps a stored On duty as Planned when the start has not come (invalid stored status)', () => {
+    const early = { ...tonight, status: 'On duty' as const };
+    expect(shiftStatusAt(early, new Date('2026-11-26T08:00:00Z'))).toBe('Planned');
+  });
+
+  it('keeps a removed shift Removed even during its times (exception)', () => {
+    const removed = { ...tonight, status: 'Removed' as const };
+    expect(shiftStatusAt(removed, new Date('2026-11-26T19:00:00Z'))).toBe('Removed');
+  });
+
+  it('shows the guard a shift that has started as On duty', async () => {
+    const deps = store({ listOverlappingForGuard: jest.fn(async () => [tonight]) });
+    const result = await getMyDutyList(deps, 'guard-1', new Date('2026-11-26T13:00:00Z'));
+    expect(result.shifts[0]?.status).toBe('On duty');
+    expect(tonight.status).toBe('Planned');
   });
 });

@@ -27,6 +27,7 @@ import {
   peopleText,
 } from '@/components/guestPasses/passView';
 import { PassQrCode } from '@/components/guestPasses/PassQrCode';
+import { LoadingBlock } from '@/components/Loading';
 
 /** Props for {@link PassCodeView}. */
 export interface PassCodeViewProps {
@@ -98,9 +99,7 @@ export function PassCodeView({ passId }: PassCodeViewProps) {
     return (
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
         <h1 className="text-xl font-bold">Guest pass</h1>
-        <div aria-live="polite">
-          {errorAlert || <p className="text-muted-foreground">Loading the pass…</p>}
-        </div>
+        <div aria-live="polite">{errorAlert || <LoadingBlock label="Loading the pass…" />}</div>
       </div>
     );
   }

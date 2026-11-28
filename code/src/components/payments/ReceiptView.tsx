@@ -17,6 +17,7 @@ import { callApi } from '@/lib/apiClient';
 import { formatTaka } from '@/lib/money';
 import type { ReceiptView as Receipt } from '@/services/myBillsService';
 import { formatBillMoment, formatBillMonth, lineLabel } from './billView';
+import { LoadingBlock } from '@/components/Loading';
 
 /** Props for {@link ReceiptView}. */
 export interface ReceiptViewProps {
@@ -62,7 +63,7 @@ export function ReceiptView({ billId }: ReceiptViewProps) {
           </Button>
         </>
       )}
-      {!receipt && !error && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {!receipt && !error && <LoadingBlock label="Loading the receipt…" />}
 
       {receipt && (
         <>

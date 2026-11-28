@@ -24,6 +24,7 @@ import {
   type Need,
   type NeedTone,
 } from './managerHomeView';
+import { LoadingBlock } from '@/components/Loading';
 
 /** The summary: still loading, loaded, or the error to show. */
 type Loaded =
@@ -168,7 +169,7 @@ export function ManagerHome() {
     <div className="flex w-full flex-col gap-5">
       <h1 className="text-[1.375rem] font-bold lg:sr-only">Dashboard</h1>
 
-      {loaded.state === 'loading' && <p className="text-muted-foreground">Loading…</p>}
+      {loaded.state === 'loading' && <LoadingBlock label="Loading the dashboard…" />}
 
       {loaded.state === 'error' && (
         <Alert variant="destructive">

@@ -24,6 +24,7 @@ import {
   formatMoment,
   type MyTicketView,
 } from '@/components/tickets/ticketView';
+import { LoadingRows } from '@/components/Loading';
 
 /** What the cancel route says happened. */
 interface CancelResponse {
@@ -128,7 +129,7 @@ export function MyTicketsList() {
         )}
       </div>
 
-      {rows === null && !notice && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {rows === null && !notice && <LoadingRows label="Loading your tickets…" rows={2} />}
       {rows?.length === 0 && (
         <p className="text-sm text-muted-foreground">
           No tickets yet. Report a fault when something needs fixing.

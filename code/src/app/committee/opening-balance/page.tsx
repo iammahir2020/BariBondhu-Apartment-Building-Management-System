@@ -14,6 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { callApi } from '@/lib/apiClient';
+import { LoadingRows } from '@/components/Loading';
 
 type BalanceStatus = 'Waiting for approval' | 'Approved' | 'Rejected';
 
@@ -58,6 +59,7 @@ function monthLabel(month: string): string {
  */
 export default function CommitteeOpeningBalancePage() {
   const [balances, setBalances] = useState<BalanceRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +68,7 @@ export default function CommitteeOpeningBalancePage() {
 
   const load = useCallback(async () => {
     const result = await callApi<BalancesResponse>('/api/opening-balances', 'GET');
+    setLoaded(true);
     if (!result.ok) {
       setError(result.error.message);
       return;
@@ -143,9 +146,12 @@ export default function CommitteeOpeningBalancePage() {
       )}
 
       <h2 className="text-lg font-semibold">Waiting for your decision</h2>
-      {waiting.length === 0 && (
-        <p className="text-sm text-muted-foreground">No opening balance is waiting.</p>
-      )}
+      {waiting.length === 0 &&
+        (loaded ? (
+          <p className="text-sm text-muted-foreground">No opening balance is waiting.</p>
+        ) : (
+          <LoadingRows label="Loading opening balances…" rows={1} />
+        ))}
       {waiting.map((row) => (
         <Card key={row.id}>
           <CardContent className="flex flex-col gap-3">
@@ -220,7 +226,7 @@ export default function CommitteeOpeningBalancePage() {
       <h2 className="mt-2 text-lg font-semibold">Decided</h2>
       <Card>
         <CardContent className="flex flex-col gap-3">
-          {decided.length === 0 && (
+          {decided.length === 0 && loaded && (
             <p className="text-sm text-muted-foreground">Nothing decided yet.</p>
           )}
           {decided.map((row) => (

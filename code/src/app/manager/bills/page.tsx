@@ -16,6 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { callApi } from '@/lib/apiClient';
+import { LoadingRows } from '@/components/Loading';
 
 type BillStatus =
   'Unpaid' | 'Payment pending' | 'Awaiting verification' | 'Paid' | 'Carried forward';
@@ -25,6 +26,7 @@ interface BillRow {
   flatId: string;
   occupancyId: string | null;
   flatNumber: string | null;
+  blockName?: string | null;
   householdName: string | null;
   billingMonth: string;
   dueDate: string;
@@ -43,6 +45,16 @@ function nextBillingMonth(): string {
   const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
   return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/**
+ * The flat with its block, like `A-3B`, so the same flat number in two blocks can be told apart.
+ * @param bill - The bill row.
+ * @returns The flat's short name, or "Unknown" when the flat is missing.
+ */
+function billFlat(bill: Pick<BillRow, 'flatNumber' | 'blockName'>): string {
+  if (bill.flatNumber === null) return 'Unknown';
+  return bill.blockName ? `${bill.blockName}-${bill.flatNumber}` : bill.flatNumber;
 }
 
 function formatMoney(poisha: number): string {
@@ -219,7 +231,7 @@ export default function ManagerBillsPage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-col gap-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6">
       <header>
         <h1 className="text-2xl font-bold">Monthly bills</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -350,7 +362,7 @@ export default function ManagerBillsPage() {
               <h2 className="text-lg font-semibold">All bills</h2>
 
               {loading ? (
-                <p role="status">Loading bills...</p>
+                <LoadingRows label="Loading bills..." rows={5} card={false} />
               ) : filteredBills.length === 0 ? (
                 <p className="py-6 text-sm text-muted-foreground">No bills found.</p>
               ) : (
@@ -369,7 +381,7 @@ export default function ManagerBillsPage() {
                     <tbody>
                       {filteredBills.map((bill) => (
                         <tr key={bill.id} className="border-b">
-                          <td className="p-3 font-semibold">{bill.flatNumber ?? 'Unknown'}</td>
+                          <td className="p-3 font-semibold">{billFlat(bill)}</td>
                           <td className="p-3">{bill.householdName ?? 'Vacant'}</td>
                           <td className="p-3">{formatMonth(bill.billingMonth)}</td>
                           <td className="p-3 text-right font-medium">
@@ -411,7 +423,7 @@ export default function ManagerBillsPage() {
             <h2 className="text-lg font-semibold">Correct unpaid bill</h2>
 
             <p className="text-sm">
-              Flat {selectedBill.flatNumber ?? 'Unknown'}
+              Flat {billFlat(selectedBill)}
               {' · '}
               {formatMoney(selectedBill.totalPoisha)}
             </p>
@@ -453,6 +465,6 @@ export default function ManagerBillsPage() {
           </CardContent>
         </Card>
       )}
-    </main>
+    </div>
   );
 }

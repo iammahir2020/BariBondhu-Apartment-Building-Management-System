@@ -31,6 +31,7 @@ import type { GuestPassView } from '@/lib/guestPassResponse';
 import { formatTaka } from '@/lib/money';
 import type { MyBillView } from '@/services/myBillsService';
 import { homePass, homeTicket, passLine, passTitle, ticketLine } from './homeView';
+import { LoadingRows } from '@/components/Loading';
 
 /** One list from the API: still loading, loaded, or the error to show. */
 type Loaded<T> =
@@ -65,7 +66,7 @@ function BillCard({ bills }: { bills: Loaded<MyBillView> }) {
   const [error, setError] = useState<string | null>(null);
 
   if (bills.state === 'loading') {
-    return <p className="text-sm text-muted-foreground">Loading your bill…</p>;
+    return <LoadingRows label="Loading your bill…" rows={1} />;
   }
   if (bills.state === 'error') return <ErrorNote message={bills.message} />;
 

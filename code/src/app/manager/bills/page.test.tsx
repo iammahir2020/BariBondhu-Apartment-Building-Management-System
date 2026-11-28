@@ -86,6 +86,24 @@ describe('BB-0509 Manager Bills Page', () => {
     expect(mockCallApi).toHaveBeenCalledWith('/api/manager/bills', 'GET', undefined);
   });
 
+  it('shows the block with the flat so the same flat number in two blocks can be told apart', async () => {
+    mockCallApi.mockImplementation(async () => ({
+      ok: true,
+      status: 200,
+      data: {
+        bills: [
+          { ...bills[0], flatNumber: '3B', blockName: 'A' },
+          { ...bills[1], flatNumber: '3B', blockName: 'B' },
+        ],
+      },
+    }));
+
+    render(<ManagerBillsPage />);
+
+    expect(await screen.findByText('A-3B')).toBeInTheDocument();
+    expect(screen.getByText('B-3B')).toBeInTheDocument();
+  });
+
   it('filters bills by payment status', async () => {
     const user = userEvent.setup();
 

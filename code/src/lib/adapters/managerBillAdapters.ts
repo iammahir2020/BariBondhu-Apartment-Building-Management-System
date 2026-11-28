@@ -7,7 +7,7 @@
 
 import { desc, eq } from 'drizzle-orm';
 import type { Database } from '@/lib/db';
-import { bills, flats, occupancies } from '@/models';
+import { bills, blocks, flats, occupancies } from '@/models';
 
 /**
  * Creates the database-backed adapter for listing manager bills.
@@ -35,10 +35,12 @@ export function databaseManagerBillStore(db: Database) {
           createdAt: bills.createdAt,
           updatedAt: bills.updatedAt,
           flatNumber: flats.number,
+          blockName: blocks.name,
           householdName: occupancies.householdName,
         })
         .from(bills)
         .leftJoin(flats, eq(bills.flatId, flats.id))
+        .leftJoin(blocks, eq(flats.blockId, blocks.id))
         .leftJoin(occupancies, eq(bills.occupancyId, occupancies.id))
         .orderBy(desc(bills.billingMonth), desc(bills.createdAt));
     },

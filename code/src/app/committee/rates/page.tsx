@@ -7,12 +7,13 @@
  *
  * @author Ayesha Siddiqa
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { callApi } from '@/lib/apiClient';
+import { LoadingLine, LoadingRows } from '@/components/Loading';
 
 type ChargeType = 'service' | 'generator' | 'water';
 
@@ -58,6 +59,12 @@ function formatMoney(poisha: number): string {
   return `৳${(poisha / 100).toLocaleString('en-US')}`;
 }
 
+/** The line under a charge's name: its current rate, "No rate set yet", or a grey bar before the rates arrive. */
+function rateText(rate: { amountPoisha: number } | undefined, loaded: boolean): ReactNode {
+  if (rate) return `Now ${formatMoney(rate.amountPoisha)} per flat`;
+  return loaded ? 'No rate set yet' : <LoadingLine label="Loading the rate…" />;
+}
+
 /** What the member typed to whole poisha; null when blank or not a number. */
 function toPoisha(text: string): number | null {
   const trimmed = text.trim();
@@ -85,6 +92,7 @@ function formatDate(value: string): string {
 export default function CommitteeRatesPage() {
   const [current, setCurrent] = useState<RateRow[]>([]);
   const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [inputs, setInputs] = useState<Record<ChargeType, string>>({
     service: '',
     generator: '',
@@ -97,6 +105,7 @@ export default function CommitteeRatesPage() {
 
   const load = useCallback(async () => {
     const result = await callApi<RatesResponse>('/api/rates', 'GET');
+    setLoaded(true);
     if (!result.ok) {
       setError(result.error.message);
       return;
@@ -160,9 +169,7 @@ export default function CommitteeRatesPage() {
                   <Label htmlFor={`rate-${type}`} className="text-base font-semibold">
                     {label}
                   </Label>
-                  <div className="text-sm text-muted-foreground">
-                    {rate ? `Now ${formatMoney(rate.amountPoisha)} per flat` : 'No rate set yet'}
-                  </div>
+                  <div className="text-sm text-muted-foreground">{rateText(rate, loaded)}</div>
                 </div>
                 <Input
                   id={`rate-${type}`}
@@ -216,9 +223,12 @@ export default function CommitteeRatesPage() {
       <h2 className="mt-2 text-lg font-semibold">Rate history</h2>
       <Card>
         <CardContent className="flex flex-col gap-3">
-          {history.length === 0 && (
-            <p className="text-sm text-muted-foreground">No rate changes yet.</p>
-          )}
+          {history.length === 0 &&
+            (loaded ? (
+              <p className="text-sm text-muted-foreground">No rate changes yet.</p>
+            ) : (
+              <LoadingRows label="Loading rate history…" card={false} />
+            ))}
           {history.map((entry) => (
             <div key={entry.id}>
               <div className="font-semibold">

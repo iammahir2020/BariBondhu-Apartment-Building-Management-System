@@ -3,6 +3,8 @@
  *
  * @author Mahir Al Kamal
  */
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { House } from 'lucide-react';
 import {
   PHONE_NAV_LIMIT,
@@ -65,6 +67,31 @@ describe('phoneNavItems', () => {
 
   it('returns no links for a role with none (exception)', () => {
     expect(phoneNavItems('admin', [])).toEqual([]);
+  });
+});
+
+/** Whether `src/app` has a page for a URL path like `/manager/bills`. */
+function hasPage(href: string): boolean {
+  return existsSync(
+    path.join(__dirname, '..', 'app', ...href.split('/').filter(Boolean), 'page.tsx'),
+  );
+}
+
+describe('every menu link opens a page', () => {
+  it.each(ROLES)('has a page for each of the %s links', (role) => {
+    const missing = allNavItems(role)
+      .map((item) => item.href)
+      .filter((href) => !hasPage(href));
+    expect(missing).toEqual([]);
+  });
+
+  it.each(ROLES)('has a More page when the %s phone menu shows More', (role) => {
+    const more = phoneNavItems(role).filter((item) => item.label === 'More');
+    expect(more.filter((item) => !hasPage(item.href))).toEqual([]);
+  });
+
+  it('finds no page for a made-up path (exception)', () => {
+    expect(hasPage('/committee/not-a-page')).toBe(false);
   });
 });
 

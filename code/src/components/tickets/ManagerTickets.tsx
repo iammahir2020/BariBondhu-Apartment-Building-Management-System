@@ -32,6 +32,7 @@ import type {
   ManagerTicketWorkNote,
 } from '@/services/managerTicketQueryService';
 import type { TicketStatus } from '@/models/Ticket';
+import { LoadingRows, LoadingBlock, LoadingInline } from '@/components/Loading';
 
 type TicketListItemJson = Omit<ManagerTicketListItem, 'createdAt' | 'updatedAt'> & {
   createdAt: string;
@@ -361,7 +362,7 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
   const reassignmentStaff = maintenanceStaff.filter((person) => person.id !== ticket?.assigneeId);
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
       <header>
         <h1 className="text-[1.375rem] font-bold">Tickets</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -417,9 +418,7 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
           )}
 
           {tickets === null && !listError && (
-            <p role="status" className="py-5 text-muted-foreground">
-              Loading tickets…
-            </p>
+            <LoadingRows label="Loading tickets…" rows={4} card={false} />
           )}
 
           {tickets?.length === 0 && (
@@ -519,11 +518,7 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
                 Back to tickets
               </Link>
 
-              {detailsLoading && (
-                <p role="status" className="py-5 text-muted-foreground">
-                  Loading ticket details…
-                </p>
-              )}
+              {detailsLoading && <LoadingBlock label="Loading ticket details…" />}
               {detailsError && (
                 <div
                   role="alert"
@@ -613,11 +608,7 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
                       {ticket.photoPath && (
                         <div>
                           <h3 className="mb-2 text-sm font-semibold">Ticket photo</h3>
-                          {photoLoading && (
-                            <p role="status" className="text-sm text-muted-foreground">
-                              Loading photo…
-                            </p>
-                          )}
+                          {photoLoading && <LoadingInline label="Loading photo…" />}
                           {photoError && (
                             <p role="alert" className="text-sm text-bad">
                               {photoError}
@@ -952,7 +943,7 @@ export function ManagerTickets({ selectedTicketId }: { selectedTicketId?: string
           </form>
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   );
 }
 

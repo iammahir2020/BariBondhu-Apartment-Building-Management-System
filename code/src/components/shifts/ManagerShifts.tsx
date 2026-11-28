@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 import { callApi } from '@/lib/apiClient';
 import type { ShiftStatus } from '@/models/Shift';
+import { LoadingRows } from '@/components/Loading';
 
 interface ShiftJson {
   id: string;
@@ -174,7 +175,7 @@ export function ManagerShifts() {
     guards.find((guard) => guard.id === id)?.displayName ?? 'Unknown guard';
 
   return (
-    <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Guard shifts</h1>
         <p className="text-sm text-muted-foreground">
@@ -182,11 +183,7 @@ export function ManagerShifts() {
         </p>
       </header>
 
-      {loading && (
-        <p role="status" className="text-sm text-muted-foreground">
-          Loading guard shifts...
-        </p>
-      )}
+      {loading && <LoadingRows label="Loading guard shifts..." />}
 
       {listError && (
         <div
@@ -355,6 +352,6 @@ export function ManagerShifts() {
           </button>
         </form>
       </section>
-    </main>
+    </div>
   );
 }
