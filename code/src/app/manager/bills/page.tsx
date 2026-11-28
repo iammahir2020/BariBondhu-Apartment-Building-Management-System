@@ -25,6 +25,7 @@ interface BillRow {
   flatId: string;
   occupancyId: string | null;
   flatNumber: string | null;
+  blockName?: string | null;
   householdName: string | null;
   billingMonth: string;
   dueDate: string;
@@ -43,6 +44,16 @@ function nextBillingMonth(): string {
   const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
   return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/**
+ * The flat with its block, like `A-3B`, so the same flat number in two blocks can be told apart.
+ * @param bill - The bill row.
+ * @returns The flat's short name, or "Unknown" when the flat is missing.
+ */
+function billFlat(bill: Pick<BillRow, 'flatNumber' | 'blockName'>): string {
+  if (bill.flatNumber === null) return 'Unknown';
+  return bill.blockName ? `${bill.blockName}-${bill.flatNumber}` : bill.flatNumber;
 }
 
 function formatMoney(poisha: number): string {
@@ -369,7 +380,7 @@ export default function ManagerBillsPage() {
                     <tbody>
                       {filteredBills.map((bill) => (
                         <tr key={bill.id} className="border-b">
-                          <td className="p-3 font-semibold">{bill.flatNumber ?? 'Unknown'}</td>
+                          <td className="p-3 font-semibold">{billFlat(bill)}</td>
                           <td className="p-3">{bill.householdName ?? 'Vacant'}</td>
                           <td className="p-3">{formatMonth(bill.billingMonth)}</td>
                           <td className="p-3 text-right font-medium">
@@ -411,7 +422,7 @@ export default function ManagerBillsPage() {
             <h2 className="text-lg font-semibold">Correct unpaid bill</h2>
 
             <p className="text-sm">
-              Flat {selectedBill.flatNumber ?? 'Unknown'}
+              Flat {billFlat(selectedBill)}
               {' · '}
               {formatMoney(selectedBill.totalPoisha)}
             </p>
