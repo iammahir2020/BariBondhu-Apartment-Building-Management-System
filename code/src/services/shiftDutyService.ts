@@ -65,14 +65,36 @@ function dhakaDayStart(now: Date): Date {
 }
 
 /**
- * Sorts shifts by start time without changing the original array.
+ * A shift's status at a moment, from its times: Planned before the start, On duty from the start, Finished from the
+ * end. Removed stays Removed. Nothing moves a shift through these states when its times pass, so the status is
+ * worked out on every read instead of trusting the stored one.
+ *
+ * @param shift - The shift's times and stored status.
+ * @param now - The moment to check.
+ * @returns The status the shift has at `now`.
+ */
+export function shiftStatusAt(
+  shift: Pick<Shift, 'startsAt' | 'endsAt' | 'status'>,
+  now: Date,
+): Shift['status'] {
+  if (shift.status === 'Removed') return 'Removed';
+  if (now.getTime() >= shift.endsAt.getTime()) return 'Finished';
+  if (now.getTime() >= shift.startsAt.getTime()) return 'On duty';
+  return 'Planned';
+}
+
+/**
+ * Drops removed shifts, sets each shift's status for `now`, and sorts by start time, without changing the original
+ * array.
  *
  * @param shifts - The shifts to sort.
+ * @param now - The current time.
  * @returns A new array in chronological order.
  */
-function sortShifts(shifts: readonly Shift[]): Shift[] {
+function sortShifts(shifts: readonly Shift[], now: Date): Shift[] {
   return shifts
     .filter((shift) => shift.status !== 'Removed')
+    .map((shift) => ({ ...shift, status: shiftStatusAt(shift, now) }))
     .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
 }
 
@@ -145,7 +167,7 @@ export async function getManagerDutyList(deps: ShiftDutyDeps, now: Date): Promis
   const startsAt = dhakaDayStart(now);
   const endsAt = new Date(startsAt.getTime() + DUTY_WINDOW_DAYS * DAY_MS);
 
-  const shifts = sortShifts(await deps.shifts.listOverlapping(startsAt, endsAt));
+  const shifts = sortShifts(await deps.shifts.listOverlapping(startsAt, endsAt), now);
 
   return {
     startsAt,
@@ -182,7 +204,10 @@ export async function getMyDutyList(
   const startsAt = dhakaDayStart(now);
   const endsAt = new Date(startsAt.getTime() + DUTY_WINDOW_DAYS * DAY_MS);
 
-  const shifts = sortShifts(await deps.shifts.listOverlappingForGuard(guardId, startsAt, endsAt));
+  const shifts = sortShifts(
+    await deps.shifts.listOverlappingForGuard(guardId, startsAt, endsAt),
+    now,
+  );
 
   const todayEndsAt = new Date(startsAt.getTime() + DAY_MS);
   const hasShiftToday = shifts.some(
