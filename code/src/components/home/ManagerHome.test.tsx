@@ -8,7 +8,7 @@
  * @author Mahir Al Kamal
  */
 import { render, screen } from '@testing-library/react';
-import { answerFetch } from '@/components/auth/testFetch';
+import { answerFetch, answerFetchByRoute } from '@/components/auth/testFetch';
 import type { ManagerHomeSummary } from '@/services/managerHomeService';
 import { ManagerHome } from './ManagerHome';
 
@@ -44,12 +44,36 @@ describe('ManagerHome', () => {
       '/manager/overpayments',
       '/manager/bills',
       '/manager/expenses',
+      '/manager/fund',
     ]);
     expect(links[0]).toHaveTextContent('1 overpayment to refund');
     expect(links[1]).toHaveTextContent('Paid for November');
     expect(links[2]).toHaveTextContent('Expenses waiting for committee');
   });
 
+  it('shows the latest published closing balance on the Fund card (normal, BM-12)', async () => {
+    answerFetchByRoute([
+      { method: 'GET', url: '/api/dashboards/manager', status: 200, body: BUSY },
+      {
+        method: 'GET',
+        url: '/api/fund-summary',
+        status: 200,
+        body: { summaries: [{ month: '2026-10-01', closingBalancePoisha: 37415000 }] },
+      },
+    ]);
+    render(<ManagerHome />);
+    expect(await screen.findByText('৳374,150.00')).toBeInTheDocument();
+    expect(screen.getByText('Closing balance, 2026-10')).toBeInTheDocument();
+  });
+
+  it('says the fund summary is not ready when no month is published (boundary)', async () => {
+    answerFetchByRoute([
+      { method: 'GET', url: '/api/dashboards/manager', status: 200, body: BUSY },
+      { method: 'GET', url: '/api/fund-summary', status: 200, body: { summaries: [] } },
+    ]);
+    render(<ManagerHome />);
+    expect(await screen.findByText('Not ready yet')).toBeInTheDocument();
+  });
   it('says nothing needs the manager when all is quiet (boundary)', async () => {
     answerFetch(200, {
       ...BUSY,

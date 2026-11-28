@@ -109,6 +109,44 @@ function Total({
   );
 }
 
+/** The fund summary fields the card shows. */
+interface FundLatest {
+  month: string;
+  closingBalancePoisha: number;
+}
+
+/** The newest published month of the fund summary, as a total card linking to the Fund page (BM-12). */
+function FundTotal() {
+  const [latest, setLatest] = useState<FundLatest | null | undefined>(undefined);
+
+  useEffect(() => {
+    void callApi<{ summaries?: FundLatest[] }>('/api/fund-summary', 'GET').then((answer) =>
+      setLatest(answer.ok ? (answer.data.summaries?.[0] ?? null) : null),
+    );
+  }, []);
+
+  if (latest === undefined) {
+    return <Total href="/manager/fund" label="Fund summary" value="…" line="Loading" />;
+  }
+  if (latest === null) {
+    return (
+      <Total
+        href="/manager/fund"
+        label="Fund summary"
+        value="Not ready yet"
+        line="No month is published"
+      />
+    );
+  }
+  return (
+    <Total
+      href="/manager/fund"
+      label="Fund summary"
+      value={formatTaka(latest.closingBalancePoisha)}
+      line={`Closing balance, ${latest.month.slice(0, 7)}`}
+    />
+  );
+}
 /**
  * Building manager home.
  * @returns The page content.
@@ -180,6 +218,7 @@ function Summary({ summary }: { summary: ManagerHomeSummary }) {
             value={String(summary.waitingExpenses.count)}
             line={formatTaka(summary.waitingExpenses.totalPoisha)}
           />
+          <FundTotal />
         </ul>
       </section>
     </>
