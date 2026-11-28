@@ -12,7 +12,9 @@ export const NATIONAL_EMERGENCY_NUMBER = '999';
 
 /** Where the building numbers are read from and updated. */
 export interface EmergencyContactStore {
+  /** Every building number, in the order the manager set. */
   list(): Promise<EmergencyContact[]>;
+  /** Changes the phone number of the building number with this label; undefined when there is none. */
   updateByLabel(label: string, phone: string): Promise<EmergencyContact | undefined>;
 }
 
