@@ -34,21 +34,25 @@ describe('ManagerHome', () => {
     expect(screen.getByText('Open tickets').parentElement).toHaveTextContent('5');
   });
 
-  it('links overpayments and expenses to their pages, and leaves cards for unbuilt pages unlinked', async () => {
+  it('links every card to its page, including the ticket alerts and Open tickets', async () => {
     answerFetch(200, BUSY);
     render(<ManagerHome />);
     await screen.findByText('Open tickets');
 
     const links = screen.getAllByRole('link');
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/manager/tickets',
+      '/manager/tickets',
       '/manager/overpayments',
       '/manager/bills',
+      '/manager/tickets',
       '/manager/expenses',
       '/manager/fund',
     ]);
-    expect(links[0]).toHaveTextContent('1 overpayment to refund');
-    expect(links[1]).toHaveTextContent('Paid for November');
-    expect(links[2]).toHaveTextContent('Expenses waiting for committee');
+    expect(links[2]).toHaveTextContent('1 overpayment to refund');
+    expect(links[3]).toHaveTextContent('Paid for November');
+    expect(links[4]).toHaveTextContent('Open tickets');
+    expect(links[5]).toHaveTextContent('Expenses waiting for committee');
   });
 
   it('shows the latest published closing balance on the Fund card (normal, BM-12)', async () => {
