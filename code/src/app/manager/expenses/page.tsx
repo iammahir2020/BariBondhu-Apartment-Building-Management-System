@@ -128,6 +128,7 @@ function categoryLabel(category: Category): string {
  */
 export default function ManagerExpensesPage() {
   const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [mode, setMode] = useState<FormMode>({ kind: 'record' });
   const [amount, setAmount] = useState('');
   const [expenseDate, setExpenseDate] = useState('');
@@ -141,6 +142,7 @@ export default function ManagerExpensesPage() {
 
   const load = useCallback(async () => {
     const result = await callApi<ExpensesResponse>('/api/expenses', 'GET');
+    setLoaded(true);
     if (!result.ok) {
       setError(result.error.message);
       return;
@@ -232,7 +234,7 @@ export default function ManagerExpensesPage() {
                   {expenses.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-muted-foreground">
-                        No expenses yet.
+                        {loaded ? 'No expenses yet.' : 'Loading…'}
                       </TableCell>
                     </TableRow>
                   )}

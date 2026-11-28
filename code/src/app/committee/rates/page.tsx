@@ -58,6 +58,12 @@ function formatMoney(poisha: number): string {
   return `৳${(poisha / 100).toLocaleString('en-US')}`;
 }
 
+/** The line under a charge's name: its current rate, "No rate set yet", or "Loading…" before the rates arrive. */
+function rateText(rate: { amountPoisha: number } | undefined, loaded: boolean): string {
+  if (rate) return `Now ${formatMoney(rate.amountPoisha)} per flat`;
+  return loaded ? 'No rate set yet' : 'Loading…';
+}
+
 /** What the member typed to whole poisha; null when blank or not a number. */
 function toPoisha(text: string): number | null {
   const trimmed = text.trim();
@@ -85,6 +91,7 @@ function formatDate(value: string): string {
 export default function CommitteeRatesPage() {
   const [current, setCurrent] = useState<RateRow[]>([]);
   const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [inputs, setInputs] = useState<Record<ChargeType, string>>({
     service: '',
     generator: '',
@@ -97,6 +104,7 @@ export default function CommitteeRatesPage() {
 
   const load = useCallback(async () => {
     const result = await callApi<RatesResponse>('/api/rates', 'GET');
+    setLoaded(true);
     if (!result.ok) {
       setError(result.error.message);
       return;
@@ -160,9 +168,7 @@ export default function CommitteeRatesPage() {
                   <Label htmlFor={`rate-${type}`} className="text-base font-semibold">
                     {label}
                   </Label>
-                  <div className="text-sm text-muted-foreground">
-                    {rate ? `Now ${formatMoney(rate.amountPoisha)} per flat` : 'No rate set yet'}
-                  </div>
+                  <div className="text-sm text-muted-foreground">{rateText(rate, loaded)}</div>
                 </div>
                 <Input
                   id={`rate-${type}`}
@@ -217,7 +223,9 @@ export default function CommitteeRatesPage() {
       <Card>
         <CardContent className="flex flex-col gap-3">
           {history.length === 0 && (
-            <p className="text-sm text-muted-foreground">No rate changes yet.</p>
+            <p className="text-sm text-muted-foreground">
+              {loaded ? 'No rate changes yet.' : 'Loading…'}
+            </p>
           )}
           {history.map((entry) => (
             <div key={entry.id}>

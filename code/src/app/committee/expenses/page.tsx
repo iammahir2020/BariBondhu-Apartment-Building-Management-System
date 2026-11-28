@@ -85,6 +85,7 @@ function monthName(value: string): string {
  */
 export default function CommitteeExpensesPage() {
   const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +94,7 @@ export default function CommitteeExpensesPage() {
 
   const load = useCallback(async () => {
     const result = await callApi<ExpensesResponse>('/api/expenses', 'GET');
+    setLoaded(true);
     if (!result.ok) {
       setError(result.error.message);
       return;
@@ -169,7 +171,9 @@ export default function CommitteeExpensesPage() {
 
       <h2 className="text-lg font-semibold">Waiting for your decision</h2>
       {waiting.length === 0 && (
-        <p className="text-sm text-muted-foreground">No expenses are waiting.</p>
+        <p className="text-sm text-muted-foreground">
+          {loaded ? 'No expenses are waiting.' : 'Loading…'}
+        </p>
       )}
       {waiting.map((row) => {
         const corrected =
@@ -272,7 +276,7 @@ export default function CommitteeExpensesPage() {
       <h2 className="mt-2 text-lg font-semibold">Decided</h2>
       <Card>
         <CardContent className="flex flex-col gap-3">
-          {decided.length === 0 && (
+          {decided.length === 0 && loaded && (
             <p className="text-sm text-muted-foreground">No expenses decided yet.</p>
           )}
           {decided.map((row) => (

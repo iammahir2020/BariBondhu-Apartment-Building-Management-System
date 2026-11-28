@@ -105,6 +105,7 @@ function toFirstDay(value: string): string {
 export default function ManagerFundPage() {
   const [balances, setBalances] = useState<BalanceRow[]>([]);
   const [summaries, setSummaries] = useState<SummaryRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [balanceMonth, setBalanceMonth] = useState('');
   const [balanceAmount, setBalanceAmount] = useState('');
   const [balanceNote, setBalanceNote] = useState('');
@@ -118,6 +119,7 @@ export default function ManagerFundPage() {
       callApi<BalancesResponse>('/api/opening-balances', 'GET'),
       callApi<SummariesResponse>('/api/fund-summary', 'GET'),
     ]);
+    setLoaded(true);
     if (!balanceResult.ok) {
       setError(balanceResult.error.message);
       return;
@@ -210,7 +212,9 @@ export default function ManagerFundPage() {
       <Card>
         <CardContent className="flex flex-col gap-4">
           {balances.length === 0 && (
-            <p className="text-sm text-muted-foreground">No opening balance entered yet.</p>
+            <p className="text-sm text-muted-foreground">
+              {loaded ? 'No opening balance entered yet.' : 'Loading…'}
+            </p>
           )}
           {balances.map((row) => (
             <div key={row.id} className="flex flex-col gap-1">
@@ -305,7 +309,7 @@ export default function ManagerFundPage() {
       </Card>
 
       <h2 className="mt-2 text-lg font-semibold">Months</h2>
-      {summaries.length === 0 && (
+      {summaries.length === 0 && loaded && (
         <p className="text-sm text-muted-foreground">No month published yet.</p>
       )}
       {summaries.map((row) => (
